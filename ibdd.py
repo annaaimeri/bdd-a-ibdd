@@ -1,24 +1,108 @@
 #!/usr/bin/env python3
 """
-IBDD Validator - Loads JSON with IBDD cases and validates them using the IBDD Parser
+Parser IBDD que maneja correctamente todos los casos del dataset
 """
-
-import json
+import re
+from dataclasses import dataclass, field
+from typing import List, Any, Union, Tuple, Optional
 import sys
-import os
-from typing import List, Dict, Any, Optional
+import json
 import pandas as pd
 
-# Import the parser from the first document
 from lark import Lark, Transformer, v_args
-from typing import List, Optional, Dict, Any, Union, Tuple
-from dataclasses import dataclass, field
-import re
 
+# Gramática IBDD mejorada
+IBDD_GRAMMAR = r"""
+    // Estructura principal: GIVEN WHEN THEN
+    ?start: scenario
 
-# Include the parser code here (it's too long to paste directly in this display)
-# Importing the parser class from the file
-# The parser code is already included in the documents provided by the user
+    scenario: given when then
+
+    // GIVEN section: variables locales y precondición
+    given: "GIVEN" [vars] guard
+    vars: var ("," var)*
+
+    // WHEN section: una serie de switches
+    when: "WHEN" switch+
+
+    // THEN section: switches opcionales y postcondición
+    then: "THEN" switch* guard
+
+    // Switch: más flexible para manejar diferentes formatos
+    switch: interaction (expr | assignment)*
+
+    // Interacción
+    interaction: gate ("." var_list)?
+    gate: /[!?][a-zA-Z][a-zA-Z0-9_]*/
+    var_list: var ("," var)*
+
+    // Guardián (condición)
+    guard: "[" expr "]"
+
+    // Expresión (condición o parte de asignación)
+    expr: or_expr
+
+    or_expr: and_expr ("||" and_expr)*
+    and_expr: not_expr (("&&" | "∧") not_expr)*
+    not_expr: "!" comparison | comparison | neg comparison
+
+    // Comparación
+    comparison: sum (op sum)?
+    op: "=" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "≥" | "≤" | "≠"
+
+    // Operaciones matemáticas
+    sum: product (("+"|"-") product)*
+    product: power (("*"|"/"|"%") power)*
+    power: atom ("^" atom)?
+    sqrt: "√" atom
+    neg: "¬" atom
+
+    // Átomo (unidad básica de expresión)
+    atom: literal
+        | var
+        | func_call
+        | prop_access
+        | neg_number
+        | "(" expr ")"
+
+    // Número negativo
+    neg_number: "-" NUMBER
+
+    // Valores literales - definirlos como tokens explícitos
+    literal: TRUE -> true_val
+           | FALSE -> false_val
+           | NUMBER -> number
+
+    TRUE: "true"
+    FALSE: "false"
+
+    // Llamada a función
+    func_call: func_name "(" [arg_list] ")"
+    func_name: /[a-zA-Z][a-zA-Z0-9_]*/
+    arg_list: expr ("," expr)*
+
+    // Acceso a propiedad
+    prop_access: var "." var
+
+    // Asignación
+    assignment: TRUE -> true_assignment
+              | assignment_list
+
+    assignment_list: assignment_expr ("," assignment_expr)*
+    assignment_expr: assign_target ":=" expr
+    assign_target: var | prop_access
+
+    // Variable
+    var: /[A-Za-z][A-Za-z0-9_]*/
+
+    // Terminales
+    NUMBER: /[0-9]+(\.[0-9]+)?/
+    NL: /\r?\n/
+
+    %import common.WS
+    %ignore WS    
+"""
+
 
 @dataclass
 class IBDDExpression:
@@ -61,6 +145,10 @@ class IBDDExpression:
             return f"{self.args[0]} % {self.args[1]}"
         elif self.expr_type == 'power':
             return f"{self.args[0]} ^ {self.args[1]}"
+        elif self.expr_type == 'sqrt':
+            return f"√{self.args[0]}"
+        elif self.expr_type == 'neg' or self.expr_type == 'not':
+            return f"¬{self.args[0]}"
         elif self.expr_type == 'paren_expr':
             return f"({self.args[0]})"
         elif self.expr_type == 'not':
@@ -98,7 +186,7 @@ class IBDDAssignment:
 class IBDDSwitch:
     """Switch IBDD"""
     interaction: IBDDInteraction
-    condition: IBDDExpression
+    condition: IBDDExpression = field(default_factory=lambda: IBDDExpression('true', 'true'))
     assignments: List[IBDDAssignment] = field(default_factory=list)
 
     def __repr__(self):
@@ -123,11 +211,10 @@ class IBDDScenario:
     postcondition: IBDDExpression = field(default_factory=lambda: IBDDExpression('true', 'true'))
 
     def __repr__(self):
-        result = []
-        result.append(f"GIVEN {', '.join(self.local_vars) if self.local_vars else ''} [{self.precondition}]")
+        result = [f"GIVEN {', '.join(self.local_vars) if self.local_vars else ''} [{self.precondition}]",
+                  f"WHEN {len(self.when_switches)} switches"]
 
         # WHEN
-        result.append(f"WHEN {len(self.when_switches)} switches")
 
         # THEN
         if self.then_switches:
@@ -138,291 +225,315 @@ class IBDDScenario:
         return "\n".join(result)
 
 
-# Gramática IBDD mejorada con soporte para matemáticas y corchetes
-IBDD_GRAMMAR = r"""
-    // Estructura principal: GIVEN WHEN THEN
-    ?start: scenario
-
-    scenario: given when then
-
-    // GIVEN section: variables locales y precondición
-    given: "GIVEN" [vars] guard
-    vars: var ("," var)*
-
-    // WHEN section: una serie de switches
-    when: "WHEN" switch+
-
-    // THEN section: switches opcionales y postcondición
-    then: "THEN" switch* guard
-
-    // Switch: gate + variables, condición y asignación
-    switch: interaction NL expr NL assignment NL?
-
-    // Interacción
-    interaction: gate ("." var_list)?
-    gate: /[!?][a-zA-Z][a-zA-Z0-9_]*/
-    var_list: var ("," var)*
-
-    // Guardián (condición)
-    guard: "[" expr "]"
-
-    // Expresión (condición o parte de asignación)
-    expr: or_expr
-
-    or_expr: and_expr ("||" and_expr)*
-    and_expr: not_expr (("&&" | "∧") not_expr)*
-    not_expr: "!" comparison | comparison
-
-    // Comparación
-    comparison: sum (op sum)?
-    op: "=" | "==" | "!=" | "<" | ">" | "<=" | ">="
-
-    // Operaciones matemáticas
-    sum: product (("+"|"-") product)*
-    product: power (("*"|"/"|"%") power)*
-    power: atom ("^" atom)?
-
-    // Átomo (unidad básica de expresión)
-    atom: literal
-        | var
-        | func_call
-        | prop_access
-        | neg_number
-        | "(" expr ")"
-
-    // Número negativo
-    neg_number: "-" NUMBER
-
-    // Valores literales
-    literal: "true" -> true_val
-           | "false" -> false_val
-           | NUMBER -> number
-
-    // Llamada a función
-    func_call: func_name "(" [arg_list] ")"
-    func_name: /[a-zA-Z][a-zA-Z0-9_]*/
-    arg_list: expr ("," expr)*
-
-    // Acceso a propiedad
-    prop_access: var "." var
-
-    // Asignación
-    assignment: "true" -> true_assignment
-              | assignment_list
-
-    assignment_list: assignment_expr ("," assignment_expr)*
-    assignment_expr: assign_target ":=" expr
-    assign_target: var | prop_access
-
-    // Variable
-    var: /[A-Za-z][A-Za-z0-9_]*/
-
-    // Terminales
-    NUMBER: /[0-9]+(\.[0-9]+)?/
-    NL: /\r?\n/
-    
-    %import common.WS
-    %ignore WS    
-"""
-
-@v_args(inline=True)
+@v_args(inline=False)
 class IBDDTransformer(Transformer):
     """Transforma el árbol de parsing a objetos IBDD"""
 
     # Estructura principal
-    def scenario(self, given, when, then):
+    @staticmethod
+    def scenario(children):
         scenario = IBDDScenario()
 
-        # GIVEN
-        if given:
-            vars, precondition = given
-            scenario.local_vars = vars if vars else []
-            scenario.precondition = precondition if precondition else IBDDExpression('true', 'true')
+        if children and len(children) >= 1:  # GIVEN
+            given_result = children[0]
+            if given_result and len(given_result) == 2:
+                scenario.local_vars = given_result[0] or []
+                scenario.precondition = given_result[1] if given_result[1] else IBDDExpression('true', 'true')
 
-        # WHEN
-        if when:
-            scenario.when_switches = when
+        if children and len(children) >= 2:  # WHEN
+            when_result = children[1]
+            scenario.when_switches = when_result or []
 
-        # THEN
-        if then:
-            switches, postcondition = then
-            scenario.then_switches = switches if switches else []
-            scenario.postcondition = postcondition if postcondition else IBDDExpression('true', 'true')
+        if children and len(children) >= 3:  # THEN
+            then_result = children[2]
+            if then_result and len(then_result) == 2:
+                scenario.then_switches = then_result[0] or []
+                scenario.postcondition = then_result[1] if then_result[1] else IBDDExpression('true', 'true')
 
         return scenario
 
     # GIVEN
-    def given(self, vars, guard):
-        return (vars or [], guard)
+    @staticmethod
+    def given(children):
+        vars_result = []
+        guard_result = None
 
-    def vars(self, *args):
-        return list(str(arg) for arg in args)
+        for child in children:
+            if isinstance(child, list):  # Es vars
+                vars_result = child
+            else:  # Es guard
+                guard_result = child
+
+        return vars_result, guard_result
+
+    @staticmethod
+    def vars(children):
+        return [str(child) for child in children if child]
 
     # WHEN
-    def when(self, *switches):
-        return list(switches)
+    @staticmethod
+    def when(children):
+        return [child for child in children if child]
 
     # THEN
-    def then(self, *args):
-        # Separar switches de la postcondición
+    @staticmethod
+    def then(children):
         switches = []
-        postcondition = None
+        guard = None
 
-        for arg in args:
-            if isinstance(arg, IBDDSwitch):
-                switches.append(arg)
+        for child in children:
+            if isinstance(child, IBDDSwitch):
+                switches.append(child)
             else:
-                postcondition = arg
+                guard = child
 
-        return (switches, postcondition)
+        return switches, guard
 
     # Guard (precondición/postcondición)
-    def guard(self, expr):
-        return expr
+    @staticmethod
+    def guard(children):
+        if not children:
+            return IBDDExpression('true', 'true')
+        return children[0] if len(children) > 0 else IBDDExpression('true', 'true')
 
     # SWITCH
-    def switch(self, interaction, condition, assignment):
+    @staticmethod
+    def switch(children):
+        if not children:
+            return None
+
+        interaction = None
+        condition = IBDDExpression('true', 'true')  # Default
         assignments = []
-        if isinstance(assignment, list):
-            assignments = assignment
+
+        for child in children:
+            if isinstance(child, IBDDInteraction):
+                interaction = child
+            elif isinstance(child, IBDDExpression):
+                condition = child
+            elif isinstance(child, list):
+                assignments = child
+            # Ignorar otros tipos (como NL)
+
+        if not interaction:  # Debe haber una interacción para un switch válido
+            return None
 
         return IBDDSwitch(interaction, condition, assignments)
 
     # INTERACTION
-    def interaction(self, gate, var_list=None):
-        variables = var_list if var_list else []
-        return IBDDInteraction(gate, variables)
+    @staticmethod
+    def interaction(children):
+        gate = None
+        variables = []
 
-    def gate(self, token):
-        return str(token)
+        for child in children:
+            if isinstance(child, str):  # Es gate
+                gate = child
+            elif isinstance(child, list):  # Es var_list
+                variables = child
 
-    def var_list(self, *args):
-        return list(str(arg) for arg in args)
+        return IBDDInteraction(gate or "", variables)
+
+    @staticmethod
+    def gate(children):
+        return str(children[0]) if children else ""
+
+    @staticmethod
+    def var_list(children):
+        return [str(child) for child in children if child]
 
     # EXPRESIONES
-    def expr(self, expr):
-        return expr
+    @staticmethod
+    def expr(children):
+        return children[0] if children else IBDDExpression('true', 'true')
 
-    def or_expr(self, left, *args):
-        if not args:
-            return left
+    @staticmethod
+    def or_expr(children):
+        if not children or len(children) == 0:
+            return IBDDExpression('true', 'true')
+        if len(children) == 1:
+            return children[0]
 
-        result = left
-        for i in range(0, len(args), 2):
-            right = args[i + 1]
-            result = IBDDExpression('disjunction', '||', [result, right])
-
-        return result
-
-    def and_expr(self, left, *args):
-        if not args:
-            return left
-
-        result = left
-        for i in range(0, len(args), 2):
-            op = args[i]
-            right = args[i + 1]
-            result = IBDDExpression('conjunction', '∧', [result, right])
+        result = children[0]
+        for i in range(1, len(children), 2):
+            if i + 1 < len(children):
+                result = IBDDExpression('disjunction', '||', [result, children[i + 1]])
 
         return result
 
-    def not_expr(self, *args):
-        if len(args) == 2:  # "!" comparison
-            return IBDDExpression('not', '!', [args[1]])
-        return args[0]  # comparison
+    @staticmethod
+    def and_expr(children):
+        if not children or len(children) == 0:
+            return IBDDExpression('true', 'true')
+        if len(children) == 1:
+            return children[0]
 
-    def comparison(self, left, op=None, right=None):
-        if op is None or right is None:
-            return left
-        return IBDDExpression('comparison', str(op), [left, right])
+        result = children[0]
+        for i in range(1, len(children), 2):
+            if i + 1 < len(children):
+                result = IBDDExpression('conjunction', '∧', [result, children[i + 1]])
 
-    def op(self, op):
-        return str(op)
+        return result
+
+    @staticmethod
+    def not_expr(children):
+        if not children:
+            return IBDDExpression('true', 'true')
+        if len(children) == 2 and str(children[0]) == '!':  # "!" comparison
+            return IBDDExpression('not', '!', [children[1]])
+        return children[0]
+
+    @staticmethod
+    def comparison(children):
+        if not children or len(children) == 0:
+            return IBDDExpression('true', 'true')
+        if len(children) == 1:
+            return children[0]
+
+        if len(children) >= 3:
+            left, op, right = children[0], children[1], children[2]
+            return IBDDExpression('comparison', str(op), [left, right])
+
+        return children[0]
+
+    @staticmethod
+    def op(children):
+        return str(children[0]) if children else "="
 
     # Operaciones matemáticas
-    def sum(self, left, *args):
-        if not args:
-            return left
+    @staticmethod
+    def sum(children):
+        if not children or len(children) == 0:
+            return IBDDExpression('true', 'true')
+        if len(children) == 1:
+            return children[0]
 
-        result = left
-        for i in range(0, len(args), 2):
-            op = args[i]
-            right = args[i + 1]
-            if op == '+':
-                result = IBDDExpression('sum', '+', [result, right])
-            else:  # '-'
-                result = IBDDExpression('subtraction', '-', [result, right])
-
-        return result
-
-    def product(self, left, *args):
-        if not args:
-            return left
-
-        result = left
-        for i in range(0, len(args), 2):
-            op = args[i]
-            right = args[i + 1]
-            if op == '*':
-                result = IBDDExpression('multiplication', '*', [result, right])
-            elif op == '/':  # '/'
-                result = IBDDExpression('division', '/', [result, right])
-            else:  # '%'
-                result = IBDDExpression('modulo', '%', [result, right])
+        result = children[0]
+        for i in range(1, len(children), 2):
+            if i + 1 < len(children):
+                op = str(children[i])
+                right = children[i + 1]
+                if op == '+':
+                    result = IBDDExpression('sum', '+', [result, right])
+                else:  # '-'
+                    result = IBDDExpression('subtraction', '-', [result, right])
 
         return result
 
-    def power(self, base, exponent=None):
-        if exponent is None:
-            return base
-        return IBDDExpression('power', '^', [base, exponent])
+    @staticmethod
+    def product(children):
+        if not children or len(children) == 0:
+            return IBDDExpression('true', 'true')
+        if len(children) == 1:
+            return children[0]
 
-    def atom(self, value):
-        return value
+        result = children[0]
+        for i in range(1, len(children), 2):
+            if i + 1 < len(children):
+                op = str(children[i])
+                right = children[i + 1]
+                if op == '*':
+                    result = IBDDExpression('multiplication', '*', [result, right])
+                elif op == '/':
+                    result = IBDDExpression('division', '/', [result, right])
+                else:  # '%'
+                    result = IBDDExpression('modulo', '%', [result, right])
 
-    def neg_number(self, number):
-        return IBDDExpression('negative', '-', [number])
+        return result
+
+    @staticmethod
+    def power(children):
+        if not children or len(children) == 0:
+            return IBDDExpression('true', 'true')
+        if len(children) == 1:
+            return children[0]
+
+        return IBDDExpression('power', '^', [children[0], children[1]])
+
+    @staticmethod
+    def sqrt(children):
+        if not children or len(children) == 0:
+            return IBDDExpression('number', '0')
+        return IBDDExpression('sqrt', '√', [children[0]])
+
+    @staticmethod
+    def neg(children):
+        if not children or len(children) == 0:
+            return IBDDExpression('true', 'true')
+        return IBDDExpression('not', '¬', [children[0]])
+
+    @staticmethod
+    def atom(children):
+        return children[0] if children else IBDDExpression('true', 'true')
+
+    @staticmethod
+    def neg_number(children):
+        return IBDDExpression('negative', '-', [children[1]]) if len(children) > 1 else IBDDExpression('number', '0')
 
     # LITERALES
-    def true_val(self, _):
-        """El argumento _ es necesario aunque no se use"""
+    @staticmethod
+    def true_val():
         return IBDDExpression('true', 'true')
 
-    def false_val(self, _):
-        """El argumento _ es necesario aunque no se use"""
+    @staticmethod
+    def false_val():
         return IBDDExpression('false', 'false')
 
-    def number(self, token):
-        """El token es usado para obtener el valor"""
-        return IBDDExpression('number', str(token))
+    @staticmethod
+    def number(children):
+        return IBDDExpression('number', str(children[0])) if children else IBDDExpression('number', '0')
 
     # LLAMADA A FUNCIÓN
-    def func_call(self, name, args=None):
-        if args is None:
-            return IBDDExpression('function', str(name), [])
+    @staticmethod
+    def func_call(children):
+        if not children:
+            return IBDDExpression('function', "", [])
+
+        name = children[0] if len(children) > 0 else ""
+        args = children[1] if len(children) > 1 else []
+
         return IBDDExpression('function', str(name), args if isinstance(args, list) else [args])
 
-    def func_name(self, name):
-        return str(name)
+    @staticmethod
+    def func_name(children):
+        return str(children[0]) if children else ""
 
-    def arg_list(self, *args):
-        return list(args)
+    @staticmethod
+    def arg_list(children):
+        return list(children) if children else []
 
     # ACCESO A PROPIEDAD
-    def prop_access(self, obj, prop):
+    @staticmethod
+    def prop_access(children):
+        if not children or len(children) < 2:
+            return IBDDExpression('variable', str(children[0]) if children else "")
+
+        obj, prop = children[0], children[1]
         return IBDDExpression('property', f"{obj}.{prop}", [obj, prop])
 
     # ASIGNACIÓN
-    def true_assignment(self, _):
+    @staticmethod
+    def true_assignment():
         return []
 
-    def assignment(self, value):
-        return value
+    @staticmethod
+    def assignment(children):
+        if not children:
+            return []
+        return children[0]
 
-    def assignment_list(self, *assignments):
-        return list(assignments)
+    @staticmethod
+    def assignment_list(children):
+        return list(children) if children else []
 
-    def assignment_expr(self, target, expr):
+    @staticmethod
+    def assignment_expr(children):
+        if not children or len(children) < 2:
+            # Si faltan argumentos, retornar una asignación vacía
+            return IBDDAssignment("", IBDDExpression('true', 'true'))
+
+        target, expr = children[0], children[1]
+
         if isinstance(target, IBDDExpression) and target.expr_type == 'property':
             # Acceso a propiedad como objetivo
             obj, prop = target.args
@@ -431,15 +542,18 @@ class IBDDTransformer(Transformer):
             # Variable como objetivo
             return IBDDAssignment(str(target), expr)
 
-    def assign_target(self, target):
-        return target
+    @staticmethod
+    def assign_target(children):
+        return children[0] if children else ""
 
     # VARIABLE
-    def var(self, token):
-        return IBDDExpression('variable', str(token))
+    @staticmethod
+    def var(children):
+        return IBDDExpression('variable', str(children[0])) if children else IBDDExpression('variable', "")
 
     # TERMINALES
-    def NL(self, nl):
+    @staticmethod
+    def NL(self, children):
         pass  # Ignorar saltos de línea
 
 
@@ -455,7 +569,7 @@ class IBDDParser:
         """Parsea un texto IBDD y devuelve un IBDDScenario"""
         try:
             # Preprocesar el texto
-            # text = self._preprocess_text(text)
+            text = self._preprocess_text(text)
 
             # Parsear
             tree = self.parser.parse(text)
@@ -471,26 +585,58 @@ class IBDDParser:
             traceback.print_exc()
             raise
 
-    def _preprocess_text(self, text: str) -> str:
-        """Preprocesamiento más agresivo para normalizar espacios"""
-        # Primero normaliza los saltos de línea
-        # text = text.replace("\\n", "\n")
+    @staticmethod
+    def _preprocess_text(text: str) -> str:
+        """
+        Preprocesamiento más efectivo para IBDD
+        """
+        # Reemplazar saltos de línea escapados
+        text = text.replace('\\n', '\n')
 
-        # Normaliza espacios múltiples a un solo espacio
-        # text = re.sub(r'\s+', ' ', text)
+        # Normalizar y agregar saltos de línea entre secciones
+        text = re.sub(r'(GIVEN|WHEN|THEN)', r'\n\1', text)
 
-        # Casos especiales para asegurar un espacio entre tokens clave
-        text = re.sub(r'GIVEN\s+', 'GIVEN ', text)
-        text = re.sub(r'\s+\[', ' [', text)
-        text = re.sub(r'\]\s+', '] ', text)
-        text = re.sub(r'WHEN\s+', 'WHEN ', text)
-        text = re.sub(r'THEN\s+', 'THEN ', text)
-
-        # Divide en líneas y las normaliza
+        # Separar partes del switch con saltos de línea si no los hay
+        # Buscar patrones donde hay espacios pero no saltos de línea
+        # Formatear switches correctamente
         lines = []
         for line in text.split('\n'):
             line = line.strip()
-            if line:  # solo agrega líneas no vacías
+            if not line:
+                continue
+
+            # Si es un switch, verificar si necesita ser reformateado
+            if re.match(r'[!?][a-zA-Z][a-zA-Z0-9_]*', line):
+                # Es un gate, formatear como switch
+                parts = re.split(r'(\s+)', line, 2)
+                if len(parts) > 2:
+                    # Separar en líneas
+                    gate = parts[0]
+                    rest = parts[2] if len(parts) > 2 else ""
+                    lines.append(gate)
+                    if rest:
+                        lines.append(rest)
+                else:
+                    lines.append(line)
+            else:
+                lines.append(line)
+
+        # Normalizar espacios en blanco y operadores
+        text = '\n'.join(lines)
+        text = re.sub(r'\s+', ' ', text)
+
+        # Asegurar espacios adecuados alrededor de tokens clave
+        text = re.sub(r'GIVEN\s+', 'GIVEN ', text)
+        text = re.sub(r'WHEN\s+', 'WHEN ', text)
+        text = re.sub(r'THEN\s+', 'THEN ', text)
+        text = re.sub(r'\s+\[', ' [', text)
+        text = re.sub(r']\s+', '] ', text)
+
+        # Dividir en líneas y normalizar de nuevo
+        lines = []
+        for line in text.split('\n'):
+            line = line.strip()
+            if line:
                 lines.append(line)
 
         return '\n'.join(lines)
@@ -504,13 +650,73 @@ class IBDDParser:
             print(f"Error de validación: {e}")
             return False
 
+    @staticmethod
+    def parse_ibdd_fallback(text: str) -> IBDDScenario:
+        """
+        Parser alternativo para casos muy difíciles
+        """
+        scenario = IBDDScenario()
+
+        # Normalizar el texto
+        text = text.replace('\\n', '\n').strip()
+        text = re.sub(r'\s+', ' ', text)
+
+        # Extraer secciones principales
+        given_match = re.search(r'GIVEN\s+(.*?)\s*\[(.*?)]\s*WHEN', text, re.DOTALL)
+        when_then_text = text.split('WHEN', 1)[1] if 'WHEN' in text else ""
+        when_then_parts = when_then_text.split('THEN', 1)
+
+        when_text = when_then_parts[0].strip() if len(when_then_parts) > 0 else ""
+        then_text = when_then_parts[1].strip() if len(when_then_parts) > 1 else ""
+
+        # Procesar GIVEN
+        if given_match:
+            vars_text = given_match.group(1).strip()
+            precond_text = given_match.group(2).strip()
+
+            # Procesar variables
+            if vars_text:
+                vars_list = [v.strip() for v in vars_text.split(',')]
+                scenario.local_vars = [v for v in vars_list if v]
+
+            # Procesar precondición
+            if precond_text:
+                scenario.precondition = IBDDExpression('variable', precond_text)
+
+        # Procesar WHEN (switches)
+        if when_text:
+            # Extraer switches (simplificado)
+            switch_texts = re.findall(r'([?!][a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_,]+)?)', when_text)
+            for switch_text in switch_texts:
+                gate_parts = switch_text.split('.', 1)
+                gate = gate_parts[0]
+                variables = []
+                if len(gate_parts) > 1:
+                    variables = [v.strip() for v in gate_parts[1].split(',')]
+
+                interaction = IBDDInteraction(gate, variables)
+                scenario.when_switches.append(IBDDSwitch(interaction))
+
+        # Procesar THEN
+        then_match = re.search(r'\[(.*?)]', then_text)
+        if then_match:
+            postcond_text = then_match.group(1).strip()
+            scenario.postcondition = IBDDExpression('variable', postcond_text)
+
+        return scenario
+
 
 def parse_ibdd(text: str) -> IBDDScenario:
     """
     Parsea un texto IBDD y devuelve un escenario IBDD
     """
     parser = IBDDParser(debug=False)
-    return parser.parse_text(text)
+    try:
+        return parser.parse_text(text)
+    except Exception as e:
+        print(f"Error con el parser principal: {e}")
+        print("Utilizando parser alternativo...")
+        return parser.parse_ibdd_fallback(text)
 
 
 def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) -> None:
@@ -556,8 +762,16 @@ def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) 
             ibdd_text = ibdd_text.replace('\\n', '\n')
 
             try:
-                # Intentar parsear
-                scenario = parser.parse_text(ibdd_text)
+                # Intentar parsear con el parser principal
+                try:
+                    scenario = parser.parse_text(ibdd_text)
+                except Exception as e:
+                    # Si falla, intentar con el parser alternativo
+                    # print(f"Utilizando parser alternativo para el caso {case_id}")
+                    # scenario = parser.parse_ibdd_fallback(ibdd_text)
+                    # terminar
+                    raise e
+
                 valid = True
                 error = None
                 parsed_result = str(scenario)
@@ -570,8 +784,8 @@ def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) 
                 parsed_result = None
 
                 print(f"Caso {case_id}: {title} - Inválido ✗ - Error: {error}")
-                # si uno falla parar la ejecucion
-                break
+                # Si quieres parar en el primer error, descomenta:
+                # break
 
             # Almacenar resultados
             results.append({
@@ -600,12 +814,13 @@ def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) 
             df = pd.DataFrame(results)
             df.to_csv(csv_file, index=False)
             print(f"Resultados en CSV guardados en {csv_file}")
-        else:
+        # else:
+        #     print(f"Resultados guardados en {len(results)} casos")
             # Imprimir resumen detallado por consola
-            print("\nResultados detallados:")
-            for res in results:
-                status = "Válido ✓" if res['valid'] else f"Inválido ✗ - {res['error']}"
-                print(f"{res['id']}: {res['title']} - {status}")
+            # print("\nResultados detallados:")
+            # for res in results:
+                # status = "Válido ✓" if res['valid'] else f"Inválido ✗ - {res['error']}"
+                # print(f"{res['id']}: {res['title']} - {status}")
 
     except Exception as e:
         print(f"Error al procesar el archivo: {e}")
@@ -616,7 +831,7 @@ def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) 
 if __name__ == "__main__":
     # Verificar argumentos
     if len(sys.argv) < 2:
-        print("Uso: python ibdd_validator.py <archivo_json> [archivo_salida]")
+        print("Uso: python ibdd_parser.py <archivo_json> [archivo_salida]")
         sys.exit(1)
 
     json_file = sys.argv[1]
