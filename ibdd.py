@@ -21,7 +21,7 @@ IBDD_GRAMMAR = r"""
 
     // GIVEN section: variables locales y precondición
     given: "GIVEN" [vars] guard
-    vars: var ("," var)*
+    vars: var (COMMA var)*
 
     // WHEN section: una serie de switches
     when: "WHEN" switch+
@@ -33,29 +33,29 @@ IBDD_GRAMMAR = r"""
     switch: interaction (expr | assignment)*
 
     // Interacción
-    interaction: gate ("." var_list)?
+    interaction: gate (DOT var_list)?
     gate: /[!?][a-zA-Z][a-zA-Z0-9_]*/
-    var_list: var ("," var)*
+    var_list: var (COMMA var)*
 
     // Guardián (condición)
-    guard: "[" expr "]"
+    guard: LBRACKET expr RBRACKET
 
     // Expresión (condición o parte de asignación)
     expr: or_expr
 
-    or_expr: and_expr ("||" and_expr)*
-    and_expr: not_expr (("&&" | "∧") not_expr)*
-    not_expr: ("!" | "¬") not_expr | comparison
+    or_expr: and_expr (OR and_expr)*
+    and_expr: not_expr ((AND | AND_SYMBOL) not_expr)*
+    not_expr: (NOT | NOT_SYMBOL) not_expr | comparison
 
     // Comparación
     comparison: sum (op sum)?
-    op: "=" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "≥" | "≤" | "≠"
+    op: EQ | EQEQ | NEQ | LT | GT | LEQ | GEQ | GEQ_SYMBOL | LEQ_SYMBOL | NEQ_SYMBOL
 
     // Operaciones matemáticas
-    sum: product (("+"|"-") product)*
-    product: power (("*"|"/"|"%") power)*
-    power: atom ("^" atom)?
-    sqrt: "√" atom
+    sum: product ((PLUS|MINUS) product)*
+    product: power ((STAR|SLASH|PERCENT) power)*
+    power: atom (CIRCUMFLEX atom)?
+    sqrt: SQRT atom
 
     // Átomo (unidad básica de expresión)
     atom: literal
@@ -63,12 +63,12 @@ IBDD_GRAMMAR = r"""
         | func_call
         | prop_access
         | neg_number
-        | "(" expr ")"
+        | LPAR expr RPAR
 
     // Número negativo
-    neg_number: "-" NUMBER
+    neg_number: MINUS NUMBER
 
-    // Valores literales - definirlos como tokens explícitos
+    // Valores literales
     literal: TRUE -> true_val
            | FALSE -> false_val
            | NUMBER -> number
@@ -77,25 +77,62 @@ IBDD_GRAMMAR = r"""
     FALSE: "false"
 
     // Llamada a función
-    func_call: func_name "(" [arg_list] ")"
+    func_call: func_name LPAR [arg_list] RPAR
     func_name: /[a-zA-Z][a-zA-Z0-9_]*/
-    arg_list: expr ("," expr)*
+    arg_list: expr (COMMA expr)*
 
     // Acceso a propiedad
-    prop_access: var "." var
+    prop_access: var DOT var
 
     // Asignación
     assignment: TRUE -> true_assignment
               | assignment_list
 
-    assignment_list: assignment_expr ("," assignment_expr)*
-    assignment_expr: assign_target ":=" expr
+    assignment_list: assignment_expr (COMMA assignment_expr)*
+    assignment_expr: assign_target ASSIGN expr
     assign_target: var | prop_access
 
     // Variable
     var: /[A-Za-z][A-Za-z0-9_]*/
 
-    // Terminales
+    // Terminales con nombres descriptivos
+    LPAR: "("
+    RPAR: ")"
+    LBRACKET: "["
+    RBRACKET: "]"
+    COMMA: ","
+    DOT: "."
+    ASSIGN: ":="
+
+    // Operadores lógicos
+    OR: "||"
+    AND: "&&"
+    AND_SYMBOL: "∧"
+    NOT: "!"
+    NOT_SYMBOL: "¬"
+
+    // Operadores de comparación
+    EQ: "="
+    EQEQ: "=="
+    NEQ: "!="
+    NEQ_SYMBOL: "≠"
+    LT: "<"
+    GT: ">"
+    LEQ: "<="
+    LEQ_SYMBOL: "≤"
+    GEQ: ">="
+    GEQ_SYMBOL: "≥"
+
+    // Operadores matemáticos
+    PLUS: "+"
+    MINUS: "-"
+    STAR: "*"
+    SLASH: "/"
+    PERCENT: "%"
+    CIRCUMFLEX: "^"
+    SQRT: "√"
+
+    // Números
     NUMBER: /[0-9]+(\.[0-9]+)?/
     NL: /\r?\n/
 
