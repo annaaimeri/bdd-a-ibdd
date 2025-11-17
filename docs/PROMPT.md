@@ -1,8 +1,7 @@
 # Prompt para Traducción BDD → IBDD
 
-## Contexto  
-Vas a traducir escenarios escritos en Gherkin a un lenguaje intermedio llamado IBDD (Intermediate Behavior-Driven Development).  IBDD mantiene la estructura Given–When–Then pero añadí precisión formal mediante Symbolic Transition Systems (STS).
-
+## Contexto
+Vas a traducir escenarios escritos en formato Gherkin a un lenguaje intermedio llamado IBDD (Intermediate Behavior-Driven Development). IBDD mantiene la estructura Given-When-Then pero añade precisión formal mediante Symbolic Transition Systems (STS).
 
 ## 1. Definición de IBDD
 
@@ -26,60 +25,64 @@ Vas a traducir escenarios escritos en Gherkin a un lenguaje intermedio llamado I
    * ! = output del sistema 
    * ? = input desde el entorno 
 * Guards: Condiciones booleanas.
-* Assignments: Asignaciones (var := expresión). 
+* Assignments: Asignaciones (var := expresión).
 
+## 2. Formato de Entrada y Salida
 
-## 2. Ejemplo de Traducción
+### Formato de Entrada:
+Recibirás un JSON que contiene una lista de escenarios en formato Gherkin, cada uno con:
+- id: Identificador único del escenario
+- domain: Dominio al que pertenece el escenario
+- title: Título descriptivo del escenario
+- given: Condiciones iniciales (Given en Gherkin)
+- when: Acciones (When en Gherkin)
+- then: Resultados esperados (Then en Gherkin)
+- complexity: Nivel de complejidad del escenario
 
-### Escenario Gherkin
-* Scenario: A controller job is added to the scheduled jobs after a job file has been submitted
-* Given a job file
-* When the operator submits the job file using Submission method  
-* Then the printer appends a new controller job to the scheduled jobs
-* And the controller job is of type Job type
+### Formato de Salida:
+Deberás devolver el mismo JSON de entrada, pero añadiendo un campo "ibdd_representation" a cada escenario con la traducción IBDD.
 
-### Traducción IBDD esperada
-* GIVEN JF [true]
-* WHEN ?submit.jf,sm
-*     true
-*     JF := jf
-* THEN !append.cj,sjl
-*     cj.type = JT ∧ sjl = SJL ∧ JT = getJobType(SM)
-*     CJ := cj, SJL := add(CJ, SJL)
-*     [is_in_list(CJ, SJL) ∧ CJ.type = JT]
+## 3. Instrucciones para la Traducción
 
+Para cada escenario en el JSON:
 
-## 3. Tarea
+1. Analiza las secciones given, when y then
+2. Identifica variables locales, globales y de interacción apropiadas
+3. Determina los gates (? para input, ! para output)
+4. Define guards y assignments coherentes con el escenario
+5. Estructura el resultado en formato IBDD (GIVEN, WHEN, THEN)
+6. Asegúrate de que la traducción sea precisa y refleje el comportamiento descrito
 
-Traducí el siguiente escenario a IBDD, pero generá 3 opciones distintas, explorando variaciones en el modelado:
+## 4. Ejemplo de Traducción
 
-### Escenario a traducir (en Gherkin):
-* Scenario: A product is added to shopping cart when user selects it
-* Given a product is available in inventory
-* And the user is logged in
-* When the user clicks add to cart button
-* And the user specifies quantity  
-* Then the product is added to the shopping cart
-* And the inventory is updated
+### Escenario Gherkin:
+{
+"id": 1,
+"domain": "printer",
+"title": "Submit job to printer",
+"given": "a job file",
+"when": "the operator submits the job file using Submission method",
+"then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type"
+}
 
+### Traducción IBDD esperada:
+{
+"id": 1,
+"domain": "printer",
+"title": "Submit job to printer",
+"given": "a job file",
+"when": "the operator submits the job file using Submission method",
+"then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type",
+"ibdd_representation": "GIVEN JF [true]\nWHEN ?submit.jf,sm\n    true\n    JF := jf\nTHEN !append.cj,sjl\n    cj.type = JT ∧ sjl = SJL ∧ JT = getJobType(SM)\n    CJ := cj, SJL := add(CJ, SJL)\n    [is_in_list(CJ, SJL) ∧ CJ.type = JT]"
+}
 
-## 4. Requisitos de Salida
+## 5. Consideraciones Adicionales
 
-Para cada traducción:
-1. Etiqueta clara: (Opción 1, Opción 2, Opción 3). 
-2. Explicación del enfoque: qué varía (granularidad, modelado, nivel de detalle, etc.). 
-3. Identificación de variables: locales, globales, de interacción. 
-4. Definición de gates: usando ? (input) y ! (output). 
-5. Uso de guards y assignments: coherentes con el escenario. 
-6. Estructura completa en formato IBDD (GIVEN, WHEN, THEN). 
-7. Justificación breve de por qué elegiste ese modelado. 
+- Mantén consistencia en el estilo de representación IBDD
+- Usa abreviaturas apropiadas para las variables (ej. P para Product, SC para ShoppingCart)
+- Las variables globales deben representarse en mayúsculas
+- Incluye condiciones de guardia adecuadas según el contexto
+- Captura fielmente la lógica del escenario en la representación IBDD
 
-
-## 5. Enfoques sugeridos para variar las opciones
-* Opción 1: Interacciones atómicas (cada acción del usuario y del sistema separada). 
-* Opción 2: Interacción compuesta (modelar el "add to cart" como un evento único que engloba acción + cantidad). 
-* Opción 3: Cambio de granularidad en variables (por ejemplo, modelar inventario como entero vs lista de productos). 
-
-
-### Instrucción Final al LLM:
-Generá 3 traducciones del escenario en formato IBDD, cumpliendo con los requisitos anteriores.
+### Instrucción Final:
+Procesa el JSON de entrada y devuelve el mismo JSON con el campo "ibdd_representation" añadido a cada escenario con su traducción IBDD correspondiente. NO incluyas explicaciones o comentarios adicionales, SOLO devuelve el JSON resultante.

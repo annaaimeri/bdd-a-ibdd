@@ -44,7 +44,7 @@ IBDD_GRAMMAR = r"""
 
     or_expr: and_expr ("||" and_expr)*
     and_expr: not_expr (("&&" | "∧") not_expr)*
-    not_expr: "!" comparison | comparison | neg comparison
+    not_expr: ("!" | "¬") not_expr | comparison
 
     // Comparación
     comparison: sum (op sum)?
@@ -55,7 +55,6 @@ IBDD_GRAMMAR = r"""
     product: power (("*"|"/"|"%") power)*
     power: atom ("^" atom)?
     sqrt: "√" atom
-    neg: "¬" atom
 
     // Átomo (unidad básica de expresión)
     atom: literal
@@ -472,11 +471,11 @@ class IBDDTransformer(Transformer):
 
     # LITERALES
     @staticmethod
-    def true_val():
+    def true_val(children):
         return IBDDExpression('true', 'true')
 
     @staticmethod
-    def false_val():
+    def false_val(children):
         return IBDDExpression('false', 'false')
 
     @staticmethod
@@ -596,6 +595,9 @@ class IBDDParser:
         # Normalizar y agregar saltos de línea entre secciones
         text = re.sub(r'(GIVEN|WHEN|THEN)', r'\n\1', text)
 
+        text = re.sub(r'([!?][a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_,]+)?)\s*∧\s*([!?][a-zA-Z][a-zA-Z0-9_]*)',
+                      r'\1\n\2', text)
+
         # Separar partes del switch con saltos de línea si no los hay
         # Buscar patrones donde hay espacios pero no saltos de línea
         # Formatear switches correctamente
@@ -608,7 +610,7 @@ class IBDDParser:
             # Si es un switch, verificar si necesita ser reformateado
             if re.match(r'[!?][a-zA-Z][a-zA-Z0-9_]*', line):
                 # Es un gate, formatear como switch
-                parts = re.split(r'(\s+)', line, 2)
+                parts = re.split(r'(\s+)', line)
                 if len(parts) > 2:
                     # Separar en líneas
                     gate = parts[0]

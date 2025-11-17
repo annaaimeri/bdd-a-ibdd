@@ -254,11 +254,11 @@ class IBDDTransformer(Transformer):
 
     # LITERALES
     @staticmethod
-    def true_val(self):
+    def true_val(children):
         return IBDDExpression('true', 'true')
 
     @staticmethod
-    def false_val(self):
+    def false_val(children):
         return IBDDExpression('false', 'false')
 
     @staticmethod
