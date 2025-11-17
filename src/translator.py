@@ -19,24 +19,17 @@ class TranslationService:
         Args:
             openai_api_key: OpenAI API key (optional, defaults to OPENAI_API_KEY env variable)
         """
-        # Load environment variables from .env file if exists
         load_dotenv()
 
-        # Use provided API key or get from environment
         self.api_key = openai_api_key or os.environ.get("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError(
                 "OpenAI API key is required. Provide it as an argument or set OPENAI_API_KEY environment variable.")
 
-        # Default model
-        self.model = "gpt-4o" # todo: change
-
-        # OpenAI API endpoint
+        self.model = "gpt-4o"
         self.api_endpoint = "https://api.openai.com/v1/chat/completions"
-
-        # Retry configuration
         self.max_retries = 5
-        self.base_delay = 1  # Base delay in seconds
+        self.base_delay = 1
 
     @staticmethod
     def read_json_file(json_file_path: str) -> Dict[str, Any]:
@@ -50,8 +43,11 @@ class TranslationService:
             Parsed JSON data
         """
         try:
+            print(f"Reading JSON file: {json_file_path}")
             with open(json_file_path, 'r', encoding='utf-8') as file:
-                return json.load(file)
+                data = json.load(file)
+            print(f"Successfully loaded JSON with {len(data)} keys")
+            return data
         except Exception as e:
             print(f"Error reading JSON file: {e}", file=sys.stderr)
             sys.exit(1)
@@ -68,6 +64,7 @@ class TranslationService:
             Prompt template as string
         """
         try:
+            print(f"Reading prompt template: {prompt_file_path}")
             with open(prompt_file_path, 'r', encoding='utf-8') as file:
                 return file.read()
         except Exception as e:
@@ -78,7 +75,6 @@ class TranslationService:
     def prepare_prompt(json_data: Dict[str, Any], prompt_template: str) -> str:
         """
         Prepare the prompt by combining the template with JSON data.
-        This method can be customized based on how the JSON data should be incorporated.
 
         Args:
             json_data: Parsed JSON data
@@ -87,15 +83,9 @@ class TranslationService:
         Returns:
             Final prompt to send to the API
         """
-        # Default implementation: Include the JSON data as context
-        # Modify this based on your specific needs
+        print("Preparing prompt with JSON data...")
         json_str = json.dumps(json_data, indent=2)
-
-        # Combine template with JSON data
-        # This assumes the prompt template has a placeholder for the JSON data
-        # If not, you might need to adjust this logic
         final_prompt = f"{prompt_template}\n\nJSON Data:\n{json_str}"
-
         return final_prompt
 
     def call_openai_api(self, prompt: str) -> Optional[str]:
@@ -119,30 +109,30 @@ class TranslationService:
             "temperature": 0.7
         }
 
+        print(f"Calling OpenAI API with model: {self.model}")
+
         for attempt in range(1, self.max_retries + 1):
             try:
-                print(f"API call attempt {attempt}/{self.max_retries}...")
+                print(f"Attempt {attempt}/{self.max_retries}...")
                 response = requests.post(self.api_endpoint, headers=headers, json=data)
 
                 if response.status_code == 200:
+                    print("Translation completed successfully")
                     response_data = response.json()
                     return response_data["choices"][0]["message"]["content"]
 
                 elif response.status_code == 429:
                     print(response.text)
-                    # Rate limit hit - implement exponential backoff
                     if attempt < self.max_retries:
-                        # Calculate delay with jitter to avoid thundering herd
                         delay = self.base_delay * (2 ** (attempt - 1)) + random.uniform(0, 1)
-                        print(f"Rate limit exceeded. Retrying in {delay:.2f} seconds...")
+                        print(f"Rate limit exceeded. Waiting {delay:.2f} seconds before retry...")
                         time.sleep(delay)
                     else:
                         print("Max retries reached. Rate limit still exceeded.", file=sys.stderr)
                         return None
 
                 else:
-                    # Other errors
-                    print(f"API returned error: {response.status_code} - {response.text}", file=sys.stderr)
+                    print(f"API error: {response.status_code} - {response.text}", file=sys.stderr)
                     if attempt < self.max_retries:
                         delay = self.base_delay * (2 ** (attempt - 1))
                         print(f"Retrying in {delay:.2f} seconds...")
@@ -171,20 +161,21 @@ class TranslationService:
             output_file_path: Path where to save the response
         """
         try:
+            print(f"Saving translation to: {output_file_path}")
             cleaned_response = response.strip()
             if cleaned_response.startswith('```json'):
-                cleaned_response = cleaned_response[7:]  # Remover ```json
+                cleaned_response = cleaned_response[7:]
             elif cleaned_response.startswith('```'):
-                cleaned_response = cleaned_response[3:]  # Remover ```
+                cleaned_response = cleaned_response[3:]
 
             if cleaned_response.endswith('```'):
-                cleaned_response = cleaned_response[:-3]  # Remover ``` final
+                cleaned_response = cleaned_response[:-3]
 
             cleaned_response = cleaned_response.strip()
 
             with open(output_file_path, 'w', encoding='utf-8') as file:
                 file.write(cleaned_response)
-            print(f"Translation saved to {output_file_path}")
+            print(f"Translation saved successfully")
         except Exception as e:
             print(f"Error saving response: {e}", file=sys.stderr)
 
@@ -197,19 +188,16 @@ class TranslationService:
             prompt_file_path: Path to the prompt template file
             output_file_path: Path where to save the translation
         """
-        # Read input files
+        print("Starting translation process...")
+
         json_data = self.read_json_file(json_file_path)
         prompt_template = self.read_prompt_file(prompt_file_path)
-
-        # Prepare the prompt
         final_prompt = self.prepare_prompt(json_data, prompt_template)
-
-        # Call OpenAI API
         response = self.call_openai_api(final_prompt)
 
         if response:
-            # Save the response
             self.save_response(response, output_file_path)
+            print("Translation process completed")
         else:
             print("Failed to get translation from OpenAI API", file=sys.stderr)
             sys.exit(1)
@@ -228,10 +216,8 @@ def main():
 
     output_file = args.output or 'translation_output.json'
 
-    # Create translation service
     service = TranslationService(args.api_key)
 
-    # Override defaults if provided
     if args.model:
         service.model = args.model
     if args.max_retries:

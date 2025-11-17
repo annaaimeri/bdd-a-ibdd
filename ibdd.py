@@ -8,6 +8,7 @@ from typing import List, Any, Union, Tuple, Optional
 import sys
 import json
 import pandas as pd
+import time
 
 from lark import Lark, Transformer, v_args
 
@@ -198,14 +199,9 @@ class IBDDSwitch:
 @dataclass
 class IBDDScenario:
     """Escenario IBDD completo"""
-    # GIVEN
     local_vars: List[str] = field(default_factory=list)
     precondition: IBDDExpression = field(default_factory=lambda: IBDDExpression('true', 'true'))
-
-    # WHEN
     when_switches: List[IBDDSwitch] = field(default_factory=list)
-
-    # THEN
     then_switches: List[IBDDSwitch] = field(default_factory=list)
     postcondition: IBDDExpression = field(default_factory=lambda: IBDDExpression('true', 'true'))
 
@@ -213,9 +209,6 @@ class IBDDScenario:
         result = [f"GIVEN {', '.join(self.local_vars) if self.local_vars else ''} [{self.precondition}]",
                   f"WHEN {len(self.when_switches)} switches"]
 
-        # WHEN
-
-        # THEN
         if self.then_switches:
             result.append(f"THEN {len(self.then_switches)} switches [{self.postcondition}]")
         else:
@@ -228,22 +221,21 @@ class IBDDScenario:
 class IBDDTransformer(Transformer):
     """Transforma el árbol de parsing a objetos IBDD"""
 
-    # Estructura principal
     @staticmethod
     def scenario(children):
         scenario = IBDDScenario()
 
-        if children and len(children) >= 1:  # GIVEN
+        if children and len(children) >= 1:
             given_result = children[0]
             if given_result and len(given_result) == 2:
                 scenario.local_vars = given_result[0] or []
                 scenario.precondition = given_result[1] if given_result[1] else IBDDExpression('true', 'true')
 
-        if children and len(children) >= 2:  # WHEN
+        if children and len(children) >= 2:
             when_result = children[1]
             scenario.when_switches = when_result or []
 
-        if children and len(children) >= 3:  # THEN
+        if children and len(children) >= 3:
             then_result = children[2]
             if then_result and len(then_result) == 2:
                 scenario.then_switches = then_result[0] or []
@@ -251,16 +243,15 @@ class IBDDTransformer(Transformer):
 
         return scenario
 
-    # GIVEN
     @staticmethod
     def given(children):
         vars_result = []
         guard_result = None
 
         for child in children:
-            if isinstance(child, list):  # Es vars
+            if isinstance(child, list):
                 vars_result = child
-            else:  # Es guard
+            else:
                 guard_result = child
 
         return vars_result, guard_result
@@ -269,12 +260,10 @@ class IBDDTransformer(Transformer):
     def vars(children):
         return [str(child) for child in children if child]
 
-    # WHEN
     @staticmethod
     def when(children):
         return [child for child in children if child]
 
-    # THEN
     @staticmethod
     def then(children):
         switches = []
@@ -288,21 +277,19 @@ class IBDDTransformer(Transformer):
 
         return switches, guard
 
-    # Guard (precondición/postcondición)
     @staticmethod
     def guard(children):
         if not children:
             return IBDDExpression('true', 'true')
         return children[0] if len(children) > 0 else IBDDExpression('true', 'true')
 
-    # SWITCH
     @staticmethod
     def switch(children):
         if not children:
             return None
 
         interaction = None
-        condition = IBDDExpression('true', 'true')  # Default
+        condition = IBDDExpression('true', 'true')
         assignments = []
 
         for child in children:
@@ -312,23 +299,21 @@ class IBDDTransformer(Transformer):
                 condition = child
             elif isinstance(child, list):
                 assignments = child
-            # Ignorar otros tipos (como NL)
 
-        if not interaction:  # Debe haber una interacción para un switch válido
+        if not interaction:
             return None
 
         return IBDDSwitch(interaction, condition, assignments)
 
-    # INTERACTION
     @staticmethod
     def interaction(children):
         gate = None
         variables = []
 
         for child in children:
-            if isinstance(child, str):  # Es gate
+            if isinstance(child, str):
                 gate = child
-            elif isinstance(child, list):  # Es var_list
+            elif isinstance(child, list):
                 variables = child
 
         return IBDDInteraction(gate or "", variables)
@@ -341,7 +326,6 @@ class IBDDTransformer(Transformer):
     def var_list(children):
         return [str(child) for child in children if child]
 
-    # EXPRESIONES
     @staticmethod
     def expr(children):
         return children[0] if children else IBDDExpression('true', 'true')
@@ -378,7 +362,7 @@ class IBDDTransformer(Transformer):
     def not_expr(children):
         if not children:
             return IBDDExpression('true', 'true')
-        if len(children) == 2 and str(children[0]) == '!':  # "!" comparison
+        if len(children) == 2 and str(children[0]) == '!':
             return IBDDExpression('not', '!', [children[1]])
         return children[0]
 
@@ -399,7 +383,6 @@ class IBDDTransformer(Transformer):
     def op(children):
         return str(children[0]) if children else "="
 
-    # Operaciones matemáticas
     @staticmethod
     def sum(children):
         if not children or len(children) == 0:
@@ -414,7 +397,7 @@ class IBDDTransformer(Transformer):
                 right = children[i + 1]
                 if op == '+':
                     result = IBDDExpression('sum', '+', [result, right])
-                else:  # '-'
+                else:
                     result = IBDDExpression('subtraction', '-', [result, right])
 
         return result
@@ -435,7 +418,7 @@ class IBDDTransformer(Transformer):
                     result = IBDDExpression('multiplication', '*', [result, right])
                 elif op == '/':
                     result = IBDDExpression('division', '/', [result, right])
-                else:  # '%'
+                else:
                     result = IBDDExpression('modulo', '%', [result, right])
 
         return result
@@ -469,7 +452,6 @@ class IBDDTransformer(Transformer):
     def neg_number(children):
         return IBDDExpression('negative', '-', [children[1]]) if len(children) > 1 else IBDDExpression('number', '0')
 
-    # LITERALES
     @staticmethod
     def true_val(children):
         return IBDDExpression('true', 'true')
@@ -482,7 +464,6 @@ class IBDDTransformer(Transformer):
     def number(children):
         return IBDDExpression('number', str(children[0])) if children else IBDDExpression('number', '0')
 
-    # LLAMADA A FUNCIÓN
     @staticmethod
     def func_call(children):
         if not children:
@@ -501,7 +482,6 @@ class IBDDTransformer(Transformer):
     def arg_list(children):
         return list(children) if children else []
 
-    # ACCESO A PROPIEDAD
     @staticmethod
     def prop_access(children):
         if not children or len(children) < 2:
@@ -510,7 +490,6 @@ class IBDDTransformer(Transformer):
         obj, prop = children[0], children[1]
         return IBDDExpression('property', f"{obj}.{prop}", [obj, prop])
 
-    # ASIGNACIÓN
     @staticmethod
     def true_assignment():
         return []
@@ -528,32 +507,27 @@ class IBDDTransformer(Transformer):
     @staticmethod
     def assignment_expr(children):
         if not children or len(children) < 2:
-            # Si faltan argumentos, retornar una asignación vacía
             return IBDDAssignment("", IBDDExpression('true', 'true'))
 
         target, expr = children[0], children[1]
 
         if isinstance(target, IBDDExpression) and target.expr_type == 'property':
-            # Acceso a propiedad como objetivo
             obj, prop = target.args
             return IBDDAssignment((obj, prop), expr)
         else:
-            # Variable como objetivo
             return IBDDAssignment(str(target), expr)
 
     @staticmethod
     def assign_target(children):
         return children[0] if children else ""
 
-    # VARIABLE
     @staticmethod
     def var(children):
         return IBDDExpression('variable', str(children[0])) if children else IBDDExpression('variable', "")
 
-    # TERMINALES
     @staticmethod
     def NL(self, children):
-        pass  # Ignorar saltos de línea
+        pass
 
 
 class IBDDParser:
@@ -566,53 +540,28 @@ class IBDDParser:
 
     def parse_text(self, text: str) -> IBDDScenario:
         """Parsea un texto IBDD y devuelve un IBDDScenario"""
-        try:
-            # Preprocesar el texto
-            text = self._preprocess_text(text)
-
-            # Parsear
-            tree = self.parser.parse(text)
-
-            # Transformar
-            result = self.transformer.transform(tree)
-
-            return result
-
-        except Exception as e:
-            import traceback
-            print(f"Error al parsear IBDD: {e}")
-            traceback.print_exc()
-            raise
+        text = self._preprocess_text(text)
+        tree = self.parser.parse(text)
+        result = self.transformer.transform(tree)
+        return result
 
     @staticmethod
     def _preprocess_text(text: str) -> str:
-        """
-        Preprocesamiento más efectivo para IBDD
-        """
-        # Reemplazar saltos de línea escapados
+        """Preprocesamiento de texto IBDD"""
         text = text.replace('\\n', '\n')
-
-        # Normalizar y agregar saltos de línea entre secciones
         text = re.sub(r'(GIVEN|WHEN|THEN)', r'\n\1', text)
-
         text = re.sub(r'([!?][a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_,]+)?)\s*∧\s*([!?][a-zA-Z][a-zA-Z0-9_]*)',
                       r'\1\n\2', text)
 
-        # Separar partes del switch con saltos de línea si no los hay
-        # Buscar patrones donde hay espacios pero no saltos de línea
-        # Formatear switches correctamente
         lines = []
         for line in text.split('\n'):
             line = line.strip()
             if not line:
                 continue
 
-            # Si es un switch, verificar si necesita ser reformateado
             if re.match(r'[!?][a-zA-Z][a-zA-Z0-9_]*', line):
-                # Es un gate, formatear como switch
                 parts = re.split(r'(\s+)', line)
                 if len(parts) > 2:
-                    # Separar en líneas
                     gate = parts[0]
                     rest = parts[2] if len(parts) > 2 else ""
                     lines.append(gate)
@@ -623,18 +572,14 @@ class IBDDParser:
             else:
                 lines.append(line)
 
-        # Normalizar espacios en blanco y operadores
         text = '\n'.join(lines)
         text = re.sub(r'\s+', ' ', text)
-
-        # Asegurar espacios adecuados alrededor de tokens clave
         text = re.sub(r'GIVEN\s+', 'GIVEN ', text)
         text = re.sub(r'WHEN\s+', 'WHEN ', text)
         text = re.sub(r'THEN\s+', 'THEN ', text)
         text = re.sub(r'\s+\[', ' [', text)
         text = re.sub(r']\s+', '] ', text)
 
-        # Dividir en líneas y normalizar de nuevo
         lines = []
         for line in text.split('\n'):
             line = line.strip()
@@ -648,22 +593,17 @@ class IBDDParser:
         try:
             self.parse_text(text)
             return True
-        except Exception as e:
-            print(f"Error de validación: {e}")
+        except Exception:
             return False
 
     @staticmethod
     def parse_ibdd_fallback(text: str) -> IBDDScenario:
-        """
-        Parser alternativo para casos muy difíciles
-        """
+        """Parser alternativo para casos difíciles"""
         scenario = IBDDScenario()
 
-        # Normalizar el texto
         text = text.replace('\\n', '\n').strip()
         text = re.sub(r'\s+', ' ', text)
 
-        # Extraer secciones principales
         given_match = re.search(r'GIVEN\s+(.*?)\s*\[(.*?)]\s*WHEN', text, re.DOTALL)
         when_then_text = text.split('WHEN', 1)[1] if 'WHEN' in text else ""
         when_then_parts = when_then_text.split('THEN', 1)
@@ -671,23 +611,18 @@ class IBDDParser:
         when_text = when_then_parts[0].strip() if len(when_then_parts) > 0 else ""
         then_text = when_then_parts[1].strip() if len(when_then_parts) > 1 else ""
 
-        # Procesar GIVEN
         if given_match:
             vars_text = given_match.group(1).strip()
             precond_text = given_match.group(2).strip()
 
-            # Procesar variables
             if vars_text:
                 vars_list = [v.strip() for v in vars_text.split(',')]
                 scenario.local_vars = [v for v in vars_list if v]
 
-            # Procesar precondición
             if precond_text:
                 scenario.precondition = IBDDExpression('variable', precond_text)
 
-        # Procesar WHEN (switches)
         if when_text:
-            # Extraer switches (simplificado)
             switch_texts = re.findall(r'([?!][a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_,]+)?)', when_text)
             for switch_text in switch_texts:
                 gate_parts = switch_text.split('.', 1)
@@ -699,7 +634,6 @@ class IBDDParser:
                 interaction = IBDDInteraction(gate, variables)
                 scenario.when_switches.append(IBDDSwitch(interaction))
 
-        # Procesar THEN
         then_match = re.search(r'\[(.*?)]', then_text)
         if then_match:
             postcond_text = then_match.group(1).strip()
@@ -709,15 +643,12 @@ class IBDDParser:
 
 
 def parse_ibdd(text: str) -> IBDDScenario:
-    """
-    Parsea un texto IBDD y devuelve un escenario IBDD
-    """
+    """Parsea un texto IBDD y devuelve un escenario IBDD"""
     parser = IBDDParser(debug=False)
     try:
         return parser.parse_text(text)
-    except Exception as e:
-        print(f"Error con el parser principal: {e}")
-        print("Utilizando parser alternativo...")
+    except Exception:
+        print(f"Using fallback parser...")
         return parser.parse_ibdd_fallback(text)
 
 
@@ -727,69 +658,64 @@ def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) 
 
     Args:
         json_file_path: Ruta al archivo JSON con los casos IBDD
-        output_file: Ruta al archivo de salida (opcional, si no se proporciona se imprime por consola)
+        output_file: Ruta al archivo de salida (opcional)
     """
     try:
-        # Cargar los datos JSON
+        print(f"Loading JSON file: {json_file_path}")
         with open(json_file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        # Inicializar el parser
+        print(f"Initializing IBDD parser...")
         parser = IBDDParser(debug=False)
-
-        # Resultados
         results = []
 
-        print(f"Validando {len(data)} casos IBDD...")
+        print(f"Validating {len(data)} IBDD cases...\n")
 
-        # Validar cada caso
         for i, case in enumerate(data, 1):
             case_id = case.get('id', i)
             domain = case.get('domain', 'unknown')
             title = case.get('title', f'Case {case_id}')
             ibdd_text = case.get('ibdd_representation', '')
 
-            # Si no hay representación IBDD, saltamos
             if not ibdd_text:
-                print(f"Caso {case_id}: {title} - Sin representación IBDD")
+                print(f"\033[91m✗\033[0m Case {case_id}: {title} - No IBDD representation found")
                 results.append({
                     'id': case_id,
                     'domain': domain,
                     'title': title,
                     'valid': False,
-                    'error': 'Sin representación IBDD'
+                    'error': 'No IBDD representation'
                 })
+                time.sleep(0.3)
                 continue
 
             ibdd_text = ibdd_text.replace('\\n', '\n')
 
             try:
-                # Intentar parsear con el parser principal
-                try:
-                    scenario = parser.parse_text(ibdd_text)
-                except Exception as e:
-                    # Si falla, intentar con el parser alternativo
-                    # print(f"Utilizando parser alternativo para el caso {case_id}")
-                    # scenario = parser.parse_ibdd_fallback(ibdd_text)
-                    # terminar
-                    raise e
-
+                scenario = parser.parse_text(ibdd_text)
                 valid = True
                 error = None
                 parsed_result = str(scenario)
-
-                print(f"Caso {case_id}: {title} - Válido ✓")
+                print(f"✓ Case {case_id}: {title} - Valid")
 
             except Exception as e:
                 valid = False
-                error = str(e)
+                error_message = str(e)
                 parsed_result = None
+                print(f"\033[91m✗ Case {case_id}: {title} - Invalid\033[0m")
+                print(f"  Error: {error_message}")
 
-                print(f"Caso {case_id}: {title} - Inválido ✗ - Error: {error}")
-                # Si quieres parar en el primer error, descomenta:
-                # break
+                results.append({
+                    'id': case_id,
+                    'domain': domain,
+                    'title': title,
+                    'valid': valid,
+                    'error': error_message,
+                    'parsed_result': parsed_result
+                })
+                time.sleep(0.3)
+                continue
 
-            # Almacenar resultados
             results.append({
                 'id': case_id,
                 'domain': domain,
@@ -799,41 +725,32 @@ def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) 
                 'parsed_result': parsed_result
             })
 
-        # Resumen
+            time.sleep(0.3)
+
         valid_count = sum(1 for r in results if r['valid'])
         if len(results) > 0:
-            print(f"\nResumen: {valid_count} de {len(results)} casos válidos ({valid_count / len(results) * 100:.1f}%)")
+            print(f"\nSummary: {valid_count} of {len(results)} valid cases ({valid_count / len(results) * 100:.1f}%)")
 
-        # Generar salida
         if output_file:
-            # Guardar como JSON
+            print(f"\nSaving results to: {output_file}")
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(results, f, indent=2, ensure_ascii=False)
-            print(f"Resultados guardados en {output_file}")
+            print(f"Results saved successfully")
 
-            # También generar un CSV
             csv_file = output_file.replace('.json', '.csv')
+            print(f"Saving CSV to: {csv_file}")
             df = pd.DataFrame(results)
             df.to_csv(csv_file, index=False)
-            print(f"Resultados en CSV guardados en {csv_file}")
-        # else:
-        #     print(f"Resultados guardados en {len(results)} casos")
-            # Imprimir resumen detallado por consola
-            # print("\nResultados detallados:")
-            # for res in results:
-                # status = "Válido ✓" if res['valid'] else f"Inválido ✗ - {res['error']}"
-                # print(f"{res['id']}: {res['title']} - {status}")
+            print(f"CSV saved successfully")
 
     except Exception as e:
-        print(f"Error al procesar el archivo: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"\033[91mError processing file: {e}\033[0m")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    # Verificar argumentos
     if len(sys.argv) < 2:
-        print("Uso: python ibdd_parser.py <archivo_json> [archivo_salida]")
+        print("Usage: python ibdd_parser.py <json_file> [output_file]")
         sys.exit(1)
 
     json_file = sys.argv[1]
