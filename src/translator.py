@@ -29,7 +29,7 @@ class TranslationService:
                 "OpenAI API key is required. Provide it as an argument or set OPENAI_API_KEY environment variable.")
 
         # Default model
-        self.model = "gpt-4o"
+        self.model = "gpt-4o" # todo: change
 
         # OpenAI API endpoint
         self.api_endpoint = "https://api.openai.com/v1/chat/completions"
