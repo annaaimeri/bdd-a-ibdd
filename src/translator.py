@@ -106,7 +106,7 @@ class TranslationService:
         data = {
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.7
+            "temperature": 1
         }
 
         print(f"Calling OpenAI API with model: {self.model}")
