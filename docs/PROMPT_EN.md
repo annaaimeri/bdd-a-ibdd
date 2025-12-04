@@ -14,7 +14,7 @@ Given    ::= 'GIVEN' Declaration '[' Guard ']'
 Declaration ::= lv1, ..., lvn
 Guard    ::= P | Guard '∧' Guard
 When     ::= 'WHEN' Switch+
-Switch   ::= Interaction Condition Assignment
+Switch   ::= Interaction '[' Condition ']' Assignment
 Interaction ::= g. iv1, ..., ivn
 Condition ::= B
 Assignment ::= A
@@ -26,9 +26,9 @@ Then     ::= 'THEN' Switch* '[' Guard ']'
 - **Local variables (lv)**: Declared in GIVEN, visible throughout the scenario
 - **Global variables**: Persistent system state (e.g., SJL = Scheduled Jobs List)
 - **Interaction variables (iv)**: Communication between system and environment
-- **Gates**: 
+- **Gates**:
   - `!` = system output
-  - `?` = environment input
+  - `?` = input from the environment
 - **Guards**: Boolean conditions
 - **Assignments**: Assignments (var := expression)
 
@@ -36,7 +36,7 @@ Then     ::= 'THEN' Switch* '[' Guard ']'
 
 ## 2. Translation Examples
 
-### Example 1: Simple Scenario (Given with Local Variable Only)
+### Example 1: Simple Scenario (Only Given with Local Variable)
 
 **Gherkin Scenario:**
 ```json
@@ -50,22 +50,23 @@ Then     ::= 'THEN' Switch* '[' Guard ']'
 }
 ```
 
-**IBDD Translation:**
+**IBDD Translation (one-line):**
+```
+GIVEN JF [true] WHEN ?submit.jf,sm [true] JF := jf THEN !append.cj,sjl [cj.type = JT ∧ sjl = SJL ∧ JT = getJobType(SM)] CJ := cj, SJL := add(CJ, SJL) [is_in_list(CJ, SJL) ∧ CJ.type = JT]
+```
+
+**IBDD Translation (formatted for readability with \n):**
 ```
 GIVEN JF [true]
-WHEN ?submit.jf,sm
-  true
-  JF := jf
-THEN !append.cj,sjl
-  cj.type = JT ∧ sjl = SJL ∧ JT = getJobType(SM)
-  CJ := cj, SJL := add(CJ, SJL)
-  [is_in_list(CJ, SJL) ∧ CJ.type = JT]
+WHEN ?submit.jf,sm [true] JF := jf
+THEN !append.cj,sjl [cj.type = JT ∧ sjl = SJL ∧ JT = getJobType(SM)] CJ := cj, SJL := add(CJ, SJL)
+[is_in_list(CJ, SJL) ∧ CJ.type = JT]
 ```
 
 **Reasoning:**
 - Given: Only declares local variable `JF` (job file), no preconditions → `[true]`
-- When: Input gate `?submit` with interaction variables `jf`, `sm`
-- Then: Output gate `!append` that adds job to list, with postcondition verifying inclusion
+- When: Input gate `?submit` with interaction variables `jf`, `sm`, condition `[true]`, assignment `JF := jf`
+- Then: Output gate `!append` with condition and assignment, postcondition verifying inclusion
 
 ---
 
@@ -83,26 +84,22 @@ THEN !append.cj,sjl
 }
 ```
 
-**IBDD Translation:**
+**IBDD Translation (formatted with \n):**
 ```
 GIVEN CJ [is_in_list(CJ, SJL) ∧ CJ.type = Production]
-WHEN !printstart.cj
-  cj.id = CJ.id ∧ cj.state = Printing
-  CJ.state := cj.state
-!printcomplete.cj
-  cj.id = CJ.id ∧ cj.state = Completed
-  CJ.state := cj.state, PJL := add(CJ, PJL)
+WHEN !printstart.cj [cj.id = CJ.id ∧ cj.state = Printing] CJ.state := cj.state
+!printcomplete.cj [cj.id = CJ.id ∧ cj.state = Completed] CJ.state := cj.state, PJL := add(CJ, PJL)
 THEN [is_in_list(CJ, PJL)]
 ```
 
 **Reasoning:**
-- Given: Local variable `CJ` with guard verifying: it's in `SJL` AND is of type Production
-- When: Two sequential switches (!printstart, !printcomplete) that update state
-- Then: Postcondition verifies that `CJ` is in `PJL` (Printed Jobs List)
+- Given: Local variable `CJ` with guard verifying: is in `SJL` AND is of type Production
+- When: Two sequential switches (!printstart, !printcomplete) each with condition in brackets and assignments
+- Then: No switches, only postcondition verifying that `CJ` is in `PJL`
 
 ---
 
-### Example 3: Scenario with Guard Only (No Local Variables)
+### Example 3: Scenario with Only Guard (No Local Variables)
 
 **Gherkin Scenario:**
 ```json
@@ -116,22 +113,18 @@ THEN [is_in_list(CJ, PJL)]
 }
 ```
 
-**IBDD Translation:**
+**IBDD Translation (formatted with \n):**
 ```
 GIVEN [is_running(CTRL)]
-WHEN ?restart
-  true
-  (no assignment)
-THEN !cleanup
-  true
-  PJL := empty(PJL)
-  [is_empty(PJL)]
+WHEN ?restart [true] true
+THEN !cleanup [true] PJL := empty(PJL)
+[is_empty(PJL)]
 ```
 
 **Reasoning:**
-- Given: No local variables, only guard verifying controller state
-- When: Simple input gate without relevant conditions or assignments
-- Then: Output gate that clears list and verifies it's empty
+- Given: No local variables, only guard verifying controller is running
+- When: Input gate `?restart` with condition `[true]` and assignment `true` (no state change)
+- Then: Output gate `!cleanup` that clears list, postcondition verifies it's empty
 
 ---
 
@@ -149,19 +142,17 @@ THEN !cleanup
 }
 ```
 
-**IBDD Translation:**
+**IBDD Translation (formatted with \n):**
 ```
 GIVEN P, SC [P.price > 0 ∧ is_valid(SC)]
-WHEN ?add_to_cart.p,sc,qty
-  p.id = P.id ∧ sc.id = SC.id ∧ qty > 0
-  SC.items := add(p, SC.items), SC.total := SC.total + (p.price * qty)
+WHEN ?add_to_cart.p,sc,qty [p.id = P.id ∧ sc.id = SC.id ∧ qty > 0] SC.items := add(p, SC.items), SC.total := SC.total + (p.price * qty)
 THEN [is_in_list(P, SC.items) ∧ SC.total = calculate_total(SC.items)]
 ```
 
 **Reasoning:**
 - Given: Two local variables (`P`, `SC`) with guards verifying valid price and valid cart
-- When: Gate with multiple interaction variables (product, cart, quantity)
-- Then: Postcondition verifies product inclusion and correct total update
+- When: Gate with multiple interaction variables, condition in brackets, multiple assignments
+- Then: No switches, only postcondition verifying product inclusion and correct total update
 
 ---
 
@@ -201,24 +192,28 @@ THEN [is_in_list(P, SC.items) ∧ SC.total = calculate_total(SC.items)]
 ## 4. Translation Rules
 
 ### 4.1 Given Clause
-- Identify if local variables are mentioned ("a job", "a product" → local variables)
-- If only describes system state → guard only, no declaration
+- Identify if there are mentioned local variables ("a job", "a product" → local variables)
+- If it only describes system state → only guard, no declaration
 - Combine multiple conditions with `∧`
+- Guard MUST be in brackets `[...]`
 
 ### 4.2 When Clause
 - User actions → input gates (`?`)
 - System actions → output gates (`!`)
 - Multiple actions with "AND" → multiple sequential switches
-- Identify necessary interaction variables for communication
+- Identify interaction variables needed for communication
+- **CRITICAL: Each switch MUST have condition in brackets `[...]`**
+- Assignments follow the condition
 
 ### 4.3 Then Clause
-- Verify final state in postcondition (final guard)
+- Verifies final state in postcondition (final guard)
 - If there are explicit system actions → switches with output gates
-- Postcondition always in brackets `[]`
+- **Each switch MUST have condition in brackets `[...]`**
+- Postcondition (final guard) MUST be in brackets `[...]`
 
 ### 4.4 Naming Conventions
-- Local variables: Uppercase abbreviations (CJ, JF, P, SC)
-- Global variables: Descriptive uppercase (SJL, PJL, CTRL)
+- Local variables: Abbreviations in uppercase (CJ, JF, P, SC)
+- Global variables: Descriptive in uppercase (SJL, PJL, CTRL)
 - Interaction variables: Lowercase, related to local ones (cj, jf, p, sc)
 - Gates: Descriptive verbs in lowercase (submit, printstart, add_to_cart)
 
@@ -228,8 +223,26 @@ THEN [is_in_list(P, SC.items) ∧ SC.total = calculate_total(SC.items)]
 
 Process the input JSON and return the same JSON with the `"ibdd_representation"` field added to each scenario.
 
-**IMPORTANT**: 
-- DO NOT include explanations, comments, or markdown
+**IMPORTANT**:
+- Do NOT include explanations, comments, or markdown
 - ONLY return the resulting JSON
 - Maintain exactly the same structure as the input JSON
 - The IBDD representation must be a string with line breaks (`\n`)
+- **ALL conditions in Switch must be between brackets `[...]`**
+- **ALL guards must be between brackets `[...]`**
+
+**CRITICAL FORMATTING RULES:**
+1. GIVEN clause: Single line
+2. Each WHEN switch: Separate line with format: `<gate>.<vars> [<condition>] <assignment>`
+3. Each THEN switch: Separate line with same format
+4. Final THEN guard: Separate line with format: `[<postcondition>]`
+
+**Example of correct formatting:**
+```
+GIVEN CJ [is_in_list(CJ, SJL)]
+WHEN !printstart.cj [cj.id = CJ.id] CJ.state := cj.state
+!printcomplete.cj [cj.id = CJ.id] CJ.state := cj.state
+THEN [is_in_list(CJ, PJL)]
+```
+
+**ALWAYS separate each switch with `\n` (newline character in the JSON string)**
