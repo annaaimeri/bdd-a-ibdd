@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Parser IBDD que maneja correctamente todos los casos del dataset
-"""
 import re
 from dataclasses import dataclass, field
 from typing import List, Any, Union, Tuple, Optional
@@ -12,82 +9,63 @@ import time
 
 from lark import Lark, Transformer, v_args
 
-# Gramática IBDD mejorada
 IBDD_GRAMMAR = r"""
-    // Estructura principal: GIVEN WHEN THEN
     ?start: scenario
 
     scenario: given when then
 
-    // GIVEN section: variables locales y precondición
+    // GIVEN section
     given: "GIVEN" [vars] guard
     vars: var (COMMA var)*
 
-    // WHEN section: una serie de switches
+    // WHEN section
     when: "WHEN" switch+
 
-    // THEN section: switches opcionales y postcondición
+    // THEN section
     then: "THEN" switch* guard
 
-    // Switch: más flexible para manejar diferentes formatos
-    switch: interaction (expr | assignment)*
+    // Switch
+    switch: interaction guard assignment
 
     // Interacción
-    interaction: gate (DOT var_list)?
+    interaction: gate [DOT var_list]
     gate: /[!?][a-zA-Z][a-zA-Z0-9_]*/
     var_list: var (COMMA var)*
 
-    // Guardián (condición)
+    // Guarda
     guard: LBRACKET expr RBRACKET
 
-    // Expresión (condición o parte de asignación)
+    // Expresión
     expr: or_expr
 
     or_expr: and_expr (OR and_expr)*
     and_expr: not_expr ((AND | AND_SYMBOL) not_expr)*
     not_expr: (NOT | NOT_SYMBOL) not_expr | comparison
 
-    // Comparación
-    comparison: sum (op sum)?
+    comparison: sum [op sum]
     op: EQ | EQEQ | NEQ | LT | GT | LEQ | GEQ | GEQ_SYMBOL | LEQ_SYMBOL | NEQ_SYMBOL
 
-    // Operaciones matemáticas
     sum: product ((PLUS|MINUS) product)*
     product: power ((STAR|SLASH|PERCENT) power)*
-    power: atom (CIRCUMFLEX atom)?
-    sqrt: SQRT atom
+    power: atom [CIRCUMFLEX atom]
 
-    // Átomo (unidad básica de expresión)
-    atom: literal
-        | var
-        | func_call
-        | prop_access
-        | neg_number
-        | LPAR expr RPAR
+    atom: literal | var | func_call | prop_access | neg_number | LPAR expr RPAR
 
-    // Número negativo
     neg_number: MINUS NUMBER
 
-    // Valores literales
-    literal: TRUE -> true_val
-           | FALSE -> false_val
-           | NUMBER -> number
+    literal: TRUE | FALSE | NUMBER
 
     TRUE: "true"
     FALSE: "false"
 
-    // Llamada a función
     func_call: func_name LPAR [arg_list] RPAR
     func_name: /[a-zA-Z][a-zA-Z0-9_]*/
     arg_list: expr (COMMA expr)*
 
-    // Acceso a propiedad
     prop_access: var DOT var
 
-    // Asignación
-    assignment: TRUE -> true_assignment
-              | assignment_list
-
+    // Asignación - puede ser "true" o lista de asignaciones
+    assignment: TRUE | assignment_list
     assignment_list: assignment_expr (COMMA assignment_expr)*
     assignment_expr: assign_target ASSIGN expr
     assign_target: var | prop_access
@@ -95,7 +73,7 @@ IBDD_GRAMMAR = r"""
     // Variable
     var: /[A-Za-z][A-Za-z0-9_]*/
 
-    // Terminales con nombres descriptivos
+    // Terminales
     LPAR: "("
     RPAR: ")"
     LBRACKET: "["
@@ -134,10 +112,10 @@ IBDD_GRAMMAR = r"""
 
     // Números
     NUMBER: /[0-9]+(\.[0-9]+)?/
-    NL: /\r?\n/
 
     %import common.WS
-    %ignore WS    
+    %import common.NEWLINE
+    %ignore WS
 """
 
 
@@ -528,7 +506,7 @@ class IBDDTransformer(Transformer):
         return IBDDExpression('property', f"{obj}.{prop}", [obj, prop])
 
     @staticmethod
-    def true_assignment():
+    def true_assignment(children):
         return []
 
     @staticmethod
@@ -585,44 +563,19 @@ class IBDDParser:
     @staticmethod
     def _preprocess_text(text: str) -> str:
         """Preprocesamiento de texto IBDD"""
+        # 1. Convertir \n escapados a newlines reales
         text = text.replace('\\n', '\n')
-        text = re.sub(r'(GIVEN|WHEN|THEN)', r'\n\1', text)
-        text = re.sub(r'([!?][a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_,]+)?)\s*∧\s*([!?][a-zA-Z][a-zA-Z0-9_]*)',
-                      r'\1\n\2', text)
 
-        lines = []
-        for line in text.split('\n'):
-            line = line.strip()
-            if not line:
-                continue
-
-            if re.match(r'[!?][a-zA-Z][a-zA-Z0-9_]*', line):
-                parts = re.split(r'(\s+)', line)
-                if len(parts) > 2:
-                    gate = parts[0]
-                    rest = parts[2] if len(parts) > 2 else ""
-                    lines.append(gate)
-                    if rest:
-                        lines.append(rest)
-                else:
-                    lines.append(line)
-            else:
-                lines.append(line)
-
-        text = '\n'.join(lines)
-        text = re.sub(r'\s+', ' ', text)
-        text = re.sub(r'GIVEN\s+', 'GIVEN ', text)
-        text = re.sub(r'WHEN\s+', 'WHEN ', text)
-        text = re.sub(r'THEN\s+', 'THEN ', text)
-        text = re.sub(r'\s+\[', ' [', text)
-        text = re.sub(r']\s+', '] ', text)
-
+        # 2. Procesar línea por línea SIN destruir la estructura
         lines = []
         for line in text.split('\n'):
             line = line.strip()
             if line:
+                # Solo colapsar espacios múltiples DENTRO de cada línea
+                line = re.sub(r' +', ' ', line)
                 lines.append(line)
 
+        # 3. Retornar con newlines preservados
         return '\n'.join(lines)
 
     def validate(self, text: str) -> bool:
