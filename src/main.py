@@ -55,7 +55,7 @@ class BDDToIBDDPipeline:
         print("=" * 80)
 
         # Step 1: Translate BDD to IBDD
-        print("\n[Step 1/3] Translating BDD scenarios to IBDD...")
+        print("\n[Step 1/4] Translating BDD scenarios to IBDD...")
         print("-" * 80)
         try:
             self.translation_service.translate(
@@ -69,7 +69,7 @@ class BDDToIBDDPipeline:
             sys.exit(1)
 
         # Step 2: Parse and validate IBDD
-        print("\n[Step 2/3] Parsing and validating IBDD scenarios...")
+        print("\n[Step 2/4] Parsing and validating IBDD scenarios...")
         print("-" * 80)
         try:
             validate_ibdd_cases(
@@ -82,8 +82,9 @@ class BDDToIBDDPipeline:
             sys.exit(1)
 
         # Step 3: Explain errors if any cases failed
-        print("\n[Step 3/3] Checking for parsing errors...")
+        print("\n[Step 3/4] Checking for parsing errors...")
         print("-" * 80)
+        explanations = []
         try:
             failed_cases = self._collect_failed_cases(
                 translation_output_path,
@@ -107,6 +108,43 @@ class BDDToIBDDPipeline:
             print(f"⚠ Error explanation step failed (non-critical): {e}", file=sys.stderr)
             print("Pipeline will continue despite explanation failure")
 
+        # Step 4: Retry failed translations with error feedback
+        print("\n[Step 4/4] Attempting to correct failed translations...")
+        print("-" * 80)
+        if explanations:
+            try:
+                corrected_translations = self.translation_service.retry_failed_translations(
+                    error_explanations=explanations
+                )
+
+                if corrected_translations:
+                    # Merge corrected translations with original successful ones
+                    updated_translations = self._merge_translations(
+                        translation_output_path,
+                        corrected_translations
+                    )
+
+                    # Save updated translations
+                    with open(translation_output_path, 'w', encoding='utf-8') as f:
+                        json.dump(updated_translations, indent=2, ensure_ascii=False, fp=f)
+
+                    print(f"✓ Updated translations saved: {translation_output_path}")
+
+                    # Re-validate the corrected cases
+                    print("\n[Re-validation] Validating corrected translations...")
+                    validate_ibdd_cases(
+                        json_file_path=translation_output_path,
+                        output_file=validation_output_path
+                    )
+                    print(f"✓ Re-validation completed: {validation_output_path}")
+                else:
+                    print("⚠ No corrections were generated - keeping original translations")
+            except Exception as e:
+                print(f"⚠ Retry step failed (non-critical): {e}", file=sys.stderr)
+                print("Pipeline will continue with original translations")
+        else:
+            print("✓ No failed cases to retry - skipping correction step")
+
         # Summary
         print("\n" + "=" * 80)
         print("Pipeline completed successfully!")
@@ -124,6 +162,42 @@ class BDDToIBDDPipeline:
                 failed = sum(1 for r in validation_results if not r.get('valid', True))
                 print(f"\nValidation Summary: {total - failed}/{total} cases passed, {failed} failed")
         print()
+
+    def _merge_translations(
+        self,
+        original_translations_path: str,
+        corrected_translations: list
+    ) -> list:
+        """
+        Merge corrected translations with original successful translations.
+
+        Args:
+            original_translations_path: Path to the original translation output file
+            corrected_translations: List of corrected translations from retry
+
+        Returns:
+            Updated list of translations with corrections applied
+        """
+        # Load original translations
+        with open(original_translations_path, 'r', encoding='utf-8') as f:
+            original_translations = json.load(f)
+
+        # Create a map of case_id to corrected translation
+        corrected_map = {case['id']: case for case in corrected_translations}
+
+        # Update original translations with corrections
+        updated_translations = []
+        for original in original_translations:
+            case_id = original['id']
+            if case_id in corrected_map:
+                # Use corrected version
+                updated_translations.append(corrected_map[case_id])
+                print(f"  → Case {case_id}: Using corrected translation")
+            else:
+                # Keep original
+                updated_translations.append(original)
+
+        return updated_translations
 
     def _collect_failed_cases(
         self,

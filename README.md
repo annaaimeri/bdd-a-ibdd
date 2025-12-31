@@ -9,6 +9,7 @@ Este proyecto implementa un pipeline completo para la traducción automática de
 - **Traductor**: Convierte escenarios BDD a IBDD usando la API de OpenAI
 - **Parser**: Valida y parsea la sintaxis IBDD generada
 - **Explicador**: Analiza errores de parsing y proporciona explicaciones detalladas para corrección
+- **Sistema de Reintentos**: Corrige automáticamente traducciones fallidas usando feedback del parser y explicador
 
 ## Requisitos
 
@@ -123,8 +124,10 @@ bdd-to-ibdd-nlp/
 │       └── test_explainer_results.json
 │
 ├── docs/                         # Documentación y prompts
-│   ├── PROMPT_EN.md              # Template de prompt en inglés (ACTIVO)
-│   └── PROMPT_ES.md              # Template de prompt en español (referencia)
+│   ├── PROMPT_EN.md              # Template de prompt en inglés (traducción inicial)
+│   ├── PROMPT_EN_RETRY.md        # Template de prompt para reintentos (inglés)
+│   ├── PROMPT_ES.md              # Template de prompt en español (traducción inicial)
+│   └── PROMPT_ES_RETRY.md        # Template de prompt para reintentos (español)
 │
 ├── _deprecated/                  # Archivos obsoletos (eliminar después)
 │   ├── README.md
@@ -138,7 +141,7 @@ bdd-to-ibdd-nlp/
 
 ## Flujo del Sistema
 
-El sistema implementa un pipeline de 3 pasos:
+El sistema implementa un pipeline de 4 pasos:
 
 ```
 1. TRADUCCIÓN (Translator)
@@ -149,6 +152,10 @@ El sistema implementa un pipeline de 3 pasos:
 
 3. EXPLICACIÓN (Explainer - solo si hay errores)
    Casos con errores → OpenAI API → Explicaciones detalladas (JSON)
+
+4. REINTENTOS (Retry System - solo si hay errores)
+   Explicaciones de errores → OpenAI API → IBDD corregidos
+   → Re-validación → Actualización de resultados
 ```
 
 ### Paso 1: Traducción
@@ -181,6 +188,29 @@ El sistema implementa un pipeline de 3 pasos:
   - Identifica el tipo y ubicación del error
   - Proporciona sugerencias de corrección
 - Guarda explicaciones en data/error_explanations.json
+- Las explicaciones incluyen:
+  - Escenario BDD original completo
+  - Traducción previa que falló
+  - Error del parser
+  - Análisis detallado del error
+  - Sugerencias de corrección
+
+### Paso 4: Reintentos Automáticos
+
+- Se ejecuta automáticamente si hay casos con errores explicados
+- Usa un prompt especializado (PROMPT_EN_RETRY.md) que incluye:
+  - Contexto del error previo
+  - Análisis y explicación del explainer
+  - Instrucciones específicas para corregir
+- Proceso:
+  1. Toma solo los casos que fallaron
+  2. Construye prompts de reintentos con feedback del explainer
+  3. Llama a OpenAI para generar traducciones corregidas
+  4. Fusiona traducciones corregidas con las exitosas originales
+  5. Re-valida todos los casos
+  6. Actualiza archivos de salida automáticamente
+- Mantiene las traducciones exitosas intactas
+- Reemplaza solo las traducciones que fallaron con las versiones corregidas
 
 ## Gramática IBDD
 
@@ -246,8 +276,8 @@ El sistema genera automáticamente:
 - **Explicaciones**: Análisis detallado de cada error encontrado
 
 Ubicación de resultados:
-- `data/output.json` - Traducciones generadas
-- `data/parsed_ibdd_results.json` - Resultados de validación
+- `data/output.json` - Traducciones generadas (actualizado automáticamente con correcciones si hay reintentos)
+- `data/parsed_ibdd_results.json` - Resultados de validación (incluye re-validación post-reintentos)
 - `data/parsed_ibdd_results.csv` - Resultados en formato CSV
 - `data/error_explanations.json` - Explicaciones de errores (si aplica)
 
@@ -256,6 +286,8 @@ Ubicación de resultados:
 - El parser usa la biblioteca Lark con estrategia Earley para manejar ambigüedades
 - Las traducciones usan Structured Outputs de OpenAI para garantizar formato JSON válido
 - El explainer usa el modelo gpt-4o con temperatura 0.3
+- El sistema de reintentos procesa múltiples casos en lote para eficiencia
+- Los reintentos son automáticos y no requieren intervención manual
 - Todos los módulos soportan tanto ejecución independiente como integrada
 
 ## Contacto

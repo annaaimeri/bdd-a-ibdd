@@ -1,79 +1,238 @@
 [
   {
-    "case_id": 8,
+    "case_id": 27,
     "success": true,
-    "explanation": "El parser encontró un paréntesis '(' inesperado dentro de la expresión 'Output.is_hard_copy_of(CJ)'. En el contexto de la gramática IBDD, las expresiones dentro de las guardas y condiciones deben estar formadas por operadores y comparaciones válidas, pero no se permite el uso de paréntesis para llamadas a funciones o métodos.",
-    "error_type": "Expresiones mal formadas",
-    "error_location": "Línea 4, dentro de la postcondición del THEN",
-    "correction_suggestion": "Reemplaza la expresión 'Output.is_hard_copy_of(CJ)' con una expresión válida que use operadores de comparación o booleanos. Por ejemplo, podrías usar 'Output.type == HardCopy' si esa es una forma válida de expresar la condición en tu contexto.",
+    "original_bdd": {
+      "given": "a controller job is printing",
+      "when": "two operators attempt to pause the same controller job simultaneously",
+      "then": "the controller job is paused only once AND both operators receive confirmation"
+    },
+    "previous_translation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?pause.cj.op1 [cj.id = CJ.id] CJ.state := Paused\n?pause.cj.op2 [cj.id = CJ.id] true\nTHEN [CJ.state = Paused ∧ confirmation_sent(op1) ∧ confirmation_sent(op2)]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 2 col 15\n\nWHEN ?pause.cj.op1 [cj.id = CJ.id] CJ.state := Paused\n              ^\nExpected one of: \n\t* MINUS\n\t* THEN\n\t* COMMA\n\t* __ANON_0\n\t* LPAR\n\t* NOT\n\t* __ANON_1\n\t* __ANON_2\n\t* FALSE\n\t* TRUE\n\t* NOT_SYMBOL\n\t* NUMBER\n\t* LBRACKET\n",
+    "explanation": "El parser encontró un error en la sintaxis del gate en la línea 2. Los gates deben comenzar con '!' para salidas o '?' para entradas, pero el parser no reconoce el uso del punto '.' en el nombre del gate. En este contexto, el parser esperaba un separador como coma, o el inicio de una nueva cláusula como 'THEN'.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, en el switch: '?pause.cj.op1'",
+    "correction_suggestion": "Revisa la sintaxis del gate en la línea 2. Asegúrate de que el nombre del gate esté correctamente formado y que no contenga caracteres no permitidos como el punto '.'. Una posible corrección sería renombrar el gate para evitar el uso de '.' o verificar que el nombre del gate esté correctamente definido en el contexto del parser.",
     "hints": [
-      "Revisa la gramática para asegurar que las expresiones dentro de las guardas y condiciones no usen paréntesis para funciones.",
-      "Considera descomponer la expresión en comparaciones más simples.",
-      "Asegúrate de que las condiciones en las guardas y postcondiciones usen operadores válidos como EQ, NEQ, LT, GT, etc."
+      "Revisa la definición de los gates en tu sistema para asegurar que el uso de '.' sea válido.",
+      "Considera utilizar un formato alternativo para los nombres de los gates que no incluya caracteres especiales.",
+      "Verifica que todos los elementos del switch estén correctamente delimitados y que el formato siga la gramática esperada."
     ]
   },
   {
-    "case_id": 24,
+    "case_id": 30,
     "success": true,
-    "explanation": "El parser encontró un error en la expresión de asignación debido al uso incorrecto de los operadores de asignación. En el IBDD, se utilizó 'PJL := CJ.state := Stopped', lo cual es incorrecto porque el operador ':=' se usó de manera anidada, lo que no es permitido en la gramática definida. El parser esperaba un operador de comparación o un operador lógico en lugar de un segundo operador de asignación dentro de la misma expresión.",
+    "original_bdd": {
+      "given": "a job file with checksum ABC123 is in scheduled jobs",
+      "when": "the operator submits the same job file with checksum ABC123",
+      "then": "the printer rejects the duplicate AND displays a warning message"
+    },
+    "previous_translation": "GIVEN JF [checksum(JF) = \"ABC123\" ∧ is_in_list(JF, SJL)]\nWHEN ?submit.jf [checksum(jf) = \"ABC123\"] duplicate := true\nTHEN !reject_duplicate [duplicate] !display_warning [duplicate] [duplicate = true]",
+    "parse_error": "No terminal matches '\"' in the current parser context, at line 1 col 26\n\nGIVEN JF [checksum(JF) = \"ABC123\" ∧ is_in_list(JF, SJL)]\n                         ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NUMBER\n\t* __ANON_1\n",
+    "explanation": "El parser encontró un carácter '\"' inesperado dentro de la expresión de la guarda en la cláusula GIVEN. En IBDD, las cadenas de texto no deben estar entre comillas dobles, ya que no son reconocidas como un tipo de terminal válido. El parser esperaba un tipo de dato como número, verdadero, falso, o una variable, pero no una cadena entre comillas.",
     "error_type": "Expresiones mal formadas",
-    "error_location": "Línea 2, parte del Assignment",
-    "correction_suggestion": "Corrige la expresión de asignación dividiéndola en dos asignaciones separadas o utilizando una estructura válida. Por ejemplo, puedes separar las asignaciones en dos líneas diferentes:\n```\nWHEN ?cancel.cj [cj.id = CJ.id] SJL := remove(CJ, SJL), PJL := CJ, CJ.state := Stopped\n```",
+    "error_location": "Línea 1, dentro de la guarda del 'GIVEN'",
+    "correction_suggestion": "Reemplaza la cadena entre comillas dobles con una representación que el parser pueda entender, como una variable o constante predefinida. Por ejemplo, si 'ABC123' es un identificador constante, podría ser definido previamente en el contexto del sistema.",
     "hints": [
-      "Revisa la gramática para asegurarte de que las asignaciones no estén anidadas.",
-      "Considera separar las asignaciones en líneas distintas para mayor claridad.",
-      "Verifica que cada asignación esté correctamente formada y que los operadores sean apropiados."
+      "Asegúrate de que las cadenas de texto no estén entre comillas dobles en las expresiones.",
+      "Considera usar constantes o variables en lugar de cadenas literales.",
+      "Revisa la documentación del sistema para ver cómo se deben representar los valores de texto."
     ]
   },
   {
     "case_id": 31,
     "success": true,
-    "explanation": "El parser encontró un símbolo '>' que no es reconocido en el contexto actual. Esto sugiere que la expresión 'J => J.state := Printing' está mal formada, ya que el operador '=>' no es parte de la gramática IBDD. El parser esperaba un valor booleano o una expresión válida según la gramática.",
-    "error_type": "Expresiones mal formadas",
-    "error_location": "Línea 2, parte 'SJL.forEach(J => J.state := Printing)'",
-    "correction_suggestion": "Reemplaza 'SJL.forEach(J => J.state := Printing)' con una expresión válida. Por ejemplo, si el objetivo es asignar un estado a cada trabajo, podrías usar una función definida previamente o un método que sea compatible con la gramática IBDD.",
+    "original_bdd": {
+      "given": "there are 10 jobs in scheduled jobs",
+      "when": "the operator starts batch printing AND the printer completes all 10 jobs",
+      "then": "all 10 jobs are in printed jobs AND the printer is idle"
+    },
+    "previous_translation": "GIVEN [job_count(SJL) = 10]\nWHEN ?start_batch_print [true] PJL := PJL + SJL\n!complete_all_jobs [true] SJL := []\nTHEN [job_count(PJL) = 10 ∧ job_count(SJL) = 0 ∧ printer_idle]",
+    "parse_error": "No terminal matches '[' in the current parser context, at line 3 col 34\n\n!complete_all_jobs [true] SJL := []\n                                 ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* NOT\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NOT_SYMBOL\n\t* NUMBER\n\t* __ANON_1\n",
+    "explanation": "El parser esperaba una asignación después del switch `!complete_all_jobs [true]`, pero no encontró ninguna. Cada switch en la sección WHEN debe tener una asignación asociada, incluso si es simplemente `true`.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 3, después del switch `!complete_all_jobs [true]`",
+    "correction_suggestion": "Agregar una asignación después del switch `!complete_all_jobs [true]`. Por ejemplo, `!complete_all_jobs [true] SJL := []` ya tiene una asignación, pero el error sugiere que el parser no la reconoció correctamente. Asegúrate de que la sintaxis de la asignación sea correcta y que no haya errores tipográficos.",
     "hints": [
-      "Revisa la sintaxis de las expresiones para asegurar que sean compatibles con la gramática IBDD.",
-      "Considera definir funciones o métodos que encapsulen la lógica compleja fuera del IBDD si es necesario.",
-      "Asegúrate de que todas las asignaciones y condiciones usen operadores y estructuras válidas según la gramática."
+      "Revisar la sintaxis de la asignación `SJL := []` para asegurarse de que sea reconocida por el parser.",
+      "Verificar que no haya caracteres invisibles o errores tipográficos que impidan el reconocimiento de la asignación.",
+      "Asegurarse de que cada switch tenga una asignación clara y explícita."
+    ]
+  },
+  {
+    "case_id": 40,
+    "success": true,
+    "original_bdd": {
+      "given": "a transaction of 250 was completed 2 hours ago",
+      "when": "the customer disputes the transaction AND the dispute is approved",
+      "then": "the transaction is reversed AND the account balance is restored AND both parties are notified"
+    },
+    "previous_translation": "GIVEN T [T.amount = 250 ∧ T.completed_time = 2_hours_ago]\nWHEN ?dispute_transaction.t [t = T] approval := approve_dispute(t)\nTHEN !reverse_transaction [approval] !notify_parties [approval] [balance_restored ∧ approval = true]",
+    "parse_error": "No terminal matches '_' in the current parser context, at line 1 col 47\n\nT [T.amount = 250 ∧ T.completed_time = 2_hours_ago]\n                                        ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* AND\n\t* RBRACKET\n\t* STAR\n\t* OR\n\t* PERCENT\n",
+    "explanation": "El parser encontró un guion bajo ('_') en '2_hours_ago', lo cual no es reconocido como un operador o parte de una expresión válida en el contexto de la gramática esperada. Los nombres de variables o constantes deben seguir las convenciones de la gramática, y los operadores deben ser reconocidos por el parser.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "GIVEN clause, line 1, column 47",
+    "correction_suggestion": "Reemplazar '2_hours_ago' con una expresión que cumpla con las reglas de la gramática. Por ejemplo, si '2_hours_ago' es una constante, podría ser 'twoHoursAgo'.\n\nCorregido:\n```\nGIVEN T [T.amount = 250 ∧ T.completed_time = twoHoursAgo]\nWHEN ?dispute_transaction.t [t = T] approval := approve_dispute(t)\nTHEN !reverse_transaction [approval] !notify_parties [approval] [balance_restored ∧ approval = true]\n```",
+    "hints": [
+      "Revisa las convenciones de nombres para constantes y variables en tu sistema.",
+      "Asegúrate de que todas las expresiones dentro de las guardas sean válidas según la gramática.",
+      "Verifica que los operadores utilizados sean reconocidos por el parser."
     ]
   },
   {
     "case_id": 43,
     "success": true,
-    "explanation": "El parser encontró un paréntesis '(' en la expresión 'discount_code.expires_in(Cart) = 5', lo cual no es esperado en una guarda. Las guardas deben estar formadas por condiciones booleanas simples o combinadas con operadores lógicos, pero no se permite el uso de llamadas a funciones con paréntesis en este contexto.",
-    "error_type": "Expresión mal formada",
-    "error_location": "Línea 1, dentro de la guarda del Given",
-    "correction_suggestion": "Reemplazar la expresión 'discount_code.expires_in(Cart) = 5' con una expresión válida que no use paréntesis. Por ejemplo, si 'expires_in' es una propiedad, podría ser 'discount_code_expires_in = 5'.\n\nIBDD corregido:\n```\nGIVEN Cart [discount_code_expires_in = 5]\nWHEN ?complete_checkout [true] DiscountRemoved := check_discount_expiry(Cart)\nTHEN [DiscountRemoved = true ∧ customer_notified(Cart) ∧ full_price_charged(Cart)]\n```",
+    "original_bdd": {
+      "given": "a cart has a discount code applied that expires in 5 minutes",
+      "when": "the customer completes checkout 10 minutes later",
+      "then": "the discount is removed AND the customer is notified AND charged the full price"
+    },
+    "previous_translation": "GIVEN C [C.discount_code.expiry = 5_minutes]\nWHEN !complete_checkout [time_elapsed = 10_minutes] discount_valid := false\nTHEN !remove_discount [¬discount_valid] !notify_customer [¬discount_valid] [charged_full_price]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 1 col 25\n\nGIVEN C [C.discount_code.expiry = 5_minutes]\n                        ^\nExpected one of: \n\t* GEQ_SYMBOL\n\t* CIRCUMFLEX\n\t* LT\n\t* AND\n\t* OR\n\t* NEQ_SYMBOL\n\t* EQEQ\n\t* AND_SYMBOL\n\t* RBRACKET\n\t* STAR\n\t* LEQ\n\t* EQ\n\t* MINUS\n\t* SLASH\n\t* LEQ_SYMBOL\n\t* GEQ\n\t* PERCENT\n\t* GT\n\t* PLUS\n\t* NEQ\n",
+    "explanation": "El parser encontró un punto (.) en 'C.discount_code.expiry', lo cual no es un operador válido en el contexto de una expresión de guardia. El parser esperaba operadores como '=', '>=', '<', etc., para comparar valores, pero no un punto que indica acceso a propiedades de un objeto.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 1, parte de la declaración de guardia",
+    "correction_suggestion": "Reemplaza 'C.discount_code.expiry' con una expresión que use operadores válidos. Por ejemplo, si 'C' es un objeto y 'discount_code.expiry' es una propiedad, asegúrate de que la expresión esté correctamente formada para el contexto del parser. Una posible corrección podría ser 'C_discount_code_expiry = 5_minutes'.",
     "hints": [
-      "Revisa que las guardas no contengan llamadas a funciones o métodos con paréntesis.",
-      "Asegúrate de que las expresiones dentro de las guardas sean comparaciones simples o combinaciones de estas con operadores lógicos."
+      "Asegúrate de que las variables y propiedades estén correctamente referenciadas sin usar puntos (.) a menos que esté permitido en el contexto.",
+      "Revisa la gramática para asegurarte de que las expresiones usen operadores válidos.",
+      "Considera usar un nombre de variable que represente el valor de 'C.discount_code.expiry' sin usar la notación de punto."
+    ]
+  },
+  {
+    "case_id": 44,
+    "success": true,
+    "original_bdd": {
+      "given": "product Y has 1 unit in stock",
+      "when": "two customers attempt to purchase product Y simultaneously",
+      "then": "only one order succeeds AND the other customer is notified that the item is out of stock"
+    },
+    "previous_translation": "GIVEN PY [PY.stock = 1]\nWHEN ?purchase.py.cust1 [py = PY] success1 := (PY.stock > 0)\n?purchase.py.cust2 [py = PY] success2 := (PY.stock > 0)\nTHEN [success1 ∧ ¬success2 ∧ notify_out_of_stock(cust2)]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 2 col 18\n\nWHEN ?purchase.py.cust1 [py = PY] success1 := (PY.stock >\n                 ^\nExpected one of: \n\t* MINUS\n\t* THEN\n\t* COMMA\n\t* __ANON_0\n\t* LPAR\n\t* NOT\n\t* __ANON_1\n\t* __ANON_2\n\t* FALSE\n\t* TRUE\n\t* NOT_SYMBOL\n\t* NUMBER\n\t* LBRACKET\n",
+    "explanation": "El parser encontró un punto ('.') en la expresión del gate, lo cual no es permitido. Los gates deben comenzar con '!' o '?', seguidos de un identificador válido sin puntos intermedios. La expresión '?purchase.py.cust1' es incorrecta debido al uso del punto después de 'purchase'.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, en 'WHEN ?purchase.py.cust1'",
+    "correction_suggestion": "Corrige la sintaxis del gate para eliminar el uso de puntos. Por ejemplo, '?purchase_py_cust1' en lugar de '?purchase.py.cust1'.",
+    "hints": [
+      "Revisa la sintaxis de los gates para asegurar que no contengan puntos.",
+      "Asegúrate de que los nombres de los gates sean identificadores válidos sin caracteres especiales como '.' o '-'."
+    ]
+  },
+  {
+    "case_id": 46,
+    "success": true,
+    "original_bdd": {
+      "given": "a customer purchased an item 35 days ago AND the return window is 30 days",
+      "when": "the customer reports the item as defective with proof",
+      "then": "an exception is created AND the return is approved AND a refund or replacement is offered"
+    },
+    "previous_translation": "GIVEN I [I.purchase_date = 35_days_ago ∧ return_window = 30_days]\nWHEN ?report_defect.i,proof [i = I ∧ proof = valid] exception_created := true\nTHEN !approve_return [exception_created] !offer_refund_or_replacement [exception_created] [exception_created]",
+    "parse_error": "No terminal matches '_' in the current parser context, at line 1 col 30\n\nGIVEN I [I.purchase_date = 35_days_ago ∧ return_window = 30_days]\n                             ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
+    "explanation": "El parser encontró un guion bajo ('_') en '35_days_ago', lo cual no es un operador válido ni un nombre de variable permitido en la gramática IBDD. La gramática espera operadores matemáticos o booleanos, o nombres de variables sin caracteres especiales.",
+    "error_type": "Expresión mal formada",
+    "error_location": "Línea 1, expresión '35_days_ago'",
+    "correction_suggestion": "Reemplaza '35_days_ago' con un identificador válido, como 'thirtyFiveDaysAgo', o utiliza una función que devuelva el valor correcto, como 'daysAgo(35)'.",
+    "hints": [
+      "Revisa los nombres de variables para asegurarte de que no contengan caracteres especiales como guiones bajos.",
+      "Considera usar funciones para representar valores calculados o derivados, como 'daysAgo(35)'."
+    ]
+  },
+  {
+    "case_id": 48,
+    "success": true,
+    "original_bdd": {
+      "given": "a customer added items to cart 3 days ago but did not checkout",
+      "when": "the automated recovery system runs",
+      "then": "the customer receives a reminder email AND a special discount code is offered"
+    },
+    "previous_translation": "GIVEN C [C.last_activity = 3_days_ago ∧ C.checked_out = false]\nWHEN !recovery_system_run [true] reminder_sent := true\nTHEN !send_reminder_email [reminder_sent] !offer_discount_code [reminder_sent] [reminder_sent]",
+    "parse_error": "No terminal matches '_' in the current parser context, at line 1 col 29\n\nGIVEN C [C.last_activity = 3_days_ago ∧ C.checked_out = false]\n                            ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
+    "explanation": "The parser encountered an unexpected '_' character in the condition 'C.last_activity = 3_days_ago'. The parser expected a valid operator or end of expression, but found an underscore, which is not a valid character in this context.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "GIVEN clause, line 1, condition 'C.last_activity = 3_days_ago'",
+    "correction_suggestion": "Replace '3_days_ago' with a valid expression or variable name that does not contain underscores. For example, use 'C.last_activity = threeDaysAgo' if 'threeDaysAgo' is a valid variable or constant in your context.",
+    "hints": [
+      "Ensure all variable names and constants do not contain underscores unless they are part of a valid identifier.",
+      "Check the grammar rules for valid characters in expressions.",
+      "Consider using camelCase or another naming convention that avoids underscores."
     ]
   },
   {
     "case_id": 50,
     "success": true,
-    "explanation": "El parser encontró un símbolo '{' que no es esperado en la expresión de la guarda. Las guardas deben estar formadas por expresiones booleanas válidas, y el uso de llaves '{ }' para definir un conjunto de horarios no es compatible con la gramática esperada. El parser esperaba una expresión booleana o un número, no un conjunto.",
+    "original_bdd": {
+      "given": "doctor A has appointments at 10:00 and 11:00",
+      "when": "a patient requests an appointment at 10:30",
+      "then": "the system suggests alternative times AND the appointment is not scheduled"
+    },
+    "previous_translation": "GIVEN DA [DA.appointments = {10:00, 11:00}]\nWHEN ?request_appointment.time [time = 10:30] conflict := check_availability(DA, time)\nTHEN !suggest_alternatives [conflict] [appointment_not_scheduled]",
+    "parse_error": "No terminal matches '{' in the current parser context, at line 1 col 29\n\nGIVEN DA [DA.appointments = {10:00, 11:00}]\n                            ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NUMBER\n\t* __ANON_1\n",
+    "explanation": "El parser encontró un error al intentar interpretar la expresión 'DA.appointments = {10:00, 11:00}'. El uso de llaves '{...}' no es reconocido como una expresión válida en el contexto de una guarda. El parser esperaba una expresión booleana bien formada que no incluya llaves, como una comparación directa o una conjunción de condiciones.",
     "error_type": "Expresiones mal formadas",
-    "error_location": "Línea 1, en la expresión de la guarda",
-    "correction_suggestion": "Reemplazar el uso de llaves '{ }' con una expresión compatible con la gramática IBDD. Una posible corrección sería usar una función o expresión que evalúe la disponibilidad de horarios, por ejemplo: 'appointments(DoctorA) = check_times(10:00, 11:00)'.",
+    "error_location": "Línea 1, expresión dentro de los corchetes de la guarda",
+    "correction_suggestion": "Para corregir el error, reemplace la expresión con una que no use llaves. Por ejemplo, si el objetivo es verificar que las citas de 'DA' incluyan las horas 10:00 y 11:00, la expresión podría ser 'DA.appointments = 10:00 ∧ DA.appointments = 11:00'.\n\nIBDD corregido:\n```\nGIVEN DA [DA.appointments = 10:00 ∧ DA.appointments = 11:00]\nWHEN ?request_appointment.time [time = 10:30] conflict := check_availability(DA, time)\nTHEN !suggest_alternatives [conflict] [appointment_not_scheduled]\n```",
     "hints": [
-      "Asegúrate de que las guardas usen expresiones booleanas válidas.",
-      "Revisa la gramática para el uso correcto de operadores y expresiones.",
-      "Considera usar funciones o expresiones que devuelvan valores booleanos en lugar de conjuntos."
+      "Reemplace las llaves '{...}' con una expresión que use operadores válidos como '=' y '∧'.",
+      "Asegúrese de que las condiciones dentro de las guardas sean expresiones booleanas válidas."
+    ]
+  },
+  {
+    "case_id": 51,
+    "success": true,
+    "original_bdd": {
+      "given": "a patient has a documented allergy to penicillin",
+      "when": "a doctor prescribes amoxicillin (a penicillin derivative)",
+      "then": "the system displays a critical allergy warning AND the prescription is blocked until acknowledged"
+    },
+    "previous_translation": "GIVEN P [P.allergies = {penicillin}]\nWHEN ?prescribe.medication [medication = amoxicillin] allergy_warning := check_allergy(P, medication)\nTHEN !display_allergy_warning [allergy_warning] !block_prescription [allergy_warning] [allergy_warning]",
+    "parse_error": "No terminal matches '{' in the current parser context, at line 1 col 24\n\nGIVEN P [P.allergies = {penicillin}]\n                       ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NUMBER\n\t* __ANON_1\n",
+    "explanation": "El parser encontró un uso incorrecto de llaves '{' en la expresión de la guarda. En IBDD, las llaves no son un símbolo reconocido para definir conjuntos o listas en las guardas. El parser esperaba un valor o expresión que no incluyera llaves.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "GIVEN P [P.allergies = {penicillin}]",
+    "correction_suggestion": "Reemplaza '{penicillin}' con una expresión válida, como una lista entre paréntesis o una expresión lógica. Por ejemplo: '[P.allergies = penicillin]' o '[P.allergies.contains(penicillin)]'.",
+    "hints": [
+      "Revisa cómo se representan las listas o conjuntos en tu contexto de IBDD.",
+      "Asegúrate de que las expresiones en las guardas usen solo operadores y símbolos válidos.",
+      "Considera usar funciones o métodos que verifiquen pertenencia en lugar de llaves."
     ]
   },
   {
     "case_id": 53,
     "success": true,
-    "explanation": "El parser encontró un ':' en la línea 2, lo que sugiere que se esperaba una asignación. Sin embargo, en IBDD, las asignaciones deben estar claramente definidas con un operador de asignación '=' seguido de una expresión o 'true'. El uso de ':=' no es reconocido por el parser en este contexto.",
-    "error_type": "Asignaciones faltantes",
-    "error_location": "Línea 2, después de la condición del switch",
-    "correction_suggestion": "Reemplaza 'Override := execute_emergency_override(OperatingRoom)' con 'Override = execute_emergency_override(OperatingRoom)' para usar el operador de asignación correcto '='.",
+    "original_bdd": {
+      "given": "an operating room is scheduled for a routine surgery at 14:00",
+      "when": "an emergency case arrives at 13:45",
+      "then": "the routine surgery is rescheduled AND the emergency case takes priority AND affected parties are notified"
+    },
+    "previous_translation": "GIVEN OR [OR.scheduled_surgery = 14:00]\nWHEN !emergency_case.arrival [arrival_time = 13:45] reschedule := true\nTHEN !reschedule_surgery [reschedule] !notify_affected_parties [true] [emergency_priority]",
+    "parse_error": "No terminal matches ':' in the current parser context, at line 1 col 36\n\nGIVEN OR [OR.scheduled_surgery = 14:00]\n                                   ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
+    "explanation": "El parser encontró un símbolo ':' inesperado en la asignación 'reschedule := true'. En IBDD, las asignaciones deben seguir la forma 'variable = valor' o simplemente 'true'. El uso de ':=' no es reconocido por la gramática IBDD.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 2, parte de la asignación",
+    "correction_suggestion": "Reemplazar 'reschedule := true' por 'reschedule = true'.",
     "hints": [
-      "Revisa que todas las asignaciones usen el operador '=' en lugar de ':='.",
-      "Asegúrate de que cada switch tenga una asignación válida.",
-      "Verifica que el formato de las asignaciones sea consistente con la gramática IBDD."
+      "Asegúrate de que las asignaciones usen '=' en lugar de ':='.",
+      "Verifica que todas las asignaciones sean válidas según la gramática IBDD."
+    ]
+  },
+  {
+    "case_id": 55,
+    "success": true,
+    "original_bdd": {
+      "given": "a patient is taking medication A",
+      "when": "a doctor prescribes medication B that interacts with medication A",
+      "then": "the system alerts about the interaction AND suggests alternatives"
+    },
+    "previous_translation": "GIVEN P [P.medications = {A}]\nWHEN ?prescribe.medication [medication = B] interaction_detected := check_interaction(P, medication)\nTHEN !alert_interaction [interaction_detected] !suggest_alternatives [interaction_detected] [interaction_detected]",
+    "parse_error": "No terminal matches '{' in the current parser context, at line 1 col 26\n\nGIVEN P [P.medications = {A}]\n                         ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NUMBER\n\t* __ANON_1\n",
+    "explanation": "El parser encontró un carácter '{' en la expresión de la guarda, lo cual no es reconocido como parte de una expresión válida en la gramática IBDD. Las guardas deben contener expresiones booleanas bien formadas, y el uso de llaves '{}' no está definido en la gramática proporcionada.",
+    "error_type": "Guarda mal formada",
+    "error_location": "Línea 1, dentro de la guarda de 'GIVEN'",
+    "correction_suggestion": "Reemplaza el uso de llaves '{}' con una expresión válida. Por ejemplo, si 'P.medications = {A}' está intentando verificar si 'A' está en un conjunto de medicamentos, podría ser reformulado como 'P.medications.contains(A)' o una expresión equivalente que sea válida según la gramática de guardas.",
+    "hints": [
+      "Revisa la gramática de guardas para asegurar que las expresiones sean booleanas y bien formadas.",
+      "Asegúrate de que las operaciones de conjunto o listas estén expresadas en términos de funciones o métodos reconocidos por la gramática.",
+      "Verifica que no se utilicen caracteres especiales no definidos en la gramática IBDD."
     ]
   }
 ]

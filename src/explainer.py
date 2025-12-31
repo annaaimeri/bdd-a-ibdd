@@ -111,6 +111,9 @@ class IBDDErrorExplainer:
             return {
                 "case_id": case_id,
                 "success": True,
+                "original_bdd": original_bdd,  # Incluir escenario BDD completo
+                "previous_translation": generated_ibdd,  # Incluir traducción que falló
+                "parse_error": parse_error,  # Incluir error del parser
                 "explanation": response.get("explanation", ""),
                 "error_type": response.get("error_type", "unknown"),
                 "error_location": response.get("error_location", ""),
@@ -121,6 +124,9 @@ class IBDDErrorExplainer:
             return {
                 "case_id": case_id,
                 "success": False,
+                "original_bdd": original_bdd,  # Incluir incluso en caso de falla
+                "previous_translation": generated_ibdd,
+                "parse_error": parse_error,
                 "error": "No se pudo generar la explicación"
             }
 
@@ -261,6 +267,47 @@ Responde en formato JSON."""
             explanations.append(explanation)
 
         return explanations
+
+    @staticmethod
+    def format_error_analysis_for_retry(error_explanation: Dict[str, Any]) -> str:
+        """
+        Formatea una explicación de error para ser insertada en el prompt de reintentos.
+
+        Args:
+            error_explanation: Diccionario con la explicación del error (del método explain_error)
+
+        Returns:
+            Texto formateado listo para insertar en el placeholder {error_analysis}
+        """
+        original_bdd = error_explanation.get('original_bdd', {})
+
+        formatted_text = f"""**Case ID:** {error_explanation.get('case_id', 'Unknown')}
+                            
+                            **Original BDD Scenario:**
+                            - **Given:** {original_bdd.get('given', 'N/A')}
+                            - **When:** {original_bdd.get('when', 'N/A')}
+                            - **Then:** {original_bdd.get('then', 'N/A')}
+                            
+                            **Previous Translation (that failed):**
+                            ```
+                            {error_explanation.get('previous_translation', 'N/A')}
+                            ```
+                            
+                            **Parser Error:**
+                            ```
+                            {error_explanation.get('parse_error', 'N/A')}
+                            ```
+                            
+                            **Error Analysis:**
+                            - **Error Type:** {error_explanation.get('error_type', 'Unknown')}
+                            - **Location:** {error_explanation.get('error_location', 'Unknown')}
+                            - **Explanation:** {error_explanation.get('explanation', 'No explanation available')}
+                            - **Correction Suggestion:** {error_explanation.get('correction_suggestion', 'No suggestion available')}
+                            
+                            **Hints:**
+                            {chr(10).join(f'- {hint}' for hint in error_explanation.get('hints', []))}
+                            """
+        return formatted_text.strip()
 
 
 def main():

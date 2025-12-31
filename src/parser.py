@@ -727,11 +727,11 @@ def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) 
                 json.dump(results, f, indent=2, ensure_ascii=False)
             print(f"Results saved successfully")
 
-            csv_file = output_file.replace('.json', '.csv')
-            print(f"Saving CSV to: {csv_file}")
-            df = pd.DataFrame(results)
-            df.to_csv(csv_file, index=False)
-            print(f"CSV saved successfully")
+            # csv_file = output_file.replace('.json', '.csv')
+            # print(f"Saving CSV to: {csv_file}")
+            # df = pd.DataFrame(results)
+            # df.to_csv(csv_file, index=False)
+            # print(f"CSV saved successfully")
 
     except Exception as e:
         print(f"\033[91mError processing file: {e}\033[0m")

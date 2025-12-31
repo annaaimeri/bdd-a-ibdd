@@ -20,32 +20,9 @@ THEN [[]"
 7,printer,Move from waiting to scheduled,True,,"GIVEN CJ [[]
 WHEN 1 switches
 THEN [[]"
-8,printer,Hard copy output after printing,False,"No terminal matches '(' in the current parser context, at line 4 col 29
-
-THEN [Output.is_hard_copy_of(CJ)]
-                            ^
-Expected one of: 
-	* EQEQ
-	* LEQ
-	* RBRACKET
-	* PLUS
-	* GT
-	* AND
-	* LT
-	* AND_SYMBOL
-	* OR
-	* MINUS
-	* EQ
-	* NEQ_SYMBOL
-	* LEQ_SYMBOL
-	* PERCENT
-	* CIRCUMFLEX
-	* GEQ_SYMBOL
-	* SLASH
-	* NEQ
-	* STAR
-	* GEQ
-",
+8,printer,Hard copy output after printing,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
 9,calculator,Add two numbers,True,,"GIVEN  [[]
 WHEN 1 switches
 THEN 1 switches [[]"
@@ -91,189 +68,163 @@ THEN 1 switches [[]"
 23,calculator,Multiply by zero,True,,"GIVEN  [[]
 WHEN 1 switches
 THEN 1 switches [[]"
-24,printer,Cancel job during printing,False,"No terminal matches ':' in the current parser context, at line 2 col 73
-
-SJL := remove(CJ, SJL), PJL := CJ.state := Stopped
-                                        ^
-Expected one of: 
-	* EQEQ
-	* LEQ
-	* NOT_SYMBOL
-	* LBRACKET
-	* PLUS
-	* GT
-	* AND
-	* LT
-	* AND_SYMBOL
-	* LPAR
-	* COMMA
-	* OR
-	* MINUS
-	* EQ
-	* __ANON_0
-	* NEQ_SYMBOL
-	* LEQ_SYMBOL
-	* PERCENT
-	* CIRCUMFLEX
-	* __ANON_1
-	* NOT
-	* GEQ_SYMBOL
-	* SLASH
-	* NUMBER
-	* NEQ
-	* TRUE
-	* FALSE
-	* STAR
-	* THEN
-	* GEQ
-	* __ANON_2
-",
+24,printer,Cancel job during printing,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
 25,printer,Handle paper jam during production,True,,"GIVEN CJ [[]
 WHEN 3 switches
 THEN [[]"
-26,printer,Priority job jumps queue,True,,"GIVEN SJL [[]
+26,printer,Priority job jumps queue,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN [[]"
+27,unknown,Case 27,True,,"GIVEN CJ [[]
 WHEN 2 switches
 THEN [[]"
-27,printer,Concurrent pause requests,True,,"GIVEN CJ [[]
-WHEN 2 switches
-THEN [[]"
-28,printer,Auto-cleanup old printed jobs,True,,"GIVEN PJL [[]
+28,printer,Auto-cleanup old printed jobs,True,,"GIVEN  [[]
 WHEN 1 switches
 THEN [[]"
 29,printer,Resume printing after power failure,True,,"GIVEN CJ [[]
 WHEN 2 switches
 THEN [[]"
-30,printer,Duplicate job submission detection,True,,"GIVEN JF [[]
+30,unknown,Case 30,True,,"GIVEN JF [[]
 WHEN 1 switches
 THEN 1 switches [[]"
-31,printer,Batch print multiple jobs,False,"No terminal matches '>' in the current parser context, at line 2 col 50
+31,unknown,Case 31,False,"No terminal matches '[' in the current parser context, at line 3 col 34
 
-rt_batch_printing [true] SJL.forEach(J => J.state := Printing)
-                                        ^
+!complete_all_jobs [true] SJL := []
+                                 ^
 Expected one of: 
-	* FALSE
-	* __ANON_1
-	* LPAR
 	* MINUS
-	* NUMBER
+	* LPAR
+	* NOT
+	* FALSE
 	* __ANON_2
 	* TRUE
+	* NOT_SYMBOL
+	* NUMBER
+	* __ANON_1
 ",
 32,printer,Emergency stop during printing,True,,"GIVEN CJ [[]
 WHEN 1 switches
 THEN [[]"
 33,banking,Transfer funds between accounts,True,,"GIVEN A, ,, B [[]
 WHEN 1 switches
-THEN [[]"
-34,banking,Concurrent withdrawal attempts,True,,"GIVEN Acc [[]
+THEN 1 switches [[]"
+34,banking,Concurrent withdrawal attempts,True,,"GIVEN A [[]
 WHEN 2 switches
 THEN [[]"
-35,banking,Overdraft protection activation,True,,"GIVEN Acc [[]
+35,banking,Overdraft protection activation,True,,"GIVEN A [[]
 WHEN 1 switches
-THEN [[]"
+THEN 1 switches [[]"
 36,banking,Failed transfer rollback,True,,"GIVEN A, ,, B [[]
 WHEN 1 switches
-THEN [[]"
-37,banking,Detect fraudulent transaction pattern,True,,"GIVEN Acc [[]
+THEN 1 switches [[]"
+37,banking,Detect fraudulent transaction pattern,True,,"GIVEN A [[]
 WHEN 1 switches
-THEN [[]"
-38,banking,Schedule recurring payment,True,,"GIVEN Acc [[]
+THEN 1 switches [[]"
+38,banking,Schedule recurring payment,True,,"GIVEN A [[]
 WHEN 1 switches
-THEN [[]"
-39,banking,Insufficient funds for scheduled payment,True,,"GIVEN Acc [[]
+THEN 1 switches [[]"
+39,banking,Insufficient funds for scheduled payment,True,,"GIVEN A [[]
 WHEN 1 switches
-THEN [[]"
-40,banking,Reverse completed transaction,True,,"GIVEN T [[]
+THEN 1 switches [[]"
+40,unknown,Case 40,True,,"GIVEN T [[]
 WHEN 1 switches
-THEN [[]"
+THEN 1 switches [[]"
 41,ecommerce,Place order with insufficient stock,True,,"GIVEN PX [[]
 WHEN 1 switches
+THEN 1 switches [[]"
+42,ecommerce,Apply discount code after cart modification,True,,"GIVEN C [[]
+WHEN 1 switches
 THEN [[]"
-42,ecommerce,Apply discount code after cart modification,True,,"GIVEN Cart [[]
-WHEN 2 switches
-THEN [[]"
-43,ecommerce,Handle expired discount during checkout,False,"No terminal matches '(' in the current parser context, at line 1 col 37
+43,unknown,Case 43,False,"No terminal matches '_' in the current parser context, at line 1 col 36
 
-GIVEN Cart [discount_code.expires_in(Cart) = 5]
-                                    ^
+GIVEN C [C_discount_code_expiry = 5_minutes]
+                                   ^
 Expected one of: 
-	* EQEQ
-	* LEQ
-	* RBRACKET
 	* PLUS
-	* GT
-	* AND
-	* LT
 	* AND_SYMBOL
-	* OR
 	* MINUS
-	* EQ
-	* NEQ_SYMBOL
-	* LEQ_SYMBOL
-	* PERCENT
 	* CIRCUMFLEX
-	* GEQ_SYMBOL
 	* SLASH
-	* NEQ
+	* RBRACKET
+	* AND
 	* STAR
-	* GEQ
+	* OR
+	* PERCENT
 ",
-44,ecommerce,Concurrent purchases of last item,True,,"GIVEN PY [[]
+44,unknown,Case 44,True,,"GIVEN PY [[]
 WHEN 2 switches
 THEN [[]"
-45,ecommerce,Cancel order after partial shipment,True,,"GIVEN Order [[]
+45,ecommerce,Cancel order after partial shipment,True,,"GIVEN O [[]
 WHEN 1 switches
-THEN [[]"
-46,ecommerce,Return damaged item past return window,True,,"GIVEN Item [[]
-WHEN 1 switches
-THEN [[]"
-47,ecommerce,Dynamic pricing based on demand,True,,"GIVEN PZ [[]
-WHEN 1 switches
-THEN [[]"
-48,ecommerce,Abandoned cart recovery,True,,"GIVEN Cart [[]
-WHEN 1 switches
-THEN [[]"
-49,ecommerce,Split payment across multiple methods,True,,"GIVEN Order [[]
-WHEN 2 switches
-THEN [[]"
-50,healthcare,Schedule appointment with doctor availability conflict,False,"No terminal matches '{' in the current parser context, at line 1 col 40
+THEN 1 switches [[]"
+46,unknown,Case 46,False,"No terminal matches '_' in the current parser context, at line 1 col 66
 
-GIVEN DoctorA [appointments(DoctorA) = {10:00, 11:00}]
-                                       ^
-Expected one of: 
-	* FALSE
-	* __ANON_1
-	* LPAR
-	* MINUS
-	* NUMBER
-	* __ANON_2
-	* TRUE
-",
-51,healthcare,Prescribe medication with allergy warning,True,,"GIVEN Patient [[]
-WHEN 1 switches
-THEN [[]"
-52,healthcare,Access patient records with privacy restrictions,True,,"GIVEN PatientRecords [[]
-WHEN 1 switches
-THEN [[]"
-53,healthcare,Emergency override of scheduled procedures,False,"No terminal matches ':' in the current parser context, at line 1 col 64
-
-heduled_surgery_time(OperatingRoom) = 14:00]
+= thirtyFiveDaysAgo ∧ return_window = 30_days]
                                         ^
 Expected one of: 
-	* STAR
-	* PERCENT
-	* CIRCUMFLEX
-	* RBRACKET
-	* SLASH
 	* PLUS
-	* OR
-	* AND
 	* AND_SYMBOL
 	* MINUS
+	* CIRCUMFLEX
+	* SLASH
+	* AND
+	* RBRACKET
+	* STAR
+	* OR
+	* PERCENT
 ",
-54,healthcare,Conflicting diagnoses from multiple doctors,True,,"GIVEN Diagnosis [[]
+47,ecommerce,Dynamic pricing based on demand,True,,"GIVEN PZ [[]
 WHEN 1 switches
-THEN [[]"
-55,healthcare,Medication interaction detection,True,,"GIVEN Patient [[]
+THEN 1 switches [[]"
+48,unknown,Case 48,True,,"GIVEN C [[]
 WHEN 1 switches
-THEN [[]"
+THEN 1 switches [[]"
+49,ecommerce,Split payment across multiple methods,True,,"GIVEN O [[]
+WHEN 2 switches
+THEN 1 switches [[]"
+50,unknown,Case 50,False,"No terminal matches ':' in the current parser context, at line 1 col 31
+
+GIVEN DA [DA.appointments = 10:00 ∧ DA.appointments = 11:00]
+                              ^
+Expected one of: 
+	* PLUS
+	* AND_SYMBOL
+	* MINUS
+	* CIRCUMFLEX
+	* SLASH
+	* RBRACKET
+	* AND
+	* STAR
+	* OR
+	* PERCENT
+",
+51,unknown,Case 51,True,,"GIVEN P [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+52,healthcare,Access patient records with privacy restrictions,True,,"GIVEN PR [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+53,unknown,Case 53,False,"No terminal matches ':' in the current parser context, at line 1 col 36
+
+GIVEN OR [OR.scheduled_surgery = 14:00]
+                                   ^
+Expected one of: 
+	* PLUS
+	* AND_SYMBOL
+	* MINUS
+	* CIRCUMFLEX
+	* SLASH
+	* RBRACKET
+	* AND
+	* STAR
+	* OR
+	* PERCENT
+",
+54,healthcare,Conflicting diagnoses from multiple doctors,True,,"GIVEN D1, ,, D2 [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+55,unknown,Case 55,True,,"GIVEN P [[]
+WHEN 1 switches
+THEN 1 switches [[]"

@@ -59,9 +59,9 @@
     "id": 8,
     "domain": "printer",
     "title": "Hard copy output after printing",
-    "valid": false,
-    "error": "No terminal matches '(' in the current parser context, at line 4 col 29\n\nTHEN [Output.is_hard_copy_of(CJ)]\n                            ^\nExpected one of: \n\t* EQEQ\n\t* LEQ\n\t* RBRACKET\n\t* PLUS\n\t* GT\n\t* AND\n\t* LT\n\t* AND_SYMBOL\n\t* OR\n\t* MINUS\n\t* EQ\n\t* NEQ_SYMBOL\n\t* LEQ_SYMBOL\n\t* PERCENT\n\t* CIRCUMFLEX\n\t* GEQ_SYMBOL\n\t* SLASH\n\t* NEQ\n\t* STAR\n\t* GEQ\n",
-    "parsed_result": null
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 9,
@@ -187,9 +187,9 @@
     "id": 24,
     "domain": "printer",
     "title": "Cancel job during printing",
-    "valid": false,
-    "error": "No terminal matches ':' in the current parser context, at line 2 col 73\n\nSJL := remove(CJ, SJL), PJL := CJ.state := Stopped\n                                        ^\nExpected one of: \n\t* EQEQ\n\t* LEQ\n\t* NOT_SYMBOL\n\t* LBRACKET\n\t* PLUS\n\t* GT\n\t* AND\n\t* LT\n\t* AND_SYMBOL\n\t* LPAR\n\t* COMMA\n\t* OR\n\t* MINUS\n\t* EQ\n\t* __ANON_0\n\t* NEQ_SYMBOL\n\t* LEQ_SYMBOL\n\t* PERCENT\n\t* CIRCUMFLEX\n\t* __ANON_1\n\t* NOT\n\t* GEQ_SYMBOL\n\t* SLASH\n\t* NUMBER\n\t* NEQ\n\t* TRUE\n\t* FALSE\n\t* STAR\n\t* THEN\n\t* GEQ\n\t* __ANON_2\n",
-    "parsed_result": null
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 25,
@@ -205,12 +205,12 @@
     "title": "Priority job jumps queue",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN SJL [[]\nWHEN 2 switches\nTHEN [[]"
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 27,
-    "domain": "printer",
-    "title": "Concurrent pause requests",
+    "domain": "unknown",
+    "title": "Case 27",
     "valid": true,
     "error": null,
     "parsed_result": "GIVEN CJ [[]\nWHEN 2 switches\nTHEN [[]"
@@ -221,7 +221,7 @@
     "title": "Auto-cleanup old printed jobs",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN PJL [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 29,
@@ -233,18 +233,18 @@
   },
   {
     "id": 30,
-    "domain": "printer",
-    "title": "Duplicate job submission detection",
+    "domain": "unknown",
+    "title": "Case 30",
     "valid": true,
     "error": null,
     "parsed_result": "GIVEN JF [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 31,
-    "domain": "printer",
-    "title": "Batch print multiple jobs",
+    "domain": "unknown",
+    "title": "Case 31",
     "valid": false,
-    "error": "No terminal matches '>' in the current parser context, at line 2 col 50\n\nrt_batch_printing [true] SJL.forEach(J => J.state := Printing)\n                                        ^\nExpected one of: \n\t* FALSE\n\t* __ANON_1\n\t* LPAR\n\t* MINUS\n\t* NUMBER\n\t* __ANON_2\n\t* TRUE\n",
+    "error": "No terminal matches '[' in the current parser context, at line 3 col 34\n\n!complete_all_jobs [true] SJL := []\n                                 ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* NOT\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NOT_SYMBOL\n\t* NUMBER\n\t* __ANON_1\n",
     "parsed_result": null
   },
   {
@@ -261,7 +261,7 @@
     "title": "Transfer funds between accounts",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN A, ,, B [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN A, ,, B [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 34,
@@ -269,7 +269,7 @@
     "title": "Concurrent withdrawal attempts",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Acc [[]\nWHEN 2 switches\nTHEN [[]"
+    "parsed_result": "GIVEN A [[]\nWHEN 2 switches\nTHEN [[]"
   },
   {
     "id": 35,
@@ -277,7 +277,7 @@
     "title": "Overdraft protection activation",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Acc [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN A [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 36,
@@ -285,7 +285,7 @@
     "title": "Failed transfer rollback",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN A, ,, B [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN A, ,, B [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 37,
@@ -293,7 +293,7 @@
     "title": "Detect fraudulent transaction pattern",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Acc [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN A [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 38,
@@ -301,7 +301,7 @@
     "title": "Schedule recurring payment",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Acc [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN A [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 39,
@@ -309,15 +309,15 @@
     "title": "Insufficient funds for scheduled payment",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Acc [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN A [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 40,
-    "domain": "banking",
-    "title": "Reverse completed transaction",
+    "domain": "unknown",
+    "title": "Case 40",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN T [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN T [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 41,
@@ -325,7 +325,7 @@
     "title": "Place order with insufficient stock",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN PX [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN PX [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 42,
@@ -333,20 +333,20 @@
     "title": "Apply discount code after cart modification",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Cart [[]\nWHEN 2 switches\nTHEN [[]"
+    "parsed_result": "GIVEN C [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 43,
-    "domain": "ecommerce",
-    "title": "Handle expired discount during checkout",
+    "domain": "unknown",
+    "title": "Case 43",
     "valid": false,
-    "error": "No terminal matches '(' in the current parser context, at line 1 col 37\n\nGIVEN Cart [discount_code.expires_in(Cart) = 5]\n                                    ^\nExpected one of: \n\t* EQEQ\n\t* LEQ\n\t* RBRACKET\n\t* PLUS\n\t* GT\n\t* AND\n\t* LT\n\t* AND_SYMBOL\n\t* OR\n\t* MINUS\n\t* EQ\n\t* NEQ_SYMBOL\n\t* LEQ_SYMBOL\n\t* PERCENT\n\t* CIRCUMFLEX\n\t* GEQ_SYMBOL\n\t* SLASH\n\t* NEQ\n\t* STAR\n\t* GEQ\n",
+    "error": "No terminal matches '_' in the current parser context, at line 1 col 36\n\nGIVEN C [C_discount_code_expiry = 5_minutes]\n                                   ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
     "parsed_result": null
   },
   {
     "id": 44,
-    "domain": "ecommerce",
-    "title": "Concurrent purchases of last item",
+    "domain": "unknown",
+    "title": "Case 44",
     "valid": true,
     "error": null,
     "parsed_result": "GIVEN PY [[]\nWHEN 2 switches\nTHEN [[]"
@@ -357,15 +357,15 @@
     "title": "Cancel order after partial shipment",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Order [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN O [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 46,
-    "domain": "ecommerce",
-    "title": "Return damaged item past return window",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN Item [[]\nWHEN 1 switches\nTHEN [[]"
+    "domain": "unknown",
+    "title": "Case 46",
+    "valid": false,
+    "error": "No terminal matches '_' in the current parser context, at line 1 col 66\n\n= thirtyFiveDaysAgo ∧ return_window = 30_days]\n                                        ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* AND\n\t* RBRACKET\n\t* STAR\n\t* OR\n\t* PERCENT\n",
+    "parsed_result": null
   },
   {
     "id": 47,
@@ -373,15 +373,15 @@
     "title": "Dynamic pricing based on demand",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN PZ [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN PZ [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 48,
-    "domain": "ecommerce",
-    "title": "Abandoned cart recovery",
+    "domain": "unknown",
+    "title": "Case 48",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Cart [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN C [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 49,
@@ -389,23 +389,23 @@
     "title": "Split payment across multiple methods",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Order [[]\nWHEN 2 switches\nTHEN [[]"
+    "parsed_result": "GIVEN O [[]\nWHEN 2 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 50,
-    "domain": "healthcare",
-    "title": "Schedule appointment with doctor availability conflict",
+    "domain": "unknown",
+    "title": "Case 50",
     "valid": false,
-    "error": "No terminal matches '{' in the current parser context, at line 1 col 40\n\nGIVEN DoctorA [appointments(DoctorA) = {10:00, 11:00}]\n                                       ^\nExpected one of: \n\t* FALSE\n\t* __ANON_1\n\t* LPAR\n\t* MINUS\n\t* NUMBER\n\t* __ANON_2\n\t* TRUE\n",
+    "error": "No terminal matches ':' in the current parser context, at line 1 col 31\n\nGIVEN DA [DA.appointments = 10:00 ∧ DA.appointments = 11:00]\n                              ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
     "parsed_result": null
   },
   {
     "id": 51,
-    "domain": "healthcare",
-    "title": "Prescribe medication with allergy warning",
+    "domain": "unknown",
+    "title": "Case 51",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Patient [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN P [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 52,
@@ -413,14 +413,14 @@
     "title": "Access patient records with privacy restrictions",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN PatientRecords [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN PR [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 53,
-    "domain": "healthcare",
-    "title": "Emergency override of scheduled procedures",
+    "domain": "unknown",
+    "title": "Case 53",
     "valid": false,
-    "error": "No terminal matches ':' in the current parser context, at line 1 col 64\n\nheduled_surgery_time(OperatingRoom) = 14:00]\n                                        ^\nExpected one of: \n\t* STAR\n\t* PERCENT\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* SLASH\n\t* PLUS\n\t* OR\n\t* AND\n\t* AND_SYMBOL\n\t* MINUS\n",
+    "error": "No terminal matches ':' in the current parser context, at line 1 col 36\n\nGIVEN OR [OR.scheduled_surgery = 14:00]\n                                   ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
     "parsed_result": null
   },
   {
@@ -429,14 +429,14 @@
     "title": "Conflicting diagnoses from multiple doctors",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Diagnosis [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN D1, ,, D2 [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 55,
-    "domain": "healthcare",
-    "title": "Medication interaction detection",
+    "domain": "unknown",
+    "title": "Case 55",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN Patient [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN P [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   }
 ]

@@ -322,6 +322,78 @@ class TranslationService:
             print("Failed to get translation from OpenAI API", file=sys.stderr)
             sys.exit(1)
 
+    def retry_failed_translations(
+        self,
+        error_explanations: List[Dict[str, Any]],
+        retry_prompt_path: str = "docs/PROMPT_EN_RETRY.md"
+    ) -> List[Dict[str, Any]]:
+        """
+        Retry translation for cases that failed parsing, using error analysis.
+
+        Args:
+            error_explanations: List of error explanation dicts (from IBDDErrorExplainer)
+            retry_prompt_path: Path to the retry prompt template
+
+        Returns:
+            List of corrected translations (same format as original translation output)
+        """
+        from src.explainer import IBDDErrorExplainer
+
+        print(f"\n[Retry] Attempting to correct {len(error_explanations)} failed translation(s)...")
+
+        # Read retry prompt template
+        retry_prompt_template = self.read_prompt_file(retry_prompt_path)
+
+        # Build JSON data with only failed cases (using original BDD)
+        failed_cases_json = []
+        error_analysis_sections = []
+
+        for error_exp in error_explanations:
+            if not error_exp.get('success', False):
+                print(f"⚠ Skipping case {error_exp.get('case_id')} - error explanation failed")
+                continue
+
+            # Build the case JSON from original BDD
+            original_bdd = error_exp.get('original_bdd', {})
+            case_data = {
+                'id': error_exp.get('case_id'),
+                'given': original_bdd.get('given', ''),
+                'when': original_bdd.get('when', ''),
+                'then': original_bdd.get('then', '')
+            }
+            failed_cases_json.append(case_data)
+
+            # Format error analysis for this case
+            error_analysis_text = IBDDErrorExplainer.format_error_analysis_for_retry(error_exp)
+            error_analysis_sections.append(error_analysis_text)
+
+        if not failed_cases_json:
+            print("⚠ No valid cases to retry")
+            return []
+
+        # Combine all error analyses
+        combined_error_analysis = "\n\n" + "="*80 + "\n\n".join(error_analysis_sections)
+
+        # Replace placeholder in retry prompt
+        final_retry_prompt = retry_prompt_template.replace(
+            '{error_analysis}',
+            combined_error_analysis
+        )
+
+        # Prepare final prompt with JSON data
+        final_prompt = self.prepare_prompt(failed_cases_json, final_retry_prompt)
+
+        # Call OpenAI API
+        print(f"[Retry] Calling OpenAI API to correct {len(failed_cases_json)} case(s)...")
+        response = self.call_openai_api(final_prompt, failed_cases_json)
+
+        if response:
+            print(f"✓ Retry completed successfully for {len(response)} case(s)")
+            return response
+        else:
+            print("✗ Retry failed - could not get corrected translations", file=sys.stderr)
+            return []
+
 
 def main():
     parser = argparse.ArgumentParser(description='Translate JSON content using GPT with Structured Outputs')
