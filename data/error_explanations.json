@@ -1,15 +1,79 @@
 [
   {
-    "case_id": 16,
+    "case_id": 8,
     "success": true,
-    "explanation": "El parser encontró el símbolo '√', que no es reconocido como un operador válido en la gramática IBDD. La gramática espera operadores estándar o funciones bien definidas, y '√' no está definido como tal en el contexto de la gramática.",
-    "error_type": "Expresión mal formada",
-    "error_location": "Línea 3, col 44",
-    "correction_suggestion": "Reemplaza '√RESULT' con una expresión válida. Por ejemplo, si 'sqrt' es una función predefinida, podrías usar 'sqrt(RESULT)' en lugar de '√RESULT'.",
+    "explanation": "El parser encontró un paréntesis '(' inesperado dentro de la expresión 'Output.is_hard_copy_of(CJ)'. En el contexto de la gramática IBDD, las expresiones dentro de las guardas y condiciones deben estar formadas por operadores y comparaciones válidas, pero no se permite el uso de paréntesis para llamadas a funciones o métodos.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 4, dentro de la postcondición del THEN",
+    "correction_suggestion": "Reemplaza la expresión 'Output.is_hard_copy_of(CJ)' con una expresión válida que use operadores de comparación o booleanos. Por ejemplo, podrías usar 'Output.type == HardCopy' si esa es una forma válida de expresar la condición en tu contexto.",
     "hints": [
-      "Asegúrate de que todas las operaciones matemáticas usen funciones o operadores reconocidos por la gramática.",
-      "Revisa la definición de funciones permitidas en tu implementación de IBDD.",
-      "Considera definir 'sqrt' como una función si no está ya definida."
+      "Revisa la gramática para asegurar que las expresiones dentro de las guardas y condiciones no usen paréntesis para funciones.",
+      "Considera descomponer la expresión en comparaciones más simples.",
+      "Asegúrate de que las condiciones en las guardas y postcondiciones usen operadores válidos como EQ, NEQ, LT, GT, etc."
+    ]
+  },
+  {
+    "case_id": 24,
+    "success": true,
+    "explanation": "El parser encontró un error en la expresión de asignación debido al uso incorrecto de los operadores de asignación. En el IBDD, se utilizó 'PJL := CJ.state := Stopped', lo cual es incorrecto porque el operador ':=' se usó de manera anidada, lo que no es permitido en la gramática definida. El parser esperaba un operador de comparación o un operador lógico en lugar de un segundo operador de asignación dentro de la misma expresión.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 2, parte del Assignment",
+    "correction_suggestion": "Corrige la expresión de asignación dividiéndola en dos asignaciones separadas o utilizando una estructura válida. Por ejemplo, puedes separar las asignaciones en dos líneas diferentes:\n```\nWHEN ?cancel.cj [cj.id = CJ.id] SJL := remove(CJ, SJL), PJL := CJ, CJ.state := Stopped\n```",
+    "hints": [
+      "Revisa la gramática para asegurarte de que las asignaciones no estén anidadas.",
+      "Considera separar las asignaciones en líneas distintas para mayor claridad.",
+      "Verifica que cada asignación esté correctamente formada y que los operadores sean apropiados."
+    ]
+  },
+  {
+    "case_id": 31,
+    "success": true,
+    "explanation": "El parser encontró un símbolo '>' que no es reconocido en el contexto actual. Esto sugiere que la expresión 'J => J.state := Printing' está mal formada, ya que el operador '=>' no es parte de la gramática IBDD. El parser esperaba un valor booleano o una expresión válida según la gramática.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 2, parte 'SJL.forEach(J => J.state := Printing)'",
+    "correction_suggestion": "Reemplaza 'SJL.forEach(J => J.state := Printing)' con una expresión válida. Por ejemplo, si el objetivo es asignar un estado a cada trabajo, podrías usar una función definida previamente o un método que sea compatible con la gramática IBDD.",
+    "hints": [
+      "Revisa la sintaxis de las expresiones para asegurar que sean compatibles con la gramática IBDD.",
+      "Considera definir funciones o métodos que encapsulen la lógica compleja fuera del IBDD si es necesario.",
+      "Asegúrate de que todas las asignaciones y condiciones usen operadores y estructuras válidas según la gramática."
+    ]
+  },
+  {
+    "case_id": 43,
+    "success": true,
+    "explanation": "El parser encontró un paréntesis '(' en la expresión 'discount_code.expires_in(Cart) = 5', lo cual no es esperado en una guarda. Las guardas deben estar formadas por condiciones booleanas simples o combinadas con operadores lógicos, pero no se permite el uso de llamadas a funciones con paréntesis en este contexto.",
+    "error_type": "Expresión mal formada",
+    "error_location": "Línea 1, dentro de la guarda del Given",
+    "correction_suggestion": "Reemplazar la expresión 'discount_code.expires_in(Cart) = 5' con una expresión válida que no use paréntesis. Por ejemplo, si 'expires_in' es una propiedad, podría ser 'discount_code_expires_in = 5'.\n\nIBDD corregido:\n```\nGIVEN Cart [discount_code_expires_in = 5]\nWHEN ?complete_checkout [true] DiscountRemoved := check_discount_expiry(Cart)\nTHEN [DiscountRemoved = true ∧ customer_notified(Cart) ∧ full_price_charged(Cart)]\n```",
+    "hints": [
+      "Revisa que las guardas no contengan llamadas a funciones o métodos con paréntesis.",
+      "Asegúrate de que las expresiones dentro de las guardas sean comparaciones simples o combinaciones de estas con operadores lógicos."
+    ]
+  },
+  {
+    "case_id": 50,
+    "success": true,
+    "explanation": "El parser encontró un símbolo '{' que no es esperado en la expresión de la guarda. Las guardas deben estar formadas por expresiones booleanas válidas, y el uso de llaves '{ }' para definir un conjunto de horarios no es compatible con la gramática esperada. El parser esperaba una expresión booleana o un número, no un conjunto.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 1, en la expresión de la guarda",
+    "correction_suggestion": "Reemplazar el uso de llaves '{ }' con una expresión compatible con la gramática IBDD. Una posible corrección sería usar una función o expresión que evalúe la disponibilidad de horarios, por ejemplo: 'appointments(DoctorA) = check_times(10:00, 11:00)'.",
+    "hints": [
+      "Asegúrate de que las guardas usen expresiones booleanas válidas.",
+      "Revisa la gramática para el uso correcto de operadores y expresiones.",
+      "Considera usar funciones o expresiones que devuelvan valores booleanos en lugar de conjuntos."
+    ]
+  },
+  {
+    "case_id": 53,
+    "success": true,
+    "explanation": "El parser encontró un ':' en la línea 2, lo que sugiere que se esperaba una asignación. Sin embargo, en IBDD, las asignaciones deben estar claramente definidas con un operador de asignación '=' seguido de una expresión o 'true'. El uso de ':=' no es reconocido por el parser en este contexto.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 2, después de la condición del switch",
+    "correction_suggestion": "Reemplaza 'Override := execute_emergency_override(OperatingRoom)' con 'Override = execute_emergency_override(OperatingRoom)' para usar el operador de asignación correcto '='.",
+    "hints": [
+      "Revisa que todas las asignaciones usen el operador '=' en lugar de ':='.",
+      "Asegúrate de que cada switch tenga una asignación válida.",
+      "Verifica que el formato de las asignaciones sea consistente con la gramática IBDD."
     ]
   }
 ]

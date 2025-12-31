@@ -20,9 +20,32 @@ THEN [[]"
 7,printer,Move from waiting to scheduled,True,,"GIVEN CJ [[]
 WHEN 1 switches
 THEN [[]"
-8,printer,Hard copy output after printing,True,,"GIVEN CJ [[]
-WHEN 1 switches
-THEN [[]"
+8,printer,Hard copy output after printing,False,"No terminal matches '(' in the current parser context, at line 4 col 29
+
+THEN [Output.is_hard_copy_of(CJ)]
+                            ^
+Expected one of: 
+	* EQEQ
+	* LEQ
+	* RBRACKET
+	* PLUS
+	* GT
+	* AND
+	* LT
+	* AND_SYMBOL
+	* OR
+	* MINUS
+	* EQ
+	* NEQ_SYMBOL
+	* LEQ_SYMBOL
+	* PERCENT
+	* CIRCUMFLEX
+	* GEQ_SYMBOL
+	* SLASH
+	* NEQ
+	* STAR
+	* GEQ
+",
 9,calculator,Add two numbers,True,,"GIVEN  [[]
 WHEN 1 switches
 THEN 1 switches [[]"
@@ -68,3 +91,189 @@ THEN 1 switches [[]"
 23,calculator,Multiply by zero,True,,"GIVEN  [[]
 WHEN 1 switches
 THEN 1 switches [[]"
+24,printer,Cancel job during printing,False,"No terminal matches ':' in the current parser context, at line 2 col 73
+
+SJL := remove(CJ, SJL), PJL := CJ.state := Stopped
+                                        ^
+Expected one of: 
+	* EQEQ
+	* LEQ
+	* NOT_SYMBOL
+	* LBRACKET
+	* PLUS
+	* GT
+	* AND
+	* LT
+	* AND_SYMBOL
+	* LPAR
+	* COMMA
+	* OR
+	* MINUS
+	* EQ
+	* __ANON_0
+	* NEQ_SYMBOL
+	* LEQ_SYMBOL
+	* PERCENT
+	* CIRCUMFLEX
+	* __ANON_1
+	* NOT
+	* GEQ_SYMBOL
+	* SLASH
+	* NUMBER
+	* NEQ
+	* TRUE
+	* FALSE
+	* STAR
+	* THEN
+	* GEQ
+	* __ANON_2
+",
+25,printer,Handle paper jam during production,True,,"GIVEN CJ [[]
+WHEN 3 switches
+THEN [[]"
+26,printer,Priority job jumps queue,True,,"GIVEN SJL [[]
+WHEN 2 switches
+THEN [[]"
+27,printer,Concurrent pause requests,True,,"GIVEN CJ [[]
+WHEN 2 switches
+THEN [[]"
+28,printer,Auto-cleanup old printed jobs,True,,"GIVEN PJL [[]
+WHEN 1 switches
+THEN [[]"
+29,printer,Resume printing after power failure,True,,"GIVEN CJ [[]
+WHEN 2 switches
+THEN [[]"
+30,printer,Duplicate job submission detection,True,,"GIVEN JF [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+31,printer,Batch print multiple jobs,False,"No terminal matches '>' in the current parser context, at line 2 col 50
+
+rt_batch_printing [true] SJL.forEach(J => J.state := Printing)
+                                        ^
+Expected one of: 
+	* FALSE
+	* __ANON_1
+	* LPAR
+	* MINUS
+	* NUMBER
+	* __ANON_2
+	* TRUE
+",
+32,printer,Emergency stop during printing,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
+33,banking,Transfer funds between accounts,True,,"GIVEN A, ,, B [[]
+WHEN 1 switches
+THEN [[]"
+34,banking,Concurrent withdrawal attempts,True,,"GIVEN Acc [[]
+WHEN 2 switches
+THEN [[]"
+35,banking,Overdraft protection activation,True,,"GIVEN Acc [[]
+WHEN 1 switches
+THEN [[]"
+36,banking,Failed transfer rollback,True,,"GIVEN A, ,, B [[]
+WHEN 1 switches
+THEN [[]"
+37,banking,Detect fraudulent transaction pattern,True,,"GIVEN Acc [[]
+WHEN 1 switches
+THEN [[]"
+38,banking,Schedule recurring payment,True,,"GIVEN Acc [[]
+WHEN 1 switches
+THEN [[]"
+39,banking,Insufficient funds for scheduled payment,True,,"GIVEN Acc [[]
+WHEN 1 switches
+THEN [[]"
+40,banking,Reverse completed transaction,True,,"GIVEN T [[]
+WHEN 1 switches
+THEN [[]"
+41,ecommerce,Place order with insufficient stock,True,,"GIVEN PX [[]
+WHEN 1 switches
+THEN [[]"
+42,ecommerce,Apply discount code after cart modification,True,,"GIVEN Cart [[]
+WHEN 2 switches
+THEN [[]"
+43,ecommerce,Handle expired discount during checkout,False,"No terminal matches '(' in the current parser context, at line 1 col 37
+
+GIVEN Cart [discount_code.expires_in(Cart) = 5]
+                                    ^
+Expected one of: 
+	* EQEQ
+	* LEQ
+	* RBRACKET
+	* PLUS
+	* GT
+	* AND
+	* LT
+	* AND_SYMBOL
+	* OR
+	* MINUS
+	* EQ
+	* NEQ_SYMBOL
+	* LEQ_SYMBOL
+	* PERCENT
+	* CIRCUMFLEX
+	* GEQ_SYMBOL
+	* SLASH
+	* NEQ
+	* STAR
+	* GEQ
+",
+44,ecommerce,Concurrent purchases of last item,True,,"GIVEN PY [[]
+WHEN 2 switches
+THEN [[]"
+45,ecommerce,Cancel order after partial shipment,True,,"GIVEN Order [[]
+WHEN 1 switches
+THEN [[]"
+46,ecommerce,Return damaged item past return window,True,,"GIVEN Item [[]
+WHEN 1 switches
+THEN [[]"
+47,ecommerce,Dynamic pricing based on demand,True,,"GIVEN PZ [[]
+WHEN 1 switches
+THEN [[]"
+48,ecommerce,Abandoned cart recovery,True,,"GIVEN Cart [[]
+WHEN 1 switches
+THEN [[]"
+49,ecommerce,Split payment across multiple methods,True,,"GIVEN Order [[]
+WHEN 2 switches
+THEN [[]"
+50,healthcare,Schedule appointment with doctor availability conflict,False,"No terminal matches '{' in the current parser context, at line 1 col 40
+
+GIVEN DoctorA [appointments(DoctorA) = {10:00, 11:00}]
+                                       ^
+Expected one of: 
+	* FALSE
+	* __ANON_1
+	* LPAR
+	* MINUS
+	* NUMBER
+	* __ANON_2
+	* TRUE
+",
+51,healthcare,Prescribe medication with allergy warning,True,,"GIVEN Patient [[]
+WHEN 1 switches
+THEN [[]"
+52,healthcare,Access patient records with privacy restrictions,True,,"GIVEN PatientRecords [[]
+WHEN 1 switches
+THEN [[]"
+53,healthcare,Emergency override of scheduled procedures,False,"No terminal matches ':' in the current parser context, at line 1 col 64
+
+heduled_surgery_time(OperatingRoom) = 14:00]
+                                        ^
+Expected one of: 
+	* STAR
+	* PERCENT
+	* CIRCUMFLEX
+	* RBRACKET
+	* SLASH
+	* PLUS
+	* OR
+	* AND
+	* AND_SYMBOL
+	* MINUS
+",
+54,healthcare,Conflicting diagnoses from multiple doctors,True,,"GIVEN Diagnosis [[]
+WHEN 1 switches
+THEN [[]"
+55,healthcare,Medication interaction detection,True,,"GIVEN Patient [[]
+WHEN 1 switches
+THEN [[]"

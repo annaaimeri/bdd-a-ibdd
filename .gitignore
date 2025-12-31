@@ -15,3 +15,4 @@ venv/
 /.idea/vcs.xml
 /.idea/.gitignore
 /.idea/bdd-to-ibdd-nlp.iml
+/.claude/
