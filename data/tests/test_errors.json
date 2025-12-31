@@ -1,0 +1,112 @@
+[
+  {
+    "id": "error_1",
+    "domain": "printer",
+    "title": "Submit job - Missing brackets in GIVEN",
+    "given": "a job file",
+    "when": "the operator submits the job file",
+    "then": "the printer processes the job",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN JF true\nWHEN ?submit.jf [true] JF := jf\nTHEN [JF.processed = true]"
+  },
+  {
+    "id": "error_2",
+    "domain": "printer",
+    "title": "Start printing - Missing gate symbol",
+    "given": "a controller job is in the queue",
+    "when": "the printer starts printing",
+    "then": "the job state is printing",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN CJ [CJ.state = Pending]\nWHEN printstart.cj [true] CJ.state := Printing\nTHEN [CJ.state = Printing]"
+  },
+  {
+    "id": "error_3",
+    "domain": "printer",
+    "title": "Restart cleanup - Missing brackets in condition",
+    "given": "the printer controller is running",
+    "when": "the operator restarts the printer controller",
+    "then": "the printed jobs clean up is executed",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN [is_running(CTRL)]\nWHEN ?restart true true\nTHEN !cleanup [true] PJL := empty(PJL)\n[is_empty(PJL)]"
+  },
+  {
+    "id": "error_4",
+    "domain": "printer",
+    "title": "Process job - Missing assignment",
+    "given": "a job file exists",
+    "when": "the operator submits the job",
+    "then": "the job is queued",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN JF [true]\nWHEN ?submit.jf [true]\nTHEN [is_in_queue(JF)]"
+  },
+  {
+    "id": "error_5",
+    "domain": "printer",
+    "title": "Complete job - Missing postcondition",
+    "given": "a job is printing",
+    "when": "the printer completes the job",
+    "then": "the job is completed",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN CJ [CJ.state = Printing]\nWHEN !complete.cj [true] CJ.state := Completed\nTHEN"
+  },
+  {
+    "id": "error_6",
+    "domain": "printer",
+    "title": "Add to queue - Invalid syntax with parentheses",
+    "given": "the printer controller is running",
+    "when": "the operator adds a job to queue",
+    "then": "the queue size increases",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN [is_running(CTRL)]\nWHEN ?addJob (no assignment)\nTHEN [queue_size > 0]"
+  },
+  {
+    "id": "error_7",
+    "domain": "printer",
+    "title": "Pause printing - Malformed guard with missing operator",
+    "given": "a job is currently printing",
+    "when": "the operator pauses the job",
+    "then": "the job state is paused",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN CJ [CJ.state Printing]\nWHEN ?pause.cj [true] CJ.state := Paused\nTHEN [CJ.state = Paused]"
+  },
+  {
+    "id": "error_8",
+    "domain": "printer",
+    "title": "Resume job - Missing condition brackets in THEN switch",
+    "given": "a job is paused",
+    "when": "the operator resumes the job",
+    "then": "the printer starts printing again",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN CJ [CJ.state = Paused]\nWHEN ?resume.cj [true] CJ.state := Printing\nTHEN !printstart.cj CJ.state := Printing\n[CJ.state = Printing]"
+  },
+  {
+    "id": "error_9",
+    "domain": "ecommerce",
+    "title": "Add to cart - Missing interaction variables",
+    "given": "a product with valid price",
+    "when": "the user adds product to cart",
+    "then": "the cart contains the product",
+    "complexity": "medium",
+    "notes": "",
+    "ibdd_representation": "GIVEN P [P.price > 0]\nWHEN ?add_to_cart [true] CART.items := add(P, CART.items)\nTHEN [is_in_list(P, CART.items)]"
+  },
+  {
+    "id": "error_10",
+    "domain": "printer",
+    "title": "Cancel job - Wrong assignment syntax",
+    "given": "a job is in the queue",
+    "when": "the operator cancels the job",
+    "then": "the job is removed from queue",
+    "complexity": "simple",
+    "notes": "",
+    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, QUEUE)]\nWHEN ?cancel.cj [true] CJ.state = Cancelled\nTHEN [CJ.state = Cancelled ∧ ¬is_in_list(CJ, QUEUE)]"
+  }
+]

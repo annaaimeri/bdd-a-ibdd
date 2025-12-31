@@ -139,6 +139,12 @@ class TranslationService:
         if isinstance(json_data, list):
             if json_data:
                 item_schema = infer_type(json_data[0])
+                # Add ibdd_representation field to the schema if not present
+                if item_schema.get("type") == "object":
+                    if "ibdd_representation" not in item_schema.get("properties", {}):
+                        item_schema["properties"]["ibdd_representation"] = {"type": "string"}
+                        if "required" in item_schema:
+                            item_schema["required"].append("ibdd_representation")
             else:
                 item_schema = {"type": "object", "additionalProperties": True}
 

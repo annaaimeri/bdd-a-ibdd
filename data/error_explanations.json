@@ -1,0 +1,15 @@
+[
+  {
+    "case_id": 16,
+    "success": true,
+    "explanation": "El parser encontró el símbolo '√', que no es reconocido como un operador válido en la gramática IBDD. La gramática espera operadores estándar o funciones bien definidas, y '√' no está definido como tal en el contexto de la gramática.",
+    "error_type": "Expresión mal formada",
+    "error_location": "Línea 3, col 44",
+    "correction_suggestion": "Reemplaza '√RESULT' con una expresión válida. Por ejemplo, si 'sqrt' es una función predefinida, podrías usar 'sqrt(RESULT)' en lugar de '√RESULT'.",
+    "hints": [
+      "Asegúrate de que todas las operaciones matemáticas usen funciones o operadores reconocidos por la gramática.",
+      "Revisa la definición de funciones permitidas en tu implementación de IBDD.",
+      "Considera definir 'sqrt' como una función si no está ya definida."
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "domain": "printer",
+    "title": "Submit job to printer",
+    "given": "a job file",
+    "when": "the operator submits the job file using Submission method",
+    "then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type",
+    "complexity": "medium",
+    "notes": ""
+  },
+  {
+    "id": "2",
+    "domain": "printer",
+    "title": "Complete printing moves job to printed",
+    "given": "a controller job is in the scheduled jobs AND the controller job is a production job",
+    "when": "the printer starts printing the controller job AND the printer completes printing the controller job",
+    "then": "the controller job is in the printed jobs",
+    "complexity": "medium",
+    "notes": ""
+  },
+  {
+    "id": "3",
+    "domain": "printer",
+    "title": "Restart cleanup",
+    "given": "the printer controller is running",
+    "when": "the operator restarts the printer controller",
+    "then": "the printed jobs clean up is executed",
+    "complexity": "simple",
+    "notes": ""
+  }
+]

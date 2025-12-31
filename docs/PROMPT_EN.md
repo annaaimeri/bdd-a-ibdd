@@ -221,12 +221,14 @@ THEN [is_in_list(P, SC.items) ∧ SC.total = calculate_total(SC.items)]
 
 ## 5. Final Instruction
 
-Process the input JSON and return the same JSON with the `"ibdd_representation"` field added to each scenario.
+Process the input JSON and return the same JSON with the `"ibdd_representation"` field containing your IBDD translation for each scenario.
 
 **IMPORTANT**:
 - Do NOT include explanations, comments, or markdown
 - ONLY return the resulting JSON
 - Maintain exactly the same structure as the input JSON
+- **CRITICAL**: Put your IBDD translation in the `"ibdd_representation"` field (overwrite existing value if present)
+- Leave the `"notes"` field unchanged if it exists
 - The IBDD representation must be a string with line breaks (`\n`)
 - **ALL conditions in Switch must be between brackets `[...]`**
 - **ALL guards must be between brackets `[...]`**

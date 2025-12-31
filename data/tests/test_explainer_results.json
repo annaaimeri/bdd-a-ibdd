@@ -1,0 +1,164 @@
+[
+  {
+    "case_id": "error_1",
+    "title": "Submit job - Missing brackets in GIVEN",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_1",
+      "success": true,
+      "explanation": "El parser esperaba un corchete de apertura '[' después de la declaración 'JF' para encerrar la guarda. En su lugar, encontró 'true', lo cual no es válido sin los corchetes. Esto se debe a que la gramática requiere que las guardas estén siempre encerradas en corchetes para ser reconocidas correctamente.",
+      "error_type": "Corchetes faltantes en guardas",
+      "error_location": "Línea 1, después de 'GIVEN JF'",
+      "correction_suggestion": "Corrige la línea 1 para incluir corchetes alrededor de 'true':\nGIVEN JF [true]",
+      "hints": [
+        "Siempre encierra las guardas en corchetes '[...]' después de una declaración 'GIVEN'.",
+        "Verifica que cada declaración 'GIVEN' siga el formato: 'GIVEN' Declaration '[' Guard ']'",
+        "Revisa el uso de corchetes en las guardas para asegurar que no falten."
+      ] // TODO: Hay que opasarle el escenario completo. O todos?
+    }
+  },
+  {
+    "case_id": "error_2",
+    "title": "Start printing - Missing gate symbol",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_2",
+      "success": true,
+      "explanation": "El parser encontró un error en la palabra 'Printin', que parece ser un error tipográfico de 'Printing'. El parser esperaba una expresión bien formada para la asignación, pero encontró una palabra incompleta.",
+      "error_type": "Expresiones mal formadas",
+      "error_location": "Línea 2, parte de la asignación",
+      "correction_suggestion": "Corrige la asignación en la línea 2 para que sea 'CJ.state := Printing'. El IBDD corregido sería:\n```\nGIVEN CJ [CJ.state = Pending]\nWHEN printstart.cj [true] CJ.state := Printing\nTHEN [CJ.state = Printing]\n```",
+      "hints": [
+        "Revisa cuidadosamente las palabras clave y nombres de estados para evitar errores tipográficos.",
+        "Asegúrate de que todas las asignaciones estén correctamente escritas y completas.",
+        "Verifica que las expresiones sean completas y sigan la sintaxis esperada."
+      ]
+    }
+  },
+  {
+    "case_id": "error_3",
+    "title": "Restart cleanup - Missing brackets in condition",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_3",
+      "success": true,
+      "explanation": "El parser esperaba un corchete de apertura '[' o un punto '.' después del gate '?restart', pero encontró 'true' sin la estructura necesaria. Esto sugiere que falta la condición entre corchetes que debería seguir inmediatamente después del gate.",
+      "error_type": "Sintaxis de gate incorrecta",
+      "error_location": "Línea 2, después de '?restart'",
+      "correction_suggestion": "Corrige la línea 2 para incluir una condición entre corchetes después del gate. Por ejemplo: 'WHEN ?restart [condition] true'.",
+      "hints": [
+        "Asegúrate de que cada interacción tenga una condición entre corchetes inmediatamente después del gate.",
+        "Revisa que cada switch tenga una estructura de 'Interaction [Condition] Assignment'.",
+        "Verifica que los gates comiencen con '?' para entradas o '!' para salidas."
+      ]
+    }
+  },
+  {
+    "case_id": "error_4",
+    "title": "Process job - Missing assignment",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_4",
+      "success": true,
+      "explanation": "El parser esperaba una asignación o un punto (DOT) después de la palabra clave THEN, pero encontró un corchete inmediatamente. Esto indica que falta un switch o una asignación antes de la guarda final en la cláusula THEN.",
+      "error_type": "Postcondición faltante",
+      "error_location": "Línea 3, inicio de la cláusula THEN",
+      "correction_suggestion": "Agregar un switch o una asignación antes de la guarda en la cláusula THEN. Ejemplo corregido: THEN ?queue.jf [is_in_queue(JF)]",
+      "hints": [
+        "Asegúrate de que cada cláusula THEN contenga al menos un switch antes de la guarda final.",
+        "Verifica que las asignaciones o interacciones precedan a las guardas en la cláusula THEN.",
+        "Revisa que cada sección del IBDD siga la estructura esperada de la gramática."
+      ]
+    }
+  },
+  {
+    "case_id": "error_5",
+    "title": "Complete job - Missing postcondition",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_5",
+      "success": true,
+      "explanation": "El parser esperaba encontrar una postcondición encerrada en corchetes ('[...]') después de la cláusula THEN, pero no encontró nada. Esto es necesario para completar la estructura del escenario según la gramática IBDD.",
+      "error_type": "Postcondición faltante",
+      "error_location": "Línea 3, después de THEN",
+      "correction_suggestion": "Agregar una postcondición adecuada después de THEN, por ejemplo: `THEN [CJ.state = Completed]`",
+      "hints": [
+        "Asegúrate de que cada cláusula THEN termine con una postcondición en corchetes.",
+        "Revisa que todas las partes del escenario IBDD estén completas antes de validar.",
+        "Consulta la gramática IBDD para verificar la estructura correcta de cada sección."
+      ]
+    }
+  },
+  {
+    "case_id": "error_6",
+    "title": "Add to queue - Invalid syntax with parentheses",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_6",
+      "success": true,
+      "explanation": "El parser esperaba un corchete de apertura '[' para indicar el inicio de una condición, seguido de una asignación. Sin embargo, encontró un paréntesis que no es parte de la sintaxis esperada. Esto ocurre porque cada switch en la sección WHEN debe tener una condición y una asignación, pero aquí falta la asignación.",
+      "error_type": "Asignaciones faltantes",
+      "error_location": "Línea 2, después de '?addJob'",
+      "correction_suggestion": "Corrige el IBDD para incluir una condición y una asignación en el switch de la sección WHEN. Por ejemplo:\nWHEN ?addJob [true] true",
+      "hints": [
+        "Asegúrate de que cada switch en la sección WHEN tenga una condición entre corchetes '[]'.",
+        "Cada switch debe terminar con una asignación, incluso si es simplemente 'true'.",
+        "Revisa la sintaxis de los gates para asegurarte de que están correctamente formados."
+      ]
+    }
+  },
+  {
+    "case_id": "error_7",
+    "title": "Pause printing - Malformed guard with missing operator",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_7",
+      "success": true,
+      "explanation": "El parser esperaba una expresión booleana bien formada dentro de los corchetes de la guarda en la cláusula GIVEN. Encontró 'CJ.state Printing', que no es una expresión booleana válida. Faltan operadores de comparación como '==' para formar una condición válida.",
+      "error_type": "Guarda mal formada",
+      "error_location": "Línea 1, dentro de la guarda de GIVEN",
+      "correction_suggestion": "Corregir la guarda en la cláusula GIVEN para que sea una expresión booleana válida. Cambiar 'CJ.state Printing' por 'CJ.state == Printing'. El IBDD corregido sería:\n```\nGIVEN CJ [CJ.state == Printing]\nWHEN ?pause.cj [true] CJ.state := Paused\nTHEN [CJ.state = Paused]\n```",
+      "hints": [
+        "Asegúrate de que las guardas contengan expresiones booleanas válidas, utilizando operadores de comparación como '=='.",
+        "Revisa que todas las condiciones dentro de los corchetes estén correctamente formadas con operadores válidos.",
+        "Verifica que cada parte de la declaración de GIVEN, WHEN y THEN siga la estructura esperada por la gramática IBDD."
+      ]
+    }
+  },
+  {
+    "case_id": "error_8",
+    "title": "Resume job - Missing condition brackets in THEN switch",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_8",
+      "success": true,
+      "explanation": "El parser esperaba un corchete de apertura '[' después de '!printstart.cj' para indicar el inicio de una condición. En su lugar, encontró 'CJ.state := Printing', lo que causó el error.",
+      "error_type": "Corchetes faltantes en condiciones",
+      "error_location": "Línea 3, después de '!printstart.cj'",
+      "correction_suggestion": "Corrige la línea 3 para que incluya una condición entre corchetes, incluso si es 'true'. Ejemplo: 'THEN !printstart.cj [true] CJ.state := Printing [CJ.state = Printing]'",
+      "hints": [
+        "Asegúrate de que cada switch en la cláusula THEN tenga una condición entre corchetes '[...]'.",
+        "Revisa que cada interacción en la cláusula THEN esté seguida inmediatamente por una condición entre corchetes.",
+        "Verifica que todas las asignaciones en la cláusula THEN estén precedidas por una condición entre corchetes."
+      ]
+    }
+  },
+  {
+    "case_id": "error_10",
+    "title": "Cancel job - Wrong assignment syntax",
+    "error_detected": true,
+    "explanation": {
+      "case_id": "error_10",
+      "success": true,
+      "explanation": "El parser esperaba una asignación después de la condición en el switch. En el IBDD, cada switch debe tener una asignación explícita después de la condición encerrada en corchetes. En este caso, después de '[true]', se esperaba una asignación, pero se encontró una expresión de igualdad 'CJ.state = Cancelled' que no es una asignación válida en este contexto.",
+      "error_type": "Asignaciones faltantes",
+      "error_location": "Línea 2, después de la condición en el switch",
+      "correction_suggestion": "Corrige el switch en la línea 2 para incluir una asignación válida. Por ejemplo, podrías cambiarlo a 'WHEN ?cancel.cj [true] true' si la intención es simplemente verificar la condición sin realizar una asignación explícita.",
+      "hints": [
+        "Asegúrate de que cada switch tenga una asignación después de la condición en corchetes.",
+        "Revisa que las asignaciones sean expresiones válidas y no confundirlas con comparaciones o expresiones lógicas.",
+        "Verifica que las condiciones y asignaciones estén correctamente separadas y formateadas en cada switch."
+      ]
+    }
+  }
+]

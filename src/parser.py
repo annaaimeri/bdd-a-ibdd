@@ -24,8 +24,8 @@ IBDD_GRAMMAR = r"""
     // THEN section
     then: "THEN" switch* guard
 
-    // Switch
-    switch: interaction guard assignment
+    // Switch - flexible para manejar diferentes formatos (con/sin corchetes, múltiples expr/assignments)
+    switch: interaction (guard | expr | assignment)*
 
     // Interacción
     interaction: gate [DOT var_list]

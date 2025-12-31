@@ -1,0 +1,186 @@
+[
+  {
+    "id": 1,
+    "domain": "printer",
+    "title": "Submit job to printer",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN JF [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 2,
+    "domain": "printer",
+    "title": "Complete printing moves job to printed",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
+  },
+  {
+    "id": 3,
+    "domain": "printer",
+    "title": "Restart cleanup",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 4,
+    "domain": "printer",
+    "title": "Pause printing",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
+  },
+  {
+    "id": 5,
+    "domain": "printer",
+    "title": "Resume paused job",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
+  },
+  {
+    "id": 6,
+    "domain": "printer",
+    "title": "Move paused job to waiting",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
+  },
+  {
+    "id": 7,
+    "domain": "printer",
+    "title": "Move from waiting to scheduled",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
+  },
+  {
+    "id": 8,
+    "domain": "printer",
+    "title": "Hard copy output after printing",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
+  },
+  {
+    "id": 9,
+    "domain": "calculator",
+    "title": "Add two numbers",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 10,
+    "domain": "calculator",
+    "title": "Subtract two numbers",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 11,
+    "domain": "calculator",
+    "title": "Multiply two numbers",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 12,
+    "domain": "calculator",
+    "title": "Divide two numbers",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 13,
+    "domain": "calculator",
+    "title": "Add three numbers",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 3 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 14,
+    "domain": "calculator",
+    "title": "Calculate percentage",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 15,
+    "domain": "calculator",
+    "title": "Square a number",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 16,
+    "domain": "calculator",
+    "title": "Calculate square root",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 17,
+    "domain": "calculator",
+    "title": "Chain operations add and multiply",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 3 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 18,
+    "domain": "calculator",
+    "title": "Calculate average of two numbers",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 19,
+    "domain": "calculator",
+    "title": "Clear and add",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 3 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 20,
+    "domain": "calculator",
+    "title": "Add negative numbers",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 21,
+    "domain": "calculator",
+    "title": "Subtract with negative result",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 22,
+    "domain": "calculator",
+    "title": "Add decimal numbers",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  },
+  {
+    "id": 23,
+    "domain": "calculator",
+    "title": "Multiply by zero",
+    "valid": true,
+    "error": null,
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+  }
+]

@@ -13,9 +13,10 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from translator import TranslationService
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from parser import validate_ibdd_cases
+from src.translator import TranslationService
+from src.parser import validate_ibdd_cases
+from src.explainer import IBDDErrorExplainer
 
 
 class BDDToIBDDPipeline:
@@ -29,29 +30,32 @@ class BDDToIBDDPipeline:
             api_key: OpenAI API key (optional, defaults to OPENAI_API_KEY env variable)
         """
         self.translation_service = TranslationService(api_key)
+        self.error_explainer = IBDDErrorExplainer(api_key)
 
     def run(
         self,
         dataset_path: str,
         prompt_path: str,
         translation_output_path: str = "data/output.json",
-        validation_output_path: str = "data/parsed_ibdd_results.json"
+        validation_output_path: str = "data/parsed_ibdd_results.json",
+        explanations_output_path: str = "data/error_explanations.json"
     ) -> None:
         """
-        Run the complete pipeline: dataset → translation → parsing/validation
+        Run the complete pipeline: dataset → translation → parsing/validation → error explanation (if needed)
 
         Args:
             dataset_path: Path to the input dataset JSON file
             prompt_path: Path to the prompt template file (.md)
             translation_output_path: Path where translated IBDD will be saved
             validation_output_path: Path where validation results will be saved
+            explanations_output_path: Path where error explanations will be saved (if errors exist)
         """
         print("=" * 80)
         print("BDD to IBDD Translation Pipeline")
         print("=" * 80)
 
         # Step 1: Translate BDD to IBDD
-        print("\n[Step 1/2] Translating BDD scenarios to IBDD...")
+        print("\n[Step 1/3] Translating BDD scenarios to IBDD...")
         print("-" * 80)
         try:
             self.translation_service.translate(
@@ -65,7 +69,7 @@ class BDDToIBDDPipeline:
             sys.exit(1)
 
         # Step 2: Parse and validate IBDD
-        print("\n[Step 2/2] Parsing and validating IBDD scenarios...")
+        print("\n[Step 2/3] Parsing and validating IBDD scenarios...")
         print("-" * 80)
         try:
             validate_ibdd_cases(
@@ -77,6 +81,32 @@ class BDDToIBDDPipeline:
             print(f"✗ Validation failed: {e}", file=sys.stderr)
             sys.exit(1)
 
+        # Step 3: Explain errors if any cases failed
+        print("\n[Step 3/3] Checking for parsing errors...")
+        print("-" * 80)
+        try:
+            failed_cases = self._collect_failed_cases(
+                translation_output_path,
+                validation_output_path
+            )
+
+            if failed_cases:
+                print(f"⚠ Found {len(failed_cases)} case(s) with parsing errors")
+                print("Generating error explanations...")
+
+                explanations = self.error_explainer.explain_multiple_errors(failed_cases)
+
+                # Save explanations
+                with open(explanations_output_path, 'w', encoding='utf-8') as f:
+                    json.dump(explanations, indent=2, ensure_ascii=False, fp=f)
+
+                print(f"✓ Error explanations saved: {explanations_output_path}")
+            else:
+                print("✓ All cases parsed successfully - no errors to explain")
+        except Exception as e:
+            print(f"⚠ Error explanation step failed (non-critical): {e}", file=sys.stderr)
+            print("Pipeline will continue despite explanation failure")
+
         # Summary
         print("\n" + "=" * 80)
         print("Pipeline completed successfully!")
@@ -84,7 +114,63 @@ class BDDToIBDDPipeline:
         print(f"Translation output: {translation_output_path}")
         print(f"Validation output:  {validation_output_path}")
         print(f"Validation CSV:     {validation_output_path.replace('.json', '.csv')}")
+
+        # Check if there were errors
+        if os.path.exists(explanations_output_path):
+            print(f"Error explanations: {explanations_output_path}")
+            with open(validation_output_path, 'r', encoding='utf-8') as f:
+                validation_results = json.load(f)
+                total = len(validation_results)
+                failed = sum(1 for r in validation_results if not r.get('valid', True))
+                print(f"\nValidation Summary: {total - failed}/{total} cases passed, {failed} failed")
         print()
+
+    def _collect_failed_cases(
+        self,
+        translation_output_path: str,
+        validation_output_path: str
+    ) -> list:
+        """
+        Collect all cases that failed parsing for error explanation.
+
+        Args:
+            translation_output_path: Path to the translation output file
+            validation_output_path: Path to the validation results file
+
+        Returns:
+            List of failed cases with all necessary information for explanation
+        """
+        # Load translation results (original BDD + generated IBDD)
+        with open(translation_output_path, 'r', encoding='utf-8') as f:
+            translations = json.load(f)
+
+        # Load validation results (parsing success/failure + errors)
+        with open(validation_output_path, 'r', encoding='utf-8') as f:
+            validations = json.load(f)
+
+        # Create a mapping of case ID to translation data
+        translation_map = {case['id']: case for case in translations}
+
+        # Collect failed cases
+        failed_cases = []
+        for validation in validations:
+            if not validation.get('valid', True):
+                case_id = validation['id']
+                translation = translation_map.get(case_id)
+
+                if translation:
+                    failed_cases.append({
+                        'case_id': case_id,
+                        'original_bdd': {
+                            'given': translation.get('given', ''),
+                            'when': translation.get('when', ''),
+                            'then': translation.get('then', '')
+                        },
+                        'generated_ibdd': translation.get('ibdd_representation', ''),
+                        'parse_error': validation.get('error', 'Unknown error')
+                    })
+
+        return failed_cases
 
 
 def main():

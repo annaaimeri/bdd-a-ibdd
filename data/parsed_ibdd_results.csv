@@ -1,0 +1,70 @@
+id,domain,title,valid,error,parsed_result
+1,printer,Submit job to printer,True,,"GIVEN JF [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+2,printer,Complete printing moves job to printed,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
+3,printer,Restart cleanup,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+4,printer,Pause printing,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
+5,printer,Resume paused job,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
+6,printer,Move paused job to waiting,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
+7,printer,Move from waiting to scheduled,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
+8,printer,Hard copy output after printing,True,,"GIVEN CJ [[]
+WHEN 1 switches
+THEN [[]"
+9,calculator,Add two numbers,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+10,calculator,Subtract two numbers,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+11,calculator,Multiply two numbers,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+12,calculator,Divide two numbers,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+13,calculator,Add three numbers,True,,"GIVEN  [[]
+WHEN 3 switches
+THEN 1 switches [[]"
+14,calculator,Calculate percentage,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+15,calculator,Square a number,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+16,calculator,Calculate square root,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+17,calculator,Chain operations add and multiply,True,,"GIVEN  [[]
+WHEN 3 switches
+THEN 1 switches [[]"
+18,calculator,Calculate average of two numbers,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+19,calculator,Clear and add,True,,"GIVEN  [[]
+WHEN 3 switches
+THEN 1 switches [[]"
+20,calculator,Add negative numbers,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+21,calculator,Subtract with negative result,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+22,calculator,Add decimal numbers,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"
+23,calculator,Multiply by zero,True,,"GIVEN  [[]
+WHEN 1 switches
+THEN 1 switches [[]"

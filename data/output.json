@@ -1,0 +1,232 @@
+[
+  {
+    "id": 1,
+    "domain": "printer",
+    "title": "Submit job to printer",
+    "given": "a job file",
+    "when": "the operator submits the job file using Submission method",
+    "then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type",
+    "complexity": "medium",
+    "ibdd_representation": "GIVEN JF [true]\nWHEN ?submit.jf,sm [true] JF := jf\nTHEN !append.cj,sjl [cj.type = JT ∧ sjl = SJL ∧ JT = getJobType(SM)] CJ := cj, SJL := add(CJ, SJL)\n[is_in_list(CJ, SJL) ∧ CJ.type = JT]"
+  },
+  {
+    "id": 2,
+    "domain": "printer",
+    "title": "Complete printing moves job to printed",
+    "given": "a controller job is in the scheduled jobs AND the controller job is a production job",
+    "when": "the printer starts printing the controller job AND the printer completes printing the controller job",
+    "then": "the controller job is in the printed jobs",
+    "complexity": "medium",
+    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, SJL) ∧ CJ.type = Production]\nWHEN !printstart.cj [cj.id = CJ.id ∧ cj.state = Printing] CJ.state := cj.state\n!printcomplete.cj [cj.id = CJ.id ∧ cj.state = Completed] CJ.state := cj.state, PJL := add(CJ, PJL)\nTHEN [is_in_list(CJ, PJL)]"
+  },
+  {
+    "id": 3,
+    "domain": "printer",
+    "title": "Restart cleanup",
+    "given": "the printer controller is running",
+    "when": "the operator restarts the printer controller",
+    "then": "the printed jobs clean up is executed",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [is_running(CTRL)]\nWHEN ?restart [true] true\nTHEN !cleanup [true] PJL := empty(PJL)\n[is_empty(PJL)]"
+  },
+  {
+    "id": 4,
+    "domain": "printer",
+    "title": "Pause printing",
+    "given": "a controller job is printing",
+    "when": "the operator pauses the printing of the controller job",
+    "then": "the controller job is paused",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?pause.cj [cj.id = CJ.id] CJ.state := Paused\nTHEN [CJ.state = Paused]"
+  },
+  {
+    "id": 5,
+    "domain": "printer",
+    "title": "Resume paused job",
+    "given": "a controller job is paused",
+    "when": "the operator resumes printing the controller job",
+    "then": "the controller job is printing",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN CJ [CJ.state = Paused]\nWHEN ?resume.cj [cj.id = CJ.id] CJ.state := Printing\nTHEN [CJ.state = Printing]"
+  },
+  {
+    "id": 6,
+    "domain": "printer",
+    "title": "Move paused job to waiting",
+    "given": "a controller job is paused",
+    "when": "the operator moves the controller job to the waiting jobs before the printer completes printing",
+    "then": "the controller job is in the waiting jobs AND the controller job is not in the printed jobs",
+    "complexity": "medium",
+    "ibdd_representation": "GIVEN CJ [CJ.state = Paused]\nWHEN ?move_to_waiting.cj [cj.id = CJ.id] WJL := add(CJ, WJL)\nTHEN [is_in_list(CJ, WJL) ∧ ¬is_in_list(CJ, PJL)]"
+  },
+  {
+    "id": 7,
+    "domain": "printer",
+    "title": "Move from waiting to scheduled",
+    "given": "a controller job in the waiting jobs",
+    "when": "the operator moves the controller job to the scheduled jobs",
+    "then": "the controller job is in the scheduled jobs",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, WJL)]\nWHEN ?move_to_scheduled.cj [cj.id = CJ.id] SJL := add(CJ, SJL)\nTHEN [is_in_list(CJ, SJL)]"
+  },
+  {
+    "id": 8,
+    "domain": "printer",
+    "title": "Hard copy output after printing",
+    "given": "a controller job is in the scheduled jobs",
+    "when": "the printer starts printing the controller job AND the printer completes printing the controller job",
+    "then": "there is a printed output AND the printed output is a hard copy of the controller job",
+    "complexity": "complex",
+    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, SJL)]\nWHEN !printstart.cj [cj.id = CJ.id ∧ cj.state = Printing] CJ.state := cj.state\n!printcomplete.cj [cj.id = CJ.id ∧ cj.state = Completed] CJ.state := cj.state, OUTPUT := hard_copy(CJ)\nTHEN [is_hard_copy(OUTPUT, CJ)]"
+  },
+  {
+    "id": 9,
+    "domain": "calculator",
+    "title": "Add two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 5 and 7 and choose addition",
+    "then": "the calculator displays the result as 12",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = 5 ∧ n2 = 7 ∧ op = add] RESULT := n1 + n2\nTHEN !display.result [RESULT = 12]"
+  },
+  {
+    "id": 10,
+    "domain": "calculator",
+    "title": "Subtract two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 10 and 3 and choose subtraction",
+    "then": "the calculator displays the result as 7",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = 10 ∧ n2 = 3 ∧ op = subtract] RESULT := n1 - n2\nTHEN !display.result [RESULT = 7]"
+  },
+  {
+    "id": 11,
+    "domain": "calculator",
+    "title": "Multiply two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 4 and 6 and choose multiplication",
+    "then": "the calculator displays the result as 24",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = 4 ∧ n2 = 6 ∧ op = multiply] RESULT := n1 * n2\nTHEN !display.result [RESULT = 24]"
+  },
+  {
+    "id": 12,
+    "domain": "calculator",
+    "title": "Divide two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 20 and 4 and choose division",
+    "then": "the calculator displays the result as 5",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = 20 ∧ n2 = 4 ∧ op = divide] RESULT := n1 / n2\nTHEN !display.result [RESULT = 5]"
+  },
+  {
+    "id": 13,
+    "domain": "calculator",
+    "title": "Add three numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 5 and add 3 and then add 2",
+    "then": "the calculator displays the result as 10",
+    "complexity": "medium",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1 [n1 = 5] RESULT := n1\n?add.n2 [n2 = 3] RESULT := RESULT + n2\n?add.n3 [n3 = 2] RESULT := RESULT + n3\nTHEN !display.result [RESULT = 10]"
+  },
+  {
+    "id": 14,
+    "domain": "calculator",
+    "title": "Calculate percentage",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 80 and calculate 25 percent",
+    "then": "the calculator displays the result as 20",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n,p [n = 80 ∧ p = 25] RESULT := (n * p) / 100\nTHEN !display.result [RESULT = 20]"
+  },
+  {
+    "id": 15,
+    "domain": "calculator",
+    "title": "Square a number",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 9 and choose square operation",
+    "then": "the calculator displays the result as 81",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n,op [n = 9 ∧ op = square] RESULT := n * n\nTHEN !display.result [RESULT = 81]"
+  },
+  {
+    "id": 16,
+    "domain": "calculator",
+    "title": "Calculate square root",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 16 and choose square root operation",
+    "then": "the calculator displays the result as 4",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n,op [n = 16 ∧ op = sqrt] RESULT := sqrt(n)\nTHEN !display.result [RESULT = 4]"
+  },
+  {
+    "id": 17,
+    "domain": "calculator",
+    "title": "Chain operations add and multiply",
+    "given": "the calculator is ready for use",
+    "when": "I enter 5 add 3 and then multiply by 2",
+    "then": "the calculator displays the result as 16",
+    "complexity": "medium",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1 [n1 = 5] RESULT := n1\n?add.n2 [n2 = 3] RESULT := RESULT + n2\n?multiply.n3 [n3 = 2] RESULT := RESULT * n3\nTHEN !display.result [RESULT = 16]"
+  },
+  {
+    "id": 18,
+    "domain": "calculator",
+    "title": "Calculate average of two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 8 and 12 and choose average",
+    "then": "the calculator displays the result as 10",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = 8 ∧ n2 = 12 ∧ op = average] RESULT := (n1 + n2) / 2\nTHEN !display.result [RESULT = 10]"
+  },
+  {
+    "id": 19,
+    "domain": "calculator",
+    "title": "Clear and add",
+    "given": "the calculator displays 42",
+    "when": "I clear the calculator and then enter 7 and add 3",
+    "then": "the calculator displays the result as 10",
+    "complexity": "medium",
+    "ibdd_representation": "GIVEN [display = 42]\nWHEN ?clear [true] display := 0\n?input.n1 [n1 = 7] RESULT := n1\n?add.n2 [n2 = 3] RESULT := RESULT + n2\nTHEN !display.result [RESULT = 10]"
+  },
+  {
+    "id": 20,
+    "domain": "calculator",
+    "title": "Add negative numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers -5 and -3 and choose addition",
+    "then": "the calculator displays the result as -8",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = -5 ∧ n2 = -3 ∧ op = add] RESULT := n1 + n2\nTHEN !display.result [RESULT = -8]"
+  },
+  {
+    "id": 21,
+    "domain": "calculator",
+    "title": "Subtract with negative result",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 5 and 12 and choose subtraction",
+    "then": "the calculator displays the result as -7",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = 5 ∧ n2 = 12 ∧ op = subtract] RESULT := n1 - n2\nTHEN !display.result [RESULT = -7]"
+  },
+  {
+    "id": 22,
+    "domain": "calculator",
+    "title": "Add decimal numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 3.5 and 2.7 and choose addition",
+    "then": "the calculator displays the result as 6.2",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = 3.5 ∧ n2 = 2.7 ∧ op = add] RESULT := n1 + n2\nTHEN !display.result [RESULT = 6.2]"
+  },
+  {
+    "id": 23,
+    "domain": "calculator",
+    "title": "Multiply by zero",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 25 and 0 and choose multiplication",
+    "then": "the calculator displays the result as 0",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?input.n1,n2,op [n1 = 25 ∧ n2 = 0 ∧ op = multiply] RESULT := n1 * n2\nTHEN !display.result [RESULT = 0]"
+  }
+]
