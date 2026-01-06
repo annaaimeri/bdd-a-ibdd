@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional, Union, List
 
 import requests
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 
 class TranslationService:
@@ -282,6 +283,42 @@ class TranslationService:
 
         return None
 
+    def translate_single_case(
+        self,
+        case: Dict[str, Any],
+        prompt_template: str
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Translate a single BDD case to IBDD.
+
+        Args:
+            case: Single case dict with id, given, when, then
+            prompt_template: The prompt template to use
+
+        Returns:
+            Translated case with metrics, or None on failure
+        """
+        start_time = time.time()
+
+        # Prepare prompt for this single case
+        final_prompt = self.prepare_prompt([case], prompt_template)
+
+        # Call API
+        response = self.call_openai_api(final_prompt, [case])
+
+        elapsed_time = time.time() - start_time
+
+        if response and isinstance(response, list) and len(response) > 0:
+            translated_case = response[0]
+            # Add metrics to the response
+            translated_case['_metrics'] = {
+                'translation_time': round(elapsed_time, 2),
+                'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            return translated_case
+
+        return None
+
     @staticmethod
     def save_response(response: Union[Dict[str, Any], List[Any]], output_file_path: str) -> None:
         """
@@ -302,24 +339,89 @@ class TranslationService:
     def translate(self, json_file_path: str, prompt_file_path: str, output_file_path: str) -> None:
         """
         Complete translation workflow from JSON to output via GPT.
+        Processes cases individually with incremental saving and progress tracking.
 
         Args:
             json_file_path: Path to the JSON file
             prompt_file_path: Path to the prompt template file
             output_file_path: Path where to save the translation
         """
-        print("Starting translation process...")
+        print("=" * 80)
+        print("Starting individual case translation process...")
+        print("=" * 80)
 
+        # Load data
         json_data = self.read_json_file(json_file_path)
         prompt_template = self.read_prompt_file(prompt_file_path)
-        final_prompt = self.prepare_prompt(json_data, prompt_template)
-        response = self.call_openai_api(final_prompt, json_data)
 
-        if response:
-            self.save_response(response, output_file_path)
-            print("Translation process completed")
-        else:
-            print("Failed to get translation from OpenAI API", file=sys.stderr)
+        # Ensure json_data is a list
+        if not isinstance(json_data, list):
+            print("Error: Dataset must be a JSON array of cases", file=sys.stderr)
+            sys.exit(1)
+
+        total_cases = len(json_data)
+        print(f"\nProcessing {total_cases} cases individually...")
+        print(f"Output will be saved incrementally to: {output_file_path}")
+        print("-" * 80)
+
+        # Track results and metrics
+        translated_cases = []
+        failed_cases = []
+        total_time = 0
+
+        # Process each case individually with progress bar
+        for case in tqdm(json_data, desc="Translating", unit="case"):
+            case_id = case.get('id', 'unknown')
+
+            try:
+                translated_case = self.translate_single_case(case, prompt_template)
+
+                if translated_case:
+                    translated_cases.append(translated_case)
+                    if '_metrics' in translated_case:
+                        total_time += translated_case['_metrics'].get('translation_time', 0)
+
+                    # Incremental save after each successful translation
+                    self.save_response(translated_cases, output_file_path)
+                else:
+                    failed_cases.append({
+                        'id': case_id,
+                        'reason': 'API returned None'
+                    })
+                    print(f"\n⚠ Warning: Case {case_id} failed to translate", file=sys.stderr)
+
+            except Exception as e:
+                failed_cases.append({
+                    'id': case_id,
+                    'reason': str(e)
+                })
+                print(f"\n✗ Error translating case {case_id}: {e}", file=sys.stderr)
+                # Continue with next case instead of failing completely
+
+        # Final save
+        self.save_response(translated_cases, output_file_path)
+
+        # Print summary
+        print("\n" + "=" * 80)
+        print("Translation Summary")
+        print("=" * 80)
+        print(f"Total cases:        {total_cases}")
+        print(f"Successfully translated: {len(translated_cases)}")
+        print(f"Failed:            {len(failed_cases)}")
+        print(f"Success rate:      {len(translated_cases)/total_cases*100:.1f}%")
+        print(f"Total time:        {total_time:.1f}s")
+        print(f"Average per case:  {total_time/len(translated_cases):.1f}s" if translated_cases else "N/A")
+        print(f"Output saved to:   {output_file_path}")
+
+        if failed_cases:
+            print("\nFailed cases:")
+            for failed in failed_cases:
+                print(f"  - Case {failed['id']}: {failed['reason']}")
+
+        print("=" * 80)
+
+        if not translated_cases:
+            print("\n✗ No cases were successfully translated", file=sys.stderr)
             sys.exit(1)
 
     def retry_failed_translations(
@@ -329,6 +431,7 @@ class TranslationService:
     ) -> List[Dict[str, Any]]:
         """
         Retry translation for cases that failed parsing, using error analysis.
+        Processes each failed case individually.
 
         Args:
             error_explanations: List of error explanation dicts (from IBDDErrorExplainer)
@@ -340,59 +443,67 @@ class TranslationService:
         from src.explainer import IBDDErrorExplainer
 
         print(f"\n[Retry] Attempting to correct {len(error_explanations)} failed translation(s)...")
+        print("-" * 80)
 
         # Read retry prompt template
         retry_prompt_template = self.read_prompt_file(retry_prompt_path)
 
-        # Build JSON data with only failed cases (using original BDD)
-        failed_cases_json = []
-        error_analysis_sections = []
+        # Track results
+        corrected_cases = []
+        retry_failed_cases = []
 
-        for error_exp in error_explanations:
+        # Process each failed case individually with progress bar
+        for error_exp in tqdm(error_explanations, desc="Retrying", unit="case"):
+            case_id = error_exp.get('case_id', 'unknown')
+
             if not error_exp.get('success', False):
-                print(f"⚠ Skipping case {error_exp.get('case_id')} - error explanation failed")
+                print(f"\n⚠ Skipping case {case_id} - error explanation failed")
+                retry_failed_cases.append(case_id)
                 continue
 
-            # Build the case JSON from original BDD
-            original_bdd = error_exp.get('original_bdd', {})
-            case_data = {
-                'id': error_exp.get('case_id'),
-                'given': original_bdd.get('given', ''),
-                'when': original_bdd.get('when', ''),
-                'then': original_bdd.get('then', '')
-            }
-            failed_cases_json.append(case_data)
+            try:
+                # Build the case JSON from original BDD
+                original_bdd = error_exp.get('original_bdd', {})
+                case_data = {
+                    'id': case_id,
+                    'given': original_bdd.get('given', ''),
+                    'when': original_bdd.get('when', ''),
+                    'then': original_bdd.get('then', '')
+                }
 
-            # Format error analysis for this case
-            error_analysis_text = IBDDErrorExplainer.format_error_analysis_for_retry(error_exp)
-            error_analysis_sections.append(error_analysis_text)
+                # Format error analysis for this specific case
+                error_analysis_text = IBDDErrorExplainer.format_error_analysis_for_retry(error_exp)
 
-        if not failed_cases_json:
-            print("⚠ No valid cases to retry")
-            return []
+                # Replace placeholder in retry prompt with this case's error analysis
+                case_retry_prompt = retry_prompt_template.replace(
+                    '{error_analysis}',
+                    error_analysis_text
+                )
 
-        # Combine all error analyses
-        combined_error_analysis = "\n\n" + "="*80 + "\n\n".join(error_analysis_sections)
+                # Translate this single case with error context
+                corrected_case = self.translate_single_case(case_data, case_retry_prompt)
 
-        # Replace placeholder in retry prompt
-        final_retry_prompt = retry_prompt_template.replace(
-            '{error_analysis}',
-            combined_error_analysis
-        )
+                if corrected_case:
+                    corrected_cases.append(corrected_case)
+                else:
+                    print(f"\n⚠ Warning: Retry failed for case {case_id}")
+                    retry_failed_cases.append(case_id)
 
-        # Prepare final prompt with JSON data
-        final_prompt = self.prepare_prompt(failed_cases_json, final_retry_prompt)
+            except Exception as e:
+                print(f"\n✗ Error retrying case {case_id}: {e}", file=sys.stderr)
+                retry_failed_cases.append(case_id)
 
-        # Call OpenAI API
-        print(f"[Retry] Calling OpenAI API to correct {len(failed_cases_json)} case(s)...")
-        response = self.call_openai_api(final_prompt, failed_cases_json)
+        # Print summary
+        print("\n" + "-" * 80)
+        print(f"Retry Summary:")
+        print(f"  Attempted:  {len(error_explanations)}")
+        print(f"  Corrected:  {len(corrected_cases)}")
+        print(f"  Still failed: {len(retry_failed_cases)}")
+        if retry_failed_cases:
+            print(f"  Failed IDs: {retry_failed_cases}")
+        print("-" * 80)
 
-        if response:
-            print(f"✓ Retry completed successfully for {len(response)} case(s)")
-            return response
-        else:
-            print("✗ Retry failed - could not get corrected translations", file=sys.stderr)
-            return []
+        return corrected_cases
 
 
 def main():
