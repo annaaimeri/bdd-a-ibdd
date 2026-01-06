@@ -32,6 +32,35 @@ Then     ::= 'THEN' Switch* '[' Guard ']'
 - **Guards**: Boolean conditions
 - **Assignments**: Assignments (var := expression)
 
+### Operators (both Unicode and ASCII forms accepted):
+
+**Logical Operators:**
+- AND: `∧` or `&&`
+- OR: `∨` or `||`
+- NOT: `¬` or `!`
+
+**Comparison Operators:**
+- Equal: `=` or `==`
+- Not equal: `≠` or `!=`
+- Less than: `<`
+- Greater than: `>`
+- Less or equal: `≤` or `<=`
+- Greater or equal: `≥` or `>=`
+
+**Mathematical Operators:**
+- Addition: `+`
+- Subtraction: `-`
+- Multiplication: `*`
+- Division: `/`
+- Modulo: `%`
+- Power: `^`
+
+**IMPORTANT - NOT Supported:**
+- String literals with quotes: `"..."` (use identifiers or constants instead)
+- Word "not": use `¬` or `!` instead
+- Sets with braces: `{...}`
+- Time literals: `"14:00"` (use numeric representation or constants)
+
 ---
 
 ## 2. Translation Examples

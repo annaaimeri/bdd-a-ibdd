@@ -38,7 +38,7 @@ IBDD_GRAMMAR = r"""
     // Expresión
     expr: or_expr
 
-    or_expr: and_expr (OR and_expr)*
+    or_expr: and_expr ((OR | OR_SYMBOL) and_expr)*
     and_expr: not_expr ((AND | AND_SYMBOL) not_expr)*
     not_expr: (NOT | NOT_SYMBOL) not_expr | comparison
 
@@ -84,6 +84,7 @@ IBDD_GRAMMAR = r"""
 
     // Operadores lógicos
     OR: "||"
+    OR_SYMBOL: "∨"
     AND: "&&"
     AND_SYMBOL: "∧"
     NOT: "!"
