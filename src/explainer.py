@@ -31,7 +31,7 @@ class IBDDErrorExplainer:
             raise ValueError(
                 "Se requiere una clave API de OpenAI. Proporciónala como argumento o configura la variable OPENAI_API_KEY.")
 
-        self.model = "gpt-4o-2024-08-06"
+        self.model = "gpt-5.2"  # GPT-5.2 Thinking - Best for complex reasoning and error analysis
         self.api_endpoint = "https://api.openai.com/v1/chat/completions"
 
         self.system_prompt = self._load_system_prompt()

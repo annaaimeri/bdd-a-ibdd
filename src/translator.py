@@ -27,7 +27,7 @@ class TranslationService:
             raise ValueError(
                 "OpenAI API key is required. Provide it as an argument or set OPENAI_API_KEY environment variable.")
 
-        self.model = "gpt-4o-2024-08-06"
+        self.model = "gpt-5.2"  # GPT-5.2 Thinking - Best for complex reasoning and formal translations
         self.api_endpoint = "https://api.openai.com/v1/chat/completions"
         self.max_retries = 5
         self.base_delay = 1
@@ -512,7 +512,7 @@ def main():
     parser.add_argument('prompt_file', help='Path to the prompt template file (.md)')
     parser.add_argument('-o', '--output', help='Path to the output file (default: translation_output.json)')
     parser.add_argument('-k', '--api-key', help='OpenAI API key (optional, can use OPENAI_API_KEY env variable)')
-    parser.add_argument('-m', '--model', help=f'OpenAI model to use (default: gpt-4o-2024-08-06)')
+    parser.add_argument('-m', '--model', help=f'OpenAI model to use (default: gpt-5.2)')
     parser.add_argument('-r', '--max-retries', type=int, help=f'Maximum number of retries (default: 5)')
 
     args = parser.parse_args()

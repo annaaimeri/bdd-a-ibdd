@@ -291,7 +291,7 @@ Examples:
     )
     parser.add_argument(
         '-m', '--model',
-        help='OpenAI model to use (default: gpt-4o-2024-08-06)'
+        help='OpenAI model to use (default: gpt-5.2)'
     )
 
     args = parser.parse_args()
@@ -315,6 +315,12 @@ Examples:
     # Set custom model if provided
     if args.model:
         pipeline.translation_service.model = args.model
+        pipeline.error_explainer.model = args.model
+
+    # Display which model is being used
+    print(f"🤖 Using OpenAI model: {pipeline.translation_service.model}")
+    print(f"📊 Explainer model: {pipeline.error_explainer.model}")
+    print()
 
     # Run the pipeline
     pipeline.run(
