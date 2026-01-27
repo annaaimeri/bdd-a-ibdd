@@ -1,0 +1,120 @@
+\chapter{Implementación}
+
+Este capítulo describe la implementación del sistema de traducción automática BDD$\rightarrow$IBDD. Se presenta la arquitectura general del pipeline, la definición formal de la gramática IBDD en Lark, el módulo de traducción basado en la API de OpenAI y el módulo de validación sintáctica.
+
+\section{Arquitectura del Sistema}
+
+El sistema implementa un pipeline de procesamiento que opera en dos etapas principales: traducción y validación. La primera etapa recibe un conjunto de escenarios BDD en formato JSON y produce traducciones IBDD mediante la API de OpenAI. La segunda etapa valida sintácticamente cada traducción contra la gramática formal IBDD utilizando el analizador Earley de Lark. Los escenarios que no superan la validación se identifican con información detallada del error, incluyendo la posición y el tipo de violación sintáctica.
+
+El pipeline se implementa en Python y se orquesta mediante la clase \texttt{BDDToIBDDPipeline} definida en el módulo principal del sistema. Los datos fluyen secuencialmente: el archivo \texttt{Dataset.json} alimenta al servicio de traducción, cuya salida se persiste en \texttt{output.json}; este archivo es luego procesado por el validador, que produce un informe de resultados en \texttt{parsed\_ibdd\_results.json}. Ambas etapas operan sobre archivos JSON, lo que permite ejecutarlas de manera independiente durante el desarrollo y la depuración.
+
+\section{Definición de la Gramática IBDD}
+
+La gramática IBDD se especifica en formato EBNF compatible con Lark y constituye el componente central del módulo de validación. Su diseño captura la estructura formal del lenguaje IBDD definido por Zameni et al.~\cite{placeholder:zameni-ibdd}, adaptada para manejar las variaciones de formato que genera el LLM.
+
+\subsection{Estructura de la Gramática}
+
+La gramática define un escenario IBDD como la secuencia de tres cláusulas obligatorias: Given, When y Then. El Listado~\ref{lst:grammar-structure} presenta las reglas estructurales principales.
+
+\begin{lstlisting}[caption={Reglas estructurales de la gramática IBDD en Lark.},label={lst:grammar-structure}]
+scenario: given when then
+
+given: "GIVEN" [vars] guard
+vars: var (COMMA var)*
+
+when: "WHEN" switch+
+then: "THEN" switch* guard
+
+switch: interaction (guard | expr | assignment)*
+interaction: gate [DOT var_list]
+gate: /[!?][a-zA-Z][a-zA-Z0-9_]*/
+var_list: var (COMMA var)*
+
+guard: LBRACKET expr RBRACKET
+\end{lstlisting}
+
+La cláusula \texttt{given} acepta opcionalmente una lista de variables locales seguida de una guarda entre corchetes. La cláusula \texttt{when} requiere al menos un switch, mientras que \texttt{then} acepta cero o más switches seguidos de una guarda final que representa la postcondición. Cada switch se compone de una interacción---un gate con dirección (\texttt{?} para entrada, \texttt{!} para salida) y opcionalmente una lista de variables de interacción---seguida de una secuencia flexible de guardas, expresiones y asignaciones.
+
+La regla \texttt{switch} merece atención particular. Su definición emplea una alternancia con repetición:
+
+\begin{center}
+\texttt{switch: interaction (guard | expr | assignment)*}
+\end{center}
+
+\noindent Esta formulación permite acomodar las diversas formas en que el LLM estructura los switches. En la gramática teórica de IBDD, un switch sigue estrictamente el patrón \textit{interacción -- condición -- asignación}; sin embargo, las traducciones generadas por el modelo pueden omitir la condición, presentar la asignación antes de la guarda, o incluir expresiones sin envolver en corchetes. Esta flexibilidad sintáctica es una decisión de diseño deliberada que prioriza la capacidad de analizar traducciones imperfectas sobre el rechazo estricto de variaciones menores.
+
+\subsection{Jerarquía de Expresiones}
+
+Las expresiones de la gramática se organizan en una jerarquía de precedencia que refleja las convenciones matemáticas estándar. El Listado~\ref{lst:grammar-expr} muestra esta jerarquía.
+
+\begin{lstlisting}[caption={Jerarquía de expresiones en la gramática IBDD.},label={lst:grammar-expr}]
+expr: or_expr
+or_expr: and_expr ((OR | OR_SYMBOL) and_expr)*
+and_expr: not_expr ((AND | AND_SYMBOL) not_expr)*
+not_expr: (NOT | NOT_SYMBOL) not_expr | comparison
+comparison: sum [op sum]
+sum: product ((PLUS|MINUS) product)*
+product: power ((STAR|SLASH|PERCENT) power)*
+power: atom [CIRCUMFLEX atom]
+atom: literal | var | func_call
+     | prop_access | neg_number
+     | LPAR expr RPAR
+\end{lstlisting}
+
+La disyunción tiene la menor precedencia, seguida por la conjunción, la negación, las comparaciones, las operaciones aritméticas de suma y resta, las de multiplicación, división y módulo, y finalmente la exponenciación. Los átomos constituyen las unidades indivisibles de las expresiones e incluyen literales booleanos (\texttt{true}, \texttt{false}) y numéricos, variables, llamadas a funciones (como \texttt{is\_in\_list(CJ, SJL)}), accesos a propiedades (\texttt{CJ.type}) y expresiones parentizadas.
+
+\subsection{Soporte de Operadores}
+
+La gramática acepta tanto notación Unicode como ASCII para los operadores lógicos y de comparación. La conjunción puede expresarse como $\wedge$ o \texttt{\&\&}, la disyunción como $\vee$ o \texttt{||}, y la negación como $\neg$ o \texttt{!}. De manera similar, la desigualdad admite $\neq$ o \texttt{!=}, y los operadores de orden $\leq$/\texttt{<=} y $\geq$/\texttt{>=}. Este soporte dual responde a la variabilidad observada en las salidas del LLM, que puede utilizar caracteres Unicode o sus equivalentes ASCII según el contexto de generación. Sin esta flexibilidad, traducciones semánticamente correctas serían rechazadas por el analizador debido a diferencias puramente notacionales.
+
+\subsection{Transformación del Árbol Sintáctico}
+
+El análisis sintáctico produce un árbol de derivación que se transforma en objetos del dominio mediante la clase \texttt{IBDDTransformer}, implementada como un transformador de Lark. La transformación mapea cada nodo del árbol a una de cinco clases de datos: \texttt{IBDDScenario} representa el escenario completo con variables locales, precondición, switches de When y Then, y postcondición; \texttt{IBDDSwitch} encapsula una interacción con su condición y asignaciones; \texttt{IBDDInteraction} modela un gate con sus variables; \texttt{IBDDAssignment} representa una asignación de valor a variable o propiedad; e \texttt{IBDDExpression} captura expresiones tipadas con sus subexpresiones en una estructura recursiva. Esta representación intermedia facilita la inspección programática de las traducciones y la generación de reportes de validación estructurados.
+
+\section{Módulo de Traducción}
+
+El módulo de traducción se implementa en la clase \texttt{TranslationService} y gestiona la comunicación con la API de OpenAI para producir traducciones IBDD a partir de escenarios BDD. El diseño del módulo se organiza en torno a tres aspectos: la garantía estructural de las respuestas mediante \textit{Structured Outputs}, la inferencia dinámica del esquema JSON, y la estrategia de procesamiento de escenarios.
+
+\subsection{Structured Outputs de OpenAI}
+\label{sec:structured-outputs}
+
+El sistema utiliza la funcionalidad de \textit{Structured Outputs} de OpenAI \cite{placeholder:so}, que permite especificar un esquema JSON (\textit{JSON Schema}) como parte de la solicitud a la API. Cuando se activa el modo \texttt{json\_schema} con la opción \texttt{strict:~true}, la API garantiza que la respuesta del modelo se ajustará exactamente al esquema proporcionado. Esta garantía se implementa mediante \textit{constrained decoding}: durante la generación, el modelo descarta las secuencias de tokens que violarían el esquema antes de seleccionar el siguiente token, asegurando que el resultado contenga exactamente los campos especificados con los tipos correctos.
+
+El uso de Structured Outputs en este sistema presenta dos ventajas concretas. La primera es la eliminación de errores de formato: sin esta restricción, el modelo podría devolver JSON malformado, incluir campos adicionales no solicitados, o envolver la respuesta en bloques de código Markdown, lo cual requeriría lógica de post-procesamiento frágil y propensa a errores. La segunda ventaja es la garantía de presencia del campo \texttt{ibdd\_representation}, que es donde el modelo deposita la traducción IBDD para cada escenario. Al declarar este campo como obligatorio en el esquema, se asegura que toda respuesta válida contenga la traducción solicitada.
+
+Cabe señalar que Structured Outputs garantiza la corrección estructural del JSON pero no la corrección sintáctica del contenido IBDD. El campo \texttt{ibdd\_representation} contiene una cadena de texto cuyo contenido---la traducción IBDD---requiere validación adicional mediante el analizador sintáctico descrito en la sección anterior. Esta distinción entre validación de formato (a cargo de Structured Outputs) y validación de contenido (a cargo del parser Earley) es fundamental en la arquitectura del sistema.
+
+\subsection{Inferencia Dinámica del Esquema}
+
+El esquema JSON que se envía a la API no se define estáticamente, sino que se infiere dinámicamente a partir de la estructura de los datos de entrada mediante el método \texttt{create\_response\_schema}. Este método recorre recursivamente el JSON de entrada, determina el tipo de cada campo (\texttt{string}, \texttt{integer}, \texttt{boolean}, \texttt{array}, \texttt{object}) y construye un esquema compatible con JSON Schema que replica la estructura observada. Adicionalmente, el método inyecta automáticamente el campo \texttt{ibdd\_representation} de tipo \texttt{string} si este no está presente en los datos de entrada, asegurando que el esquema resultante siempre incluya el campo de salida requerido para la traducción.
+
+Para entradas de tipo arreglo---el caso habitual, donde se procesa un conjunto de escenarios---el esquema resultante envuelve los elementos en un objeto con un campo \texttt{items} de tipo arreglo. Esta envoltura responde a un requisito técnico de la API de OpenAI, que exige que el esquema raíz sea de tipo objeto. El servicio de traducción deshace esta envoltura al recibir la respuesta, extrayendo de manera transparente el arreglo de escenarios traducidos.
+
+La inferencia dinámica permite que el sistema se adapte a variaciones en la estructura del \textit{dataset} de entrada sin requerir modificaciones en el código. Si se agregan campos al JSON de entrada (por ejemplo, notas o metadatos adicionales), el esquema inferido los incorporará automáticamente y el modelo los preservará en la salida.
+
+\subsection{Procesamiento de Escenarios}
+
+El servicio procesa los escenarios de manera individual: cada escenario BDD se envía como una solicitud independiente a la API y su traducción se persiste de manera incremental en el archivo de salida. Esta estrategia de procesamiento individual---en contraposición al envío de todos los escenarios en una única solicitud---responde a dos consideraciones.
+
+La primera es la reducción del costo de las llamadas a la API. El envío del dataset completo en una única solicitud implicaría un prompt de entrada de gran tamaño, ya que cada escenario adicional incrementa el número de tokens de contexto. Dado que la API de OpenAI factura por cantidad de tokens procesados, tanto de entrada como de salida, y que el costo por token de salida es superior al de entrada, el procesamiento individual minimiza el contexto por solicitud y reduce el costo total. Además, las solicitudes con contextos extensos presentan mayor probabilidad de respuestas truncadas o degradadas en calidad cuando el modelo debe mantener coherencia a lo largo de una salida muy extensa.
+
+La segunda consideración es la resiliencia ante interrupciones: dado que cada traducción se persiste de manera incremental en el archivo de salida, si el proceso se detiene por un error de red, agotamiento de la cuota de la API u otra causa, las traducciones completadas se preservan y no es necesario reprocesar todo el conjunto de datos.
+
+El módulo implementa un mecanismo de reintentos con \textit{exponential backoff} para manejar errores transitorios de la API, particularmente los errores de límite de tasa (código HTTP 429). Ante un error, el sistema espera un intervalo que se duplica en cada reintento ($t_i = t_{\text{base}} \cdot 2^{i-1} + \epsilon$, donde $\epsilon$ es una perturbación aleatoria uniforme), hasta un máximo de cinco intentos. Este mecanismo permite procesar conjuntos de datos extensos sin interrupciones por limitaciones temporales de la API.
+
+La temperatura del modelo se configura en $0.7$, un valor que balancea la diversidad de las traducciones con la consistencia sintáctica. Valores más bajos producirían traducciones más determinísticas pero potencialmente repetitivas ante escenarios similares; valores más altos introducirían mayor variabilidad con riesgo de desviaciones sintácticas. El modelo utilizado es configurable mediante parámetros de línea de comandos, lo que permite evaluar diferentes versiones del modelo sin modificar el código fuente.
+
+\section{Módulo de Validación Sintáctica}
+
+El módulo de validación instancia la clase \texttt{IBDDParser}, que encapsula el analizador Earley de Lark. El parser se configura con dos opciones relevantes: resolución automática de ambigüedades (\texttt{ambiguity=\linebreak[0]'resolve'}) y propagación de posiciones (\texttt{propagate\_\linebreak[0]positions=True}). La primera opción indica al analizador que seleccione automáticamente la derivación más simple ante una ambigüedad, evitando la necesidad de intervención manual. La segunda habilita la generación de mensajes de error que incluyen la línea y columna exactas donde se detectó la violación sintáctica, información útil para diagnosticar problemas en las traducciones.
+
+Antes del análisis, cada texto IBDD se somete a un preprocesamiento que normaliza los caracteres de escape (\texttt{\textbackslash n} a saltos de línea reales), elimina líneas vacías y colapsa espacios múltiples dentro de cada línea. Este preprocesamiento es necesario porque las traducciones generadas por el LLM representan los saltos de línea como secuencias de escape dentro de cadenas JSON, y el analizador Earley requiere el texto con saltos de línea reales para aplicar las reglas de la gramática que dependen de la separación de cláusulas.
+
+La validación opera en modo por lotes: el sistema procesa secuencialmente todos los escenarios de un archivo JSON, registrando para cada uno si el análisis fue exitoso o, en caso de fallo, el mensaje de error del analizador. Los resultados se persisten en un archivo JSON que asocia cada escenario con su estado de validación (\texttt{valid: true/false}), el dominio, el título y, cuando corresponde, el mensaje de error y la representación parseada del escenario. Este informe estructurado sirve como insumo para las etapas posteriores del pipeline.
+
+El módulo incluye además un analizador de respaldo (\textit{fallback parser}) basado en expresiones regulares que se activa cuando el analizador Earley no logra procesar un texto IBDD. Este analizador alternativo extrae los componentes principales del escenario---variables de la cláusula Given, gates de la cláusula When y postcondición de la cláusula Then---mediante patrones de coincidencia, produciendo una representación parcial pero útil para el diagnóstico de errores.
+
+\section{Módulo de Corrección Iterativa}
+
+% TODO: Bucle de retroalimentación entre el LLM y el parser.
+% Estrategia de corrección. Criterio de parada.

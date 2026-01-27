@@ -1,0 +1,67 @@
+\documentclass[a4paper,12pt]{report}
+
+\usepackage{famafCover}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  breaklines=true,
+  frame=single,
+  literate={∧}{$\wedge$}1 {→}{$\rightarrow$}1
+}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage[
+    backend=biber,
+    style=numeric,
+]{biblatex}
+\addbibresource{example_citations.bib}
+
+\carrera{computacion}
+\title{Traducción Automática de
+Escenarios BDD en Lenguaje Natural a Lenguaje Intermedio de BDD mediante Técnicas
+de Procesamiento de Lenguaje Natural}
+\author{Anna Paula Aimeri Vicentin}
+\date{MES, 2026}
+\supervisors{Laura Brandán Briones}
+
+\begin{document}
+
+% Título
+
+\maketitle
+
+% Agradecimientos
+
+\input{01_agradecimientos/agradecimientos}
+
+% Resumen y Abstract
+
+\input{02_resumen/resumen}
+\input{02_resumen/abstract}
+
+\clearpage
+
+% Índice
+
+\tableofcontents
+
+\clearpage
+
+% Capítulos
+
+\input{03_intro/intro}
+\input{04_marco_teorico/marco_teorico}
+\input{05_enfoque/enfoque}
+\input{06_implementacion/implementacion}
+\input{07_evaluacion/evaluacion}
+\input{08_discusion/discusion}
+\input{09_conclusiones/conclusiones}
+
+% Bibliografía
+
+\printbibliography
+
+\end{document}

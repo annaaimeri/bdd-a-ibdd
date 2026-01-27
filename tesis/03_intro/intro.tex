@@ -1,0 +1,38 @@
+\chapter{Introducción}
+
+\section{Motivación y Contexto}
+
+El desarrollo de software moderno enfrenta un desafío persistente: cerrar la brecha entre la especificación del comportamiento deseado de un sistema y la generación automática de casos de prueba que validen ese comportamiento. El Desarrollo Dirigido por Comportamiento (BDD, \textit{Behavior-Driven Development}) ha demostrado ser efectivo para capturar requisitos mediante escenarios en lenguaje natural estructurado, utilizando la sintaxis Given-When-Then del formato Gherkin. Esta aproximación facilita la colaboración entre técnicos y no técnicos, permitiendo que analistas de negocio, testers y desarrolladores compartan un lenguaje común para describir el comportamiento esperado del sistema.
+
+Por otro lado, las Pruebas Basadas en Modelos (MBT, \textit{Model-Based Testing}) ofrecen un enfoque riguroso y automatizado para generar casos de prueba a partir de modelos formales del sistema, como los Sistemas de Transición Simbólicos (STS, \textit{Symbolic Transition Systems}). Estos modelos formales permiten aplicar algoritmos de generación automática de tests que garantizan cobertura sistemática y detectan comportamientos inesperados.
+
+Sin embargo, existe una discontinuidad entre estos dos mundos. Los escenarios BDD, expresados en lenguaje natural, carecen de la precisión formal necesaria para alimentar directamente las herramientas de MBT. Investigaciones recientes han propuesto el Lenguaje Intermedio de BDD (IBDD) como puente entre ambos paradigmas \cite{placeholder:zameni-ibdd}. IBDD mantiene la estructura Given-When-Then de BDD pero incorpora elementos formales de los STS, incluyendo variables globales y locales, guardas lógicas, gates de interacción y asignaciones explícitas de estado.
+
+Los trabajos de Zameni et al. han demostrado que, una vez que los escenarios están representados en IBDD, es posible transformarlos automáticamente en Sistemas de Transición BDD (BDDTS) y posteriormente en STS, desde donde se pueden generar casos de prueba completos y formalmente válidos \cite{placeholder:zameni-bddts}. El paso faltante en esta cadena de automatización es precisamente la traducción inicial: convertir escenarios Gherkin escritos por humanos en representaciones IBDD formalmente correctas.
+
+Actualmente, esta traducción es un proceso enteramente manual que requiere experiencia especializada en teoría de sistemas de transición y conocimiento profundo de la gramática IBDD. Un analista debe identificar variables implícitas, inferir gates de interacción apropiados, establecer guardas lógicas correctas y determinar las asignaciones de estado necesarias---información que típicamente no está explícita en el texto natural del escenario BDD. Este cuello de botella limita la escalabilidad industrial de todo el pipeline BDD-a-MBT.
+
+\section{Problema de Investigación}
+
+El problema central que aborda este trabajo es: \textit{¿cómo automatizar la traducción de escenarios BDD expresados en lenguaje natural (formato Gherkin) al lenguaje intermedio formal IBDD, preservando la semántica del comportamiento especificado y generando representaciones formalmente válidas que puedan alimentar herramientas de generación automática de casos de prueba?}
+
+Este problema presenta múltiples desafíos técnicos. En primer lugar, los escenarios Gherkin contienen imprecisiones inherentes al lenguaje natural que deben resolverse para producir especificaciones formales. A esto se suma que elementos cruciales de IBDD---variables globales, tipos de datos, funciones del dominio, gates del sistema---no están explícitos en el texto Gherkin y deben inferirse del contexto o del conocimiento del dominio. La correspondencia entre construcciones lingüísticas en Gherkin y elementos formales de IBDD tampoco es trivial; por ejemplo, la frase ``el usuario hace clic en agregar al carrito'' debe traducirse a un gate de entrada específico (\texttt{?click.add\_button}) con variables de interacción apropiadas. Las traducciones generadas, a su vez, deben ser sintácticamente correctas según la gramática IBDD y semánticamente consistentes con la especificación BDD original. Finalmente, la diversidad de dominios que abarcan los escenarios BDD---e-commerce, sistemas industriales, aplicaciones financieras---introduce vocabularios y patrones de interacción específicos que el sistema debe manejar.
+
+\section{Enfoque Propuesto}
+
+Este trabajo propone un enfoque híbrido que combina las capacidades de comprensión semántica de Modelos de Lenguaje Grandes (LLMs, \textit{Large Language Models}) con la estructura formal proporcionada por la gramática IBDD y técnicas de análisis sintáctico determinístico.
+
+La arquitectura del sistema se organiza en torno a dos componentes principales. El primero es un módulo de traducción basado en LLM que utiliza modelos de lenguaje pre-entrenados para interpretar escenarios Gherkin y generar candidatos de traducción IBDD, aprovechando la capacidad de los LLMs para capturar patrones semánticos complejos y realizar inferencias sobre información implícita. El segundo componente es un módulo de validación sintáctica que emplea la biblioteca Lark con su analizador Earley para verificar las traducciones generadas contra la gramática formal IBDD, garantizando corrección estructural.
+
+El flujo del sistema opera de la siguiente manera: un escenario Gherkin es procesado por el LLM, que genera tres candidatos de traducción IBDD; estos candidatos son luego validados sintácticamente mediante Lark. Si la validación falla, se inicia un ciclo de corrección iterativa hasta obtener una representación IBDD válida.
+
+La elección de LLMs se fundamenta en su demostrada capacidad para tareas de traducción entre lenguajes formales y naturales, como se evidencia en trabajos recientes sobre generación de código desde especificaciones \cite{placeholder:llm-code-generation} y traducción de requisitos a modelos formales \cite{placeholder:nl-to-formal}. Sin embargo, los LLMs por sí solos no garantizan corrección sintáctica ni consistencia formal, de ahí la necesidad del componente de validación.
+
+\section{Estructura del Documento}
+
+% TODO: Describir la organización del resto del documento,
+% indicando brevemente el contenido de cada capítulo.
+
+\section{Trabajo Realizado}
+
+% TODO: Resumir las contribuciones y el trabajo efectivamente realizado.
