@@ -116,5 +116,32 @@ El módulo incluye además un analizador de respaldo (\textit{fallback parser}) 
 
 \section{Módulo de Corrección Iterativa}
 
-% TODO: Bucle de retroalimentación entre el LLM y el parser.
-% Estrategia de corrección. Criterio de parada.
+Cuando el analizador sintáctico detecta que una traducción IBDD no es conforme a la gramática, el pipeline activa un ciclo de corrección que involucra tres etapas: identificación de los casos fallidos, análisis automatizado de los errores mediante un agente explicador, y reintento de la traducción con contexto del error. Este ciclo constituye el mecanismo central de auto-corrección del sistema y opera de manera no destructiva sobre las traducciones existentes.
+
+\subsection{Identificación de Casos Fallidos}
+
+Al finalizar la validación sintáctica, el orquestador del pipeline cruza los resultados de validación con las traducciones originales para construir un expediente completo de cada caso fallido. Para cada escenario cuyo campo \texttt{valid} es \texttt{false}, el sistema recopila cuatro elementos: el identificador del caso, el escenario BDD original (cláusulas Given, When y Then en lenguaje natural), la traducción IBDD que generó el error, y el mensaje de error producido por el analizador Earley, que incluye la posición exacta (línea y columna) y el tipo de token inesperado. Esta información constituye el insumo que alimenta al agente explicador de errores.
+
+\subsection{Análisis de Errores}
+
+El análisis de errores se implementa en la clase \texttt{IBDDErrorExplainer}, un agente especializado que utiliza el LLM para interpretar los mensajes de error del parser y producir diagnósticos estructurados. A diferencia del módulo de traducción, que opera con una temperatura de $0.7$, el explicador se configura con una temperatura de $0.3$. Este valor más bajo favorece respuestas determinísticas y analíticas, apropiadas para una tarea de diagnóstico donde la creatividad no es deseable.
+
+El agente explicador opera con un prompt de sistema que incluye la gramática IBDD de referencia y un catálogo de patrones de error frecuentes: corchetes faltantes en guardas o condiciones, sintaxis de gate incorrecta (confusión entre \texttt{?} y \texttt{!}), asignaciones ausentes, expresiones mal formadas, saltos de línea incorrectos y postcondiciones faltantes. Este catálogo permite que el modelo enfoque su análisis en las categorías de error más probables.
+
+Para cada caso fallido, el explicador construye un prompt de análisis que presenta al modelo el escenario BDD original, la traducción IBDD que falló y el mensaje de error del parser, solicitando un diagnóstico estructurado. La respuesta se obtiene mediante Structured Outputs con un esquema que define cinco campos obligatorios: \texttt{error\_type} (clasificación del error, por ejemplo ``corchetes faltantes'' o ``gate inválido''), \texttt{error\_location} (posición exacta dentro del texto IBDD), \texttt{explanation} (descripción de la discrepancia entre lo esperado por el parser y lo encontrado), \texttt{correction\_suggestion} (fragmento IBDD corregido o sugerencia concreta) y \texttt{hints} (lista de recomendaciones adicionales). El uso de Structured Outputs garantiza que todo diagnóstico contenga estos cinco campos con los tipos de datos correctos, facilitando su procesamiento automatizado en la etapa siguiente.
+
+\subsection{Reintento con Contexto de Error}
+
+El reintento de traducción utiliza un prompt especializado que extiende el prompt de traducción inicial con información del error. El prompt de reintento contiene las mismas cinco secciones del prompt original---contexto, gramática, ejemplos, reglas y formato---pero incorpora al inicio una sección adicional de análisis de error, precedida por un encabezado que indica al modelo que se encuentra en modo de corrección. Esta sección se inyecta dinámicamente mediante un \textit{placeholder} \texttt{\{error\_analysis\}} que el sistema reemplaza con el diagnóstico formateado del caso específico.
+
+El formato del diagnóstico inyectado incluye el escenario BDD original, la traducción previa que falló, el error del parser, el análisis completo del explicador (tipo, ubicación, explicación y sugerencia de corrección) y las recomendaciones adicionales. De este modo, el modelo de traducción recibe el contexto completo del fallo y puede aplicar la corrección de manera informada. El prompt de reintento añade además una lista de verificación final que instruye al modelo a confirmar, antes de emitir la respuesta, que la corrección aborda el error específico identificado, que todos los corchetes están correctamente ubicados, que la sintaxis de gates es válida y que la traducción mantiene la correspondencia semántica con el escenario BDD original.
+
+El procesamiento de reintentos opera de manera individual: cada caso fallido se reenvía como una solicitud independiente a la API, utilizando el mismo mecanismo de Structured Outputs y reintentos con \textit{exponential backoff} del módulo de traducción inicial. Esta independencia permite que el fallo de un reintento no afecte la corrección de los demás casos.
+
+\subsection{Fusión No Destructiva y Re-validación}
+
+Las traducciones corregidas se integran al conjunto de resultados mediante una estrategia de fusión no destructiva. El sistema carga las traducciones originales, construye un mapa indexado por identificador de caso con las traducciones corregidas, y recorre secuencialmente las traducciones originales: para cada caso cuyo identificador coincide con una corrección, se reemplaza la traducción original por la corregida; los casos que no presentaron errores se preservan intactos. Este diseño garantiza que las traducciones exitosas nunca se sobrescriban como efecto colateral del proceso de corrección.
+
+Tras la fusión, el pipeline ejecuta una re-validación sintáctica sobre el archivo de traducciones actualizado, aplicando el mismo analizador Earley utilizado en la validación inicial. Esta re-validación cumple dos funciones: confirmar que las correcciones resolvieron efectivamente los errores de parsing, e identificar casos donde el reintento no logró producir una traducción conforme. Los resultados de la re-validación se persisten en el mismo archivo de validación, actualizando el estado de cada caso.
+
+Las etapas de análisis de errores y reintento se clasifican como no críticas dentro del pipeline: si alguna de ellas falla---por ejemplo, por un error de la API o un agotamiento de la cuota---el pipeline continúa con las traducciones originales y emite una advertencia. Esta decisión se fundamenta en que es preferible contar con traducciones parcialmente correctas (las exitosas de la primera pasada) que interrumpir todo el proceso por un fallo en la corrección de los casos problemáticos.

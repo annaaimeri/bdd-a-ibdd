@@ -19,6 +19,10 @@
 ]{biblatex}
 \addbibresource{example_citations.bib}
 
+% Monoespaciada más pequeña para que no desentone con el cuerpo a 12pt
+\let\Oldtexttt\texttt
+\renewcommand{\texttt}[1]{{\ttfamily\small #1}}
+
 \carrera{computacion}
 \title{Traducción Automática de
 Escenarios BDD en Lenguaje Natural a Lenguaje Intermedio de BDD mediante Técnicas
