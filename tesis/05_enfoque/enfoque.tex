@@ -113,7 +113,11 @@ Aunque el trabajo de Karpurapu et al. aborda la dirección inversa a la de este 
 
 \subsection{Decisión Final}
 
-Sobre la base de los resultados experimentales y su consistencia con la literatura, se seleccionó GPT-4o como modelo de lenguaje para el sistema de traducción. El modelo demostró corrección sintáctica en todas las traducciones generadas, alta uniformidad de calidad entre ejecuciones y capacidad de explorar enfoques alternativos genuinos. Si bien se trata de un modelo propietario que requiere acceso mediante la API de OpenAI, esta limitación se considera aceptable en el contexto de un trabajo de investigación. Para despliegues futuros donde se requieran modelos de código abierto, los resultados sugieren que alternativas como Llama podrían ser viables incorporando mecanismos adicionales de validación y corrección.
+Sobre la base de los resultados experimentales y su consistencia con la literatura, se seleccionó la familia de modelos GPT-4o de OpenAI como motor de lenguaje para el sistema de traducción. El modelo demostró corrección sintáctica en todas las traducciones generadas, alta uniformidad de calidad entre ejecuciones y capacidad de explorar enfoques alternativos genuinos. Si bien se trata de un modelo propietario que requiere acceso mediante la API de OpenAI, esta limitación se considera aceptable en el contexto de un trabajo de investigación.
+
+Es importante señalar que la arquitectura del sistema parametriza la versión del modelo como una variable de configuración, lo que permite actualizarla sin modificar el resto de la implementación. La evaluación comparativa presentada en este capítulo se realizó con la versión \texttt{gpt-4o-2024-08-06}, disponible al momento del desarrollo. Dado que OpenAI publica periódicamente nuevas versiones dentro de la misma familia de modelos, el sistema está diseñado para incorporar versiones posteriores de forma transparente. Esta decisión de diseño asegura que los resultados de la evaluación sean reproducibles con el modelo original, al tiempo que permite beneficiarse de mejoras futuras.
+
+Para despliegues futuros donde se requieran modelos de código abierto, los resultados sugieren que alternativas como Llama podrían ser viables incorporando mecanismos adicionales de validación y corrección.
 
 \section{Selección de la Herramienta de Análisis Sintáctico}
 

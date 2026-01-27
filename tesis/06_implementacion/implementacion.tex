@@ -3,10 +3,31 @@
 Este capítulo describe la implementación del sistema de traducción automática BDD$\rightarrow$IBDD. Se presenta la arquitectura general del pipeline, la definición formal de la gramática IBDD en Lark, el módulo de traducción basado en la API de OpenAI y el módulo de validación sintáctica.
 
 \section{Arquitectura del Sistema}
+\label{sec:arquitectura}
 
-El sistema implementa un pipeline de procesamiento que opera en dos etapas principales: traducción y validación. La primera etapa recibe un conjunto de escenarios BDD en formato JSON y produce traducciones IBDD mediante la API de OpenAI. La segunda etapa valida sintácticamente cada traducción contra la gramática formal IBDD utilizando el analizador Earley de Lark. Los escenarios que no superan la validación se identifican con información detallada del error, incluyendo la posición y el tipo de violación sintáctica.
+El sistema implementa un pipeline de cinco etapas orquestado por la clase
+\texttt{BDDToIBDDPipeline}, definida en el módulo principal. Cada etapa consume la salida de la anterior y persiste sus resultados en archivos JSON intermedios, lo que permite ejecutar las etapas de manera independiente durante el desarrollo y la depuración. A continuación se describe brevemente cada etapa; las secciones posteriores de este capítulo desarrollan en detalle los módulos correspondientes.
 
-El pipeline se implementa en Python y se orquesta mediante la clase \texttt{BDDToIBDDPipeline} definida en el módulo principal del sistema. Los datos fluyen secuencialmente: el archivo \texttt{Dataset.json} alimenta al servicio de traducción, cuya salida se persiste en \texttt{output.json}; este archivo es luego procesado por el validador, que produce un informe de resultados en \texttt{parsed\_ibdd\_results.json}. Ambas etapas operan sobre archivos JSON, lo que permite ejecutarlas de manera independiente durante el desarrollo y la depuración.
+\begin{enumerate}
+  \item \textbf{Traducción} (Sección~\ref{sec:modulo-traduccion}).
+    Recibe el archivo \texttt{Dataset.json} con los escenarios BDD en formato Gherkin y produce traducciones IBDD mediante la API de OpenAI, utilizando Structured Outputs para garantizar conformidad con el esquema JSON esperado. Las traducciones se persisten incrementalmente en
+    \texttt{output.json}.
+
+  \item \textbf{Validación sintáctica} (Sección~\ref{sec:modulo-validacion}).
+    Cada traducción se analiza contra la gramática formal IBDD utilizando el analizador Earley de Lark. Los escenarios que no superan la validación se identifican con información detallada del error, incluyendo la posición y el tipo de violación sintáctica. Los resultados se almacenan en
+    \texttt{parsed\_ibdd\_results.json}.
+
+  \item \textbf{Validación semántica} (Sección~\ref{sec:modulo-semantico}).
+    Los escenarios sintácticamente válidos se someten a una verificación semántica que contrasta la traducción IBDD con el escenario BDD original, evaluando la preservación de entidades, acciones y valores numéricos.
+
+  \item \textbf{Análisis de errores} (Sección~\ref{sec:modulo-correccion}).
+    Los escenarios que fallaron en la validación sintáctica o semántica son procesados por un agente especializado---el \textit{explainer}---que diagnostica la causa del error y genera una explicación estructurada con sugerencias de corrección.
+
+  \item \textbf{Reintento con correcciones} (Sección~\ref{sec:modulo-correccion}).
+    Las explicaciones de error se inyectan en un prompt de reintento que solicita al LLM una nueva traducción informada por el diagnóstico previo. Las traducciones corregidas reemplazan únicamente los casos fallidos mediante una estrategia de fusión no destructiva, y el ciclo de validación se repite sobre los casos retraducidos.
+\end{enumerate}
+
+El pipeline completo se implementa en Python. Los datos fluyen secuencialmente desde \texttt{Dataset.json} hasta los archivos de resultados finales, y todas las etapas operan sobre archivos JSON como formato de intercambio.
 
 \section{Definición de la Gramática IBDD}
 
@@ -72,6 +93,7 @@ La gramática acepta tanto notación Unicode como ASCII para los operadores lóg
 El análisis sintáctico produce un árbol de derivación que se transforma en objetos del dominio mediante la clase \texttt{IBDDTransformer}, implementada como un transformador de Lark. La transformación mapea cada nodo del árbol a una de cinco clases de datos: \texttt{IBDDScenario} representa el escenario completo con variables locales, precondición, switches de When y Then, y postcondición; \texttt{IBDDSwitch} encapsula una interacción con su condición y asignaciones; \texttt{IBDDInteraction} modela un gate con sus variables; \texttt{IBDDAssignment} representa una asignación de valor a variable o propiedad; e \texttt{IBDDExpression} captura expresiones tipadas con sus subexpresiones en una estructura recursiva. Esta representación intermedia facilita la inspección programática de las traducciones y la generación de reportes de validación estructurados.
 
 \section{Módulo de Traducción}
+\label{sec:modulo-traduccion}
 
 El módulo de traducción se implementa en la clase \texttt{TranslationService} y gestiona la comunicación con la API de OpenAI para producir traducciones IBDD a partir de escenarios BDD. El diseño del módulo se organiza en torno a tres aspectos: la garantía estructural de las respuestas mediante \textit{Structured Outputs}, la inferencia dinámica del esquema JSON, y la estrategia de procesamiento de escenarios.
 
@@ -105,6 +127,7 @@ El módulo implementa un mecanismo de reintentos con \textit{exponential backoff
 La temperatura del modelo se configura en $0.7$, un valor que balancea la diversidad de las traducciones con la consistencia sintáctica. Valores más bajos producirían traducciones más determinísticas pero potencialmente repetitivas ante escenarios similares; valores más altos introducirían mayor variabilidad con riesgo de desviaciones sintácticas. El modelo utilizado es configurable mediante parámetros de línea de comandos, lo que permite evaluar diferentes versiones del modelo sin modificar el código fuente.
 
 \section{Módulo de Validación Sintáctica}
+\label{sec:modulo-validacion}
 
 El módulo de validación instancia la clase \texttt{IBDDParser}, que encapsula el analizador Earley de Lark. El parser se configura con dos opciones relevantes: resolución automática de ambigüedades (\texttt{ambiguity=\linebreak[0]'resolve'}) y propagación de posiciones (\texttt{propagate\_\linebreak[0]positions=True}). La primera opción indica al analizador que seleccione automáticamente la derivación más simple ante una ambigüedad, evitando la necesidad de intervención manual. La segunda habilita la generación de mensajes de error que incluyen la línea y columna exactas donde se detectó la violación sintáctica, información útil para diagnosticar problemas en las traducciones.
 
@@ -115,6 +138,7 @@ La validación opera en modo por lotes: el sistema procesa secuencialmente todos
 El módulo incluye además un analizador de respaldo (\textit{fallback parser}) basado en expresiones regulares que se activa cuando el analizador Earley no logra procesar un texto IBDD. Este analizador alternativo extrae los componentes principales del escenario---variables de la cláusula Given, gates de la cláusula When y postcondición de la cláusula Then---mediante patrones de coincidencia, produciendo una representación parcial pero útil para el diagnóstico de errores.
 
 \section{Módulo de Corrección Iterativa}
+\label{sec:modulo-correccion}
 
 Cuando el analizador sintáctico detecta que una traducción IBDD no es conforme a la gramática, el pipeline activa un ciclo de corrección que involucra tres etapas: identificación de los casos fallidos, análisis automatizado de los errores mediante un agente explicador, y reintento de la traducción con contexto del error. Este ciclo constituye el mecanismo central de auto-corrección del sistema y opera de manera no destructiva sobre las traducciones existentes.
 
@@ -145,3 +169,46 @@ Las traducciones corregidas se integran al conjunto de resultados mediante una e
 Tras la fusión, el pipeline ejecuta una re-validación sintáctica sobre el archivo de traducciones actualizado, aplicando el mismo analizador Earley utilizado en la validación inicial. Esta re-validación cumple dos funciones: confirmar que las correcciones resolvieron efectivamente los errores de parsing, e identificar casos donde el reintento no logró producir una traducción conforme. Los resultados de la re-validación se persisten en el mismo archivo de validación, actualizando el estado de cada caso.
 
 Las etapas de análisis de errores y reintento se clasifican como no críticas dentro del pipeline: si alguna de ellas falla---por ejemplo, por un error de la API o un agotamiento de la cuota---el pipeline continúa con las traducciones originales y emite una advertencia. Esta decisión se fundamenta en que es preferible contar con traducciones parcialmente correctas (las exitosas de la primera pasada) que interrumpir todo el proceso por un fallo en la corrección de los casos problemáticos.
+
+\section{Módulo de Validación Semántica}
+\label{sec:modulo-semantico}
+
+La validación sintáctica descrita en secciones anteriores verifica que las traducciones IBDD se ajusten a la gramática formal, pero no evalúa si el contenido de la traducción preserva el significado del escenario BDD original. Una traducción puede ser sintácticamente correcta y al mismo tiempo semánticamente deficiente: por ejemplo, podría omitir una entidad mencionada en el escenario, utilizar un gate de salida donde el BDD describe una acción del usuario, o perder un valor numérico relevante para una postcondición. El módulo de validación semántica aborda esta limitación mediante un enfoque de verificación en múltiples capas.
+
+\subsection{Arquitectura Multi-capa}
+
+El validador semántico se implementa en la clase \texttt{SemanticValidator} y opera exclusivamente sobre los escenarios que superaron la validación sintáctica, ya que intentar evaluar la semántica de un texto que no se ajusta a la gramática carecería de fundamento. El diseño contempla tres capas de validación progresivamente más sofisticadas, donde cada capa aplica un nivel de análisis más profundo. Las capas operan de forma secuencial con una estrategia de \textit{fail-fast}: si una capa determina que la traducción es inválida, las capas posteriores no se ejecutan, evitando el costo computacional de análisis innecesarios.
+
+Cada capa produce un resultado tipado que incluye un veredicto booleano, un puntaje de confianza en el rango $[0, 1]$, un identificador de la capa que emitió el veredicto, una lista de problemas detectados y un diccionario de detalles específicos de la evaluación. Esta estructura uniforme permite agregar los resultados de las tres capas en un informe consolidado por escenario.
+
+\subsection{Capa 1: Validación por Checklist}
+
+La primera capa implementa una verificación basada en la extracción y cotejo de elementos clave entre el escenario BDD original y la traducción IBDD. Esta capa opera sin recurrir al LLM, lo que la hace instantánea y sin costo.
+
+El proceso de validación comienza con la extracción de tres tipos de elementos del texto BDD. Las entidades se identifican mediante heurísticas léxicas que combinan cuatro estrategias: extracción de sustantivos precedidos por artículos (``a job file'' identifica ``file''), detección de sustantivos recurrentes (palabras que aparecen dos o más veces en el escenario), reconocimiento de variables capitalizadas, y coincidencia con un vocabulario de sustantivos técnicos frecuentes en dominios BDD (como ``account'', ``balance'', ``cart'', ``transaction''). Las acciones se extraen principalmente de la cláusula When mediante un diccionario de verbos de acción comunes en escenarios BDD (``submit'', ``add'', ``transfer'', ``click'') complementado con detección de formas verbales por sufijos. Los valores numéricos se extraen mediante coincidencia de patrones de números enteros y decimales.
+
+Una vez extraídos los elementos, el validador busca su presencia en el texto IBDD normalizado. La búsqueda de entidades incorpora flexibilidad para acomodar las convenciones de IBDD: se busca la entidad literal, como parte de nombres de funciones o propiedades (``\texttt{.entity}'', ``\texttt{entity(}'' ), en formas singular y plural, y como inicial en las variables capitalizadas del IBDD (por ejemplo, la entidad ``job'' se considera presente si existe una variable como \texttt{JF} que contiene la inicial ``J''). Las acciones se buscan como componentes de nombres de gates (\texttt{?transfer}, \texttt{!add}) o en forma \textit{snake\_case}.
+
+El puntaje de confianza se calcula como la proporción de elementos presentes sobre el total de elementos extraídos. El umbral de validación se establece en $0.6$, lo que tolera hasta un $40\%$ de elementos no encontrados. Este umbral relativamente permisivo responde al hecho de que IBDD utiliza abreviaturas y convenciones de nomenclatura que dificultan la coincidencia directa con el texto en lenguaje natural.
+
+\subsection{Capa 2: Consistencia Numérica}
+
+% TODO: Implementar y documentar.
+% Esta capa verificará que todos los valores numéricos del BDD
+% aparezcan en el IBDD, que las operaciones aritméticas sean
+% consistentes (ej: si el BDD dice "el total se actualiza",
+% el IBDD debe contener una asignación aritmética) y que los
+% resultados esperados en la postcondición sean coherentes
+% con las operaciones realizadas en los switches.
+
+La segunda capa, prevista para una iteración futura, verificará la consistencia de los valores numéricos y las operaciones aritméticas entre el escenario BDD y su traducción IBDD. El objetivo es detectar errores como la omisión de valores numéricos en las guardas, operaciones aritméticas incorrectas en las asignaciones, o postcondiciones que no reflejan los cálculos descritos en el escenario original.
+
+\subsection{Capa 3: Juez LLM}
+
+% TODO: Implementar y documentar.
+% Esta capa utilizará el LLM como juez para evaluar la preservación
+% semántica completa: entidades, precondiciones, acciones, cambios
+% de estado, postcondiciones y flujo lógico. Usará temperatura baja
+% (0.3) y Structured Outputs para emitir un veredicto estructurado.
+
+La tercera capa, también prevista para desarrollo futuro, empleará el propio modelo de lenguaje como evaluador semántico. El LLM recibirá el escenario BDD original y la traducción IBDD, y producirá una evaluación estructurada que cubra la preservación de entidades, la representación de precondiciones, la correspondencia de acciones con gates, la corrección de los cambios de estado y la coherencia de las postcondiciones. A diferencia de las capas anteriores, esta evaluación capturará relaciones semánticas complejas que las heurísticas léxicas no pueden detectar, como la equivalencia entre la frase ``el usuario agrega el producto al carrito'' y el gate \texttt{?add\_to\_cart.p,sc}. El costo de esta capa---una llamada a la API por escenario---justifica su posición como última etapa del pipeline, ejecutándose solo sobre los escenarios que superaron las verificaciones previas.
