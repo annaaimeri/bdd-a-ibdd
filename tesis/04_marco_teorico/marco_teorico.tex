@@ -8,6 +8,33 @@ El Desarrollo Dirigido por Comportamiento (BDD, \textit{Behavior-Driven Developm
 
 La innovación central de BDD consiste en desplazar el foco desde las pruebas hacia el comportamiento esperado del sistema. En lugar de escribir pruebas unitarias que verifican implementaciones específicas, BDD propone describir el comportamiento del sistema desde la perspectiva del usuario mediante escenarios concretos. Este cambio de vocabulario---de ``prueba'' a ``comportamiento''---tiene implicaciones profundas: facilita la comunicación entre desarrolladores, analistas de negocio y otros \textit{stakeholders}, y produce especificaciones que sirven simultáneamente como documentación y como base para pruebas automatizadas.
 
+Solís y Wang~\cite{solis2011bdd} identifican como características fundamentales de BDD la ubicuidad del lenguaje compartido entre todos los participantes del proyecto, la naturaleza iterativa del proceso de especificación, y el uso de ejemplos concretos como mecanismo primario de comunicación entre el dominio del negocio y el dominio técnico.
+
+\subsection{Sintaxis Gherkin}
+
+El vehículo principal para expresar escenarios BDD es Gherkin, un lenguaje de dominio específico diseñado para ser legible tanto por humanos como por herramientas de automatización~\cite{cucumber2024gherkin}. Un escenario Gherkin describe una situación concreta del comportamiento del sistema mediante tres cláusulas estructuradas:
+
+\begin{itemize}
+  \item \textbf{Given} (\textit{Dado}): establece las precondiciones o el estado inicial del sistema antes de que ocurra la acción bajo prueba.
+  \item \textbf{When} (\textit{Cuando}): describe la acción o evento que desencadena el comportamiento que se desea especificar.
+  \item \textbf{Then} (\textit{Entonces}): define el resultado esperado o la postcondición que debe verificarse tras la ejecución de la acción.
+\end{itemize}
+
+A modo de ejemplo, el siguiente escenario especifica el comportamiento de un sistema de comercio electrónico al agregar un producto al carrito de compras:
+
+\begin{lstlisting}[caption={Ejemplo de un escenario BDD en sintaxis Gherkin.},label={lst:gherkin-example}]
+Scenario: Add product to shopping cart
+  Given the user is on the product page for "Laptop"
+  And the product is in stock
+  When the user clicks the "Add to Cart" button
+  Then the cart should contain 1 item
+  And the total price should be updated
+\end{lstlisting}
+
+Los escenarios Gherkin se agrupan en archivos denominados \textit{features}, donde cada \textit{feature} describe una funcionalidad del sistema e incluye uno o más escenarios que ilustran su comportamiento esperado bajo distintas condiciones. Las palabras clave \textbf{And} y \textbf{But} permiten encadenar múltiples condiciones dentro de una misma cláusula, mejorando la legibilidad sin alterar la semántica de la especificación.
+
+Esta estructura, si bien es lo suficientemente formal para ser procesada por herramientas de automatización como Cucumber, mantiene un nivel de abstracción cercano al lenguaje natural. Es precisamente esta característica la que convierte a Gherkin en un formato accesible para \textit{stakeholders} no técnicos, pero también la que introduce los desafíos de ambigüedad e imprecisión que motivan el presente trabajo.
+
 \section{Pruebas Basadas en Modelos}
 
 % TODO: Definir MBT. Explicar el proceso de generación automática de
