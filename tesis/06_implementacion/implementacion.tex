@@ -31,7 +31,7 @@ El pipeline completo se implementa en Python. Los datos fluyen secuencialmente d
 
 \section{Definición de la Gramática IBDD}
 
-La gramática IBDD se especifica en formato EBNF compatible con Lark y constituye el componente central del módulo de validación. Su diseño captura la estructura formal del lenguaje IBDD definido por Zameni et al.~\cite{placeholder:zameni-ibdd}, adaptada para manejar las variaciones de formato que genera el LLM.
+La gramática IBDD se especifica en formato EBNF compatible con Lark y constituye el componente central del módulo de validación. Su diseño captura la estructura formal del lenguaje IBDD definido por Zameni et al.~\cite{zameni2024ibdd}, adaptada para manejar las variaciones de formato que genera el LLM.
 
 \subsection{Estructura de la Gramática}
 
@@ -100,7 +100,7 @@ El módulo de traducción se implementa en la clase \texttt{TranslationService} 
 \subsection{Structured Outputs de OpenAI}
 \label{sec:structured-outputs}
 
-El sistema utiliza la funcionalidad de \textit{Structured Outputs} de OpenAI \cite{placeholder:so}, que permite especificar un esquema JSON (\textit{JSON Schema}) como parte de la solicitud a la API. Cuando se activa el modo \texttt{json\_schema} con la opción \texttt{strict:~true}, la API garantiza que la respuesta del modelo se ajustará exactamente al esquema proporcionado. Esta garantía se implementa mediante \textit{constrained decoding}: durante la generación, el modelo descarta las secuencias de tokens que violarían el esquema antes de seleccionar el siguiente token, asegurando que el resultado contenga exactamente los campos especificados con los tipos correctos.
+El sistema utiliza la funcionalidad de \textit{Structured Outputs} de OpenAI \cite{openai2024structured}, que permite especificar un esquema JSON (\textit{JSON Schema}) como parte de la solicitud a la API. Cuando se activa el modo \texttt{json\_schema} con la opción \texttt{strict:~true}, la API garantiza que la respuesta del modelo se ajustará exactamente al esquema proporcionado. Esta garantía se implementa mediante \textit{constrained decoding}: durante la generación, el modelo descarta las secuencias de tokens que violarían el esquema antes de seleccionar el siguiente token, asegurando que el resultado contenga exactamente los campos especificados con los tipos correctos.
 
 El uso de Structured Outputs en este sistema presenta dos ventajas concretas. La primera es la eliminación de errores de formato: sin esta restricción, el modelo podría devolver JSON malformado, incluir campos adicionales no solicitados, o envolver la respuesta en bloques de código Markdown, lo cual requeriría lógica de post-procesamiento frágil y propensa a errores. La segunda ventaja es la garantía de presencia del campo \texttt{ibdd\_representation}, que es donde el modelo deposita la traducción IBDD para cada escenario. Al declarar este campo como obligatorio en el esquema, se asegura que toda respuesta válida contenga la traducción solicitada.
 
