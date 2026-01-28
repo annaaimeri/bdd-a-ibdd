@@ -69,9 +69,58 @@ Los conceptos de STS resultan esenciales para comprender el lenguaje IBDD presen
 
 \section{Lenguaje Intermedio de BDD}
 
-% TODO: Definir IBDD. Explicar la gramática formal (variables globales/locales,
-% gates, guards, assignments). Rol como puente entre BDD y STS.
-% Describir BDDTS y la cadena de transformación IBDD → BDDTS → STS.
+El Lenguaje Intermedio de BDD (IBDD, \textit{Intermediate Behavior-Driven Development}) fue propuesto por Zameni et al.~\cite{zameni2024ibdd} como puente formal entre los escenarios textuales BDD y los modelos formales requeridos por las técnicas de MBT. IBDD conserva la estructura Given-When-Then de BDD pero incorpora elementos de los Sistemas de Transición Simbólicos, añadiendo la precisión formal necesaria para habilitar transformaciones automáticas hacia modelos de prueba.
+
+La motivación de IBDD radica en que los escenarios BDD textuales presentan dos limitaciones fundamentales para su uso en MBT: ambigüedad inherente al lenguaje natural e incompletitud de la información necesaria para construir modelos formales. Elementos como las variables de estado del sistema, los tipos de datos, las guardas lógicas y los canales de interacción no están explícitos en el texto Gherkin y deben ser inferidos por un experto del dominio. IBDD hace explícita esta información mediante una gramática híbrida que combina notación EBNF con estructuras matemáticas de lógica de primer orden.
+
+\subsection{Información Específica del Dominio}
+
+IBDD introduce el concepto de Información Específica del Dominio (DSI, \textit{Domain-Specific Information}), definida como una tupla $(\mathcal{S}, \mathcal{F}, \mathcal{V}, \mathcal{G})$, donde~\cite{zameni2024ibdd}:
+
+\begin{itemize}
+  \item $\mathcal{S}$ es el conjunto de \textit{sorts} (tipos de datos), que incluye tipos primitivos (Bool, Int), tipos compuestos, enumeraciones y tipos lista.
+  \item $\mathcal{F}$ es el conjunto de funciones definidas sobre los sorts.
+  \item $\mathcal{V}$ es el conjunto de variables tipadas, particionado en tres subconjuntos disjuntos: variables \textit{globales} (representan el estado persistente del sistema), variables \textit{locales} (con alcance limitado al escenario) y variables de \textit{interacción} (utilizadas para el intercambio de datos en una transición).
+  \item $\mathcal{G}$ es el conjunto de \textit{gates}, particionado en gates de entrada $\mathcal{G}_i$ (iniciados por el entorno, prefijados con \texttt{?}) y gates de salida $\mathcal{G}_o$ (iniciados por el sistema, prefijados con \texttt{!}).
+\end{itemize}
+
+\subsection{Gramática IBDD}
+
+La gramática IBDD estructura cada escenario en tres cláusulas:
+
+\begin{itemize}
+  \item \textbf{Given}: declara variables locales e introduce una guarda de entrada (\textit{input guard}), que es una conjunción de predicados sobre variables globales y locales representando la precondición del escenario.
+  \item \textbf{When}: consiste en uno o más \textit{switches}, cada uno compuesto por una interacción (un gate con sus variables de interacción), una condición (un predicado booleano) y una asignación (una función de actualización de variables).
+  \item \textbf{Then}: consiste en cero o más switches de salida seguidos de una guarda de salida (\textit{output guard}) que define la postcondición del escenario.
+\end{itemize}
+
+A modo de ejemplo, el siguiente término IBDD representa un escenario del dominio de impresora industrial donde un trabajo de impresión se mueve a la lista de trabajos completados~\cite{zameni2024ibdd}:
+
+\begin{lstlisting}[caption={Ejemplo de un término IBDD para un escenario de impresora industrial.},label={lst:ibdd-example}]
+GIVEN CJ [is_in_list(CJ, SJL) ∧ CJ.type = Production]
+WHEN !printstart.cj
+       cj.id = CJ.id ∧ cj.state = Printing
+       CJ.state := cj.state
+     !printcomplete.cj
+       cj.id = CJ.id ∧ cj.state = Completed
+       CJ.state := cj.state, PJL := add(CJ, PJL)
+THEN [is_in_list(CJ, PJL)]
+\end{lstlisting}
+
+En este ejemplo, \texttt{CJ} es una variable local que representa un trabajo de control, \texttt{SJL} y \texttt{PJL} son variables globales que representan las listas de trabajos programados e impresos, y \texttt{!printstart} y \texttt{!printcomplete} son gates de salida del sistema. Las condiciones verifican la identidad y el estado del trabajo, mientras que las asignaciones actualizan el estado de las variables.
+
+\subsection{Pipeline de Transformación}
+
+IBDD se sitúa en el centro de un pipeline de transformación que conecta los escenarios BDD con la generación automática de casos de prueba. Este pipeline consta de las siguientes etapas~\cite{zameni2024ibdd, zameni2023bddts}:
+
+\begin{enumerate}
+  \item \textbf{BDD $\rightarrow$ IBDD}: traducción de escenarios Gherkin al formalismo IBDD. Esta etapa, originalmente manual, es el objeto de automatización del presente trabajo.
+  \item \textbf{IBDD $\rightarrow$ BDDTS}: transformación formal de términos IBDD a Sistemas de Transición BDD (\textit{BDD Transition Systems}), una variante de STS que particiona las variables de estado en locales y globales, y añade una localidad objetivo junto con guardas de entrada y salida.
+  \item \textbf{BDDTS $\rightarrow$ STS}: transformación de los BDDTS a Sistemas de Transición Simbólicos, incorporando la información necesaria para la generación de pruebas.
+  \item \textbf{STS $\rightarrow$ Tests}: aplicación de algoritmos de generación automática de casos de prueba sobre los STS resultantes.
+\end{enumerate}
+
+Zameni et al.~\cite{zameni2025composition} extienden este pipeline con mecanismos de composición secuencial de BDDTS, permitiendo construir modelos complejos a partir de escenarios individuales y explotar así la capacidad de MBT para generar conjuntos extensos de pruebas. La automatización de la primera etapa de este pipeline---la traducción de BDD a IBDD---constituye la contribución central de este trabajo.
 
 \section{Modelos de Lenguaje Grandes}
 
