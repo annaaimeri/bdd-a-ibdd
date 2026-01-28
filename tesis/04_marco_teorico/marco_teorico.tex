@@ -37,8 +37,13 @@ Esta estructura, si bien es lo suficientemente formal para ser procesada por her
 
 \section{Pruebas Basadas en Modelos}
 
-% TODO: Definir MBT. Explicar el proceso de generación automática de
-% casos de prueba a partir de modelos formales.
+Las Pruebas Basadas en Modelos (MBT, \textit{Model-Based Testing}) constituyen un enfoque de verificación de software en el que los casos de prueba se derivan de manera sistemática a partir de un modelo formal que describe el comportamiento esperado del sistema bajo prueba~\cite{utting2012taxonomy}. A diferencia de las técnicas de prueba manuales, donde un ingeniero diseña casos de prueba individualmente, MBT automatiza este proceso: dado un modelo del sistema y un criterio de cobertura, un algoritmo de generación produce un conjunto de casos de prueba que satisface dicho criterio.
+
+Utting et al.~\cite{utting2012taxonomy} proponen una taxonomía que clasifica los enfoques de MBT según cinco dimensiones: la notación del modelo (máquinas de estados, autómatas, modelos de flujo de datos), el criterio de selección de pruebas (cobertura estructural, cobertura de requisitos, selección aleatoria), la tecnología de generación (model checking, ejecución simbólica, búsqueda), la ejecución de las pruebas (\textit{online} versus \textit{offline}), y el nivel de automatización del proceso completo.
+
+En el contexto de sistemas reactivos---sistemas que interactúan con su entorno mediante estímulos y respuestas---Tretmans~\cite{tretmans2008mbt} formaliza la relación de conformidad \textit{ioco} (\textit{input-output conformance}) como criterio para determinar si una implementación se comporta de acuerdo con su especificación. Bajo esta teoría, el modelo del sistema se expresa como un Sistema de Transición Etiquetado (\textit{Labelled Transition System}, LTS), y los casos de prueba se generan como secuencias de estímulos y observaciones que verifican la conformidad de la implementación con respecto al modelo.
+
+El atractivo fundamental de MBT reside en la posibilidad de generar automáticamente grandes conjuntos de casos de prueba con garantías formales de cobertura, lo cual resulta particularmente valioso en dominios donde la exhaustividad de las pruebas es crítica. Sin embargo, la aplicación de MBT requiere la existencia de un modelo formal del sistema, cuya construcción constituye en sí misma un desafío significativo. En la tesis doctoral de Brandán Briones~\cite{brandan2007mbt} se desarrollan teorías para MBT que abordan aspectos de tiempo real y cobertura en este tipo de sistemas.
 
 \section{Sistemas de Transición Simbólicos}
 
