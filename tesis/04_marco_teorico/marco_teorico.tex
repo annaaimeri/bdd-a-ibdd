@@ -142,12 +142,42 @@ Esta observación motiva el enfoque híbrido adoptado en el presente trabajo: ut
 
 \section{Análisis Sintáctico y Gramáticas Formales}
 
-% TODO: Conceptos de parsing necesarios para comprender el módulo de
-% validación. Algoritmos relevantes (Earley, LALR). Notación EBNF.
+El análisis sintáctico (\textit{parsing}) es el proceso de verificar si una cadena de texto pertenece al lenguaje definido por una gramática formal, y de construir una representación estructurada (típicamente un árbol de derivación) que refleje la estructura jerárquica de la entrada. En el contexto de este trabajo, el análisis sintáctico desempeña un rol central: verificar que las traducciones IBDD generadas por el LLM sean sintácticamente válidas respecto de la gramática formal del lenguaje.
+
+\subsection{Notación EBNF}
+
+La gramática IBDD se especifica utilizando la notación EBNF (\textit{Extended Backus-Naur Form}), propuesta por Niklaus Wirth~\cite{wirth1977ebnf} como extensión de la notación BNF (\textit{Backus-Naur Form}) introducida por John Backus en 1959 para describir la sintaxis de ALGOL~60. Wirth observó que la diversidad innecesaria de notaciones sintácticas en la literatura dificultaba la comunicación, y propuso EBNF como notación unificada que incorpora operadores de expresiones regulares: corchetes \texttt{[ ]} para secuencias opcionales, llaves \texttt{\{ \}} para repeticiones, y paréntesis \texttt{( )} para agrupamiento. Estas extensiones permiten expresar gramáticas de manera más compacta, evitando el uso intensivo de recursión para representar repeticiones simples.
+
+\subsection{Algoritmo de Earley}
+
+Para el análisis sintáctico de las traducciones IBDD, este trabajo emplea el algoritmo de Earley~\cite{earley1970parsing}, un algoritmo de análisis descendente basado en programación dinámica que opera sobre gramáticas libres de contexto arbitrarias. A diferencia de los analizadores LR o LALR, que requieren gramáticas restringidas a subclases específicas, el algoritmo de Earley acepta cualquier gramática libre de contexto sin necesidad de transformaciones previas.
+
+El algoritmo procesa la cadena de entrada de izquierda a derecha, manteniendo un conjunto de \textit{items} (reglas de producción parcialmente reconocidas) organizados en columnas correspondientes a cada posición de la entrada. En cada paso, tres operaciones fundamentales avanzan el reconocimiento: \textit{prediction} (predice qué reglas pueden aplicarse), \textit{scanning} (consume un terminal de la entrada) y \textit{completion} (propaga el reconocimiento de un no-terminal completado). Su complejidad temporal es $O(n^3)$ en el caso general, $O(n^2)$ para gramáticas no ambiguas, y $O(n)$ para gramáticas LR($k$), donde $n$ es la longitud de la entrada.
+
+La elección del algoritmo de Earley se justifica por dos razones. En primer lugar, la gramática IBDD---que combina elementos EBNF con estructuras matemáticas de lógica de primer orden---no se ajusta a las restricciones de los analizadores LALR convencionales. En segundo lugar, la flexibilidad del algoritmo de Earley permite modificar y extender la gramática durante el desarrollo del sistema sin necesidad de reestructurarla para satisfacer requisitos de un analizador más restrictivo.
+
+\subsection{Lark como Herramienta de Análisis}
+
+La implementación del módulo de validación utiliza Lark~\cite{lark_github}, una biblioteca de análisis sintáctico para Python que soporta múltiples algoritmos, incluyendo Earley y LALR(1). Lark permite definir gramáticas en una variante de EBNF y genera automáticamente el analizador correspondiente, proporcionando árboles de derivación tipados y mensajes de error detallados que facilitan el diagnóstico de fallos en las traducciones generadas.
 
 \section{Trabajos Relacionados}
 
-% TODO: Revisión de trabajos previos en: (1) automatización de BDD,
-% (2) traducción de lenguaje natural a formalismos, (3) uso de LLMs
-% para generación de especificaciones formales, (4) validación
-% sintáctica de salidas de LLMs.
+Esta sección revisa los trabajos previos más relevantes, organizados según su relación con las distintas dimensiones del presente trabajo: el pipeline formal BDD-a-MBT, el uso de técnicas de procesamiento de lenguaje natural para la automatización de BDD, y la aplicación de modelos de lenguaje grandes en este dominio.
+
+\subsection{Pipeline Formal BDD-a-MBT}
+
+El presente trabajo se inscribe directamente en la línea de investigación iniciada por Zameni et al., quienes han desarrollado progresivamente el pipeline de transformación desde escenarios BDD hasta la generación automática de casos de prueba. En su trabajo inicial~\cite{zameni2023bddts}, los autores presentaron la idea de transformar manualmente escenarios BDD en modelos formales sobre los cuales aplicar técnicas de MBT, demostrando la viabilidad del enfoque pero señalando la dificultad de automatizar la transformación debido a la gran discrepancia entre los escenarios textuales y los modelos formales. Posteriormente, Zameni et al.~\cite{zameni2024ibdd} definieron el lenguaje intermedio IBDD y formalizaron la transformación de IBDD a BDDTS y de BDDTS a STS, estableciendo así los eslabones formales de la cadena. Más recientemente~\cite{zameni2025composition}, extendieron el framework con mecanismos de composición secuencial de BDDTS que permiten construir modelos complejos a partir de escenarios individuales. El paso que permanece sin automatizar en este pipeline---y que constituye el objetivo del presente trabajo---es la traducción inicial de escenarios Gherkin a IBDD.
+
+\subsection{Automatización de BDD mediante NLP}
+
+La aplicación de técnicas de procesamiento de lenguaje natural a escenarios BDD tiene antecedentes previos a la era de los LLMs. Soeken et al.~\cite{soeken2012nlp} propusieron un flujo asistido para BDD donde el sistema utiliza NLP para extraer semi-automáticamente la estructura del código de implementación y los casos de prueba a partir de escenarios textuales, estableciendo un diálogo interactivo con el usuario. Este enfoque opera a nivel de código fuente y no genera representaciones formales intermedias.
+
+Fischbach et al.~\cite{fischbach2020specmate} desarrollaron SPECMATE, una herramienta que automatiza la creación de casos de prueba a partir de criterios de aceptación expresados en lenguaje natural. SPECMATE utiliza técnicas de NLP para extraer relaciones causales de los criterios de aceptación y generar árboles de causa-efecto, a partir de los cuales se derivan automáticamente los casos de prueba. A diferencia del presente trabajo, SPECMATE no genera representaciones formales intermedias ni se integra con el framework de MBT basado en STS.
+
+\subsection{LLMs para la Automatización de BDD}
+
+El trabajo más directamente relacionado con el enfoque propuesto es el de Karpurapu et al.~\cite{karpurapu2024llm}, quienes realizaron una evaluación exhaustiva del uso de LLMs para la formulación automática de pruebas de aceptación en BDD. Sus experimentos abarcan múltiples modelos y estrategias de prompting, y sus resultados demuestran que la técnica de \textit{few-shot prompting}---donde se proveen ejemplos de la tarea al modelo---mejora significativamente la calidad de las salidas en comparación con \textit{zero-shot prompting}. Este hallazgo informó directamente el diseño del sistema de traducción propuesto en este trabajo.
+
+\subsection{Posicionamiento del Presente Trabajo}
+
+El presente trabajo se diferencia de los anteriores en varios aspectos. En primer lugar, aborda específicamente la traducción a IBDD, un formalismo diseñado como puente hacia MBT, mientras que los trabajos previos de NLP para BDD generan código fuente o casos de prueba directamente, sin pasar por una representación formal intermedia. En segundo lugar, combina las capacidades de comprensión semántica de los LLMs con un módulo de validación sintáctica determinístico basado en gramáticas formales, un enfoque híbrido que no ha sido explorado en la literatura para este problema específico. Finalmente, al automatizar la primera etapa del pipeline propuesto por Zameni et al., este trabajo busca completar la cadena de automatización BDD-a-MBT.
