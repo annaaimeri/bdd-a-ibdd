@@ -124,9 +124,21 @@ Zameni et al.~\cite{zameni2025composition} extienden este pipeline con mecanismo
 
 \section{Modelos de Lenguaje Grandes}
 
-% TODO: Describir LLMs relevantes para el trabajo. Capacidades de
-% comprensión y generación de texto estructurado. Aplicaciones en
-% ingeniería de software (generación de código, traducción de formalismos).
+Los Modelos de Lenguaje Grandes (LLMs, \textit{Large Language Models}) son redes neuronales con miles de millones de parámetros, entrenadas sobre corpus masivos de texto para predecir la siguiente secuencia de tokens en un contexto dado. Su arquitectura se fundamenta en el \textit{Transformer}~\cite{vaswani2017attention}, que introdujo el mecanismo de \textit{self-attention} como alternativa a las redes recurrentes, permitiendo capturar dependencias a larga distancia en secuencias de texto de forma paralelizable y eficiente.
+
+A partir de esta arquitectura base, modelos sucesivos como GPT-4~\cite{openai2023gpt4} han demostrado capacidades emergentes que trascienden la generación de texto: comprensión semántica profunda, razonamiento sobre estructuras formales, y generación de código en múltiples lenguajes de programación. GPT-4, en particular, es un modelo multimodal capaz de procesar texto e imágenes, que exhibe desempeño a nivel humano en diversas evaluaciones profesionales y académicas.
+
+\subsection{Aplicaciones en Ingeniería de Software}
+
+La aplicación de LLMs en ingeniería de software ha experimentado un crecimiento notable. Jiang et al.~\cite{jiang2024codellm} presentan un relevamiento sistemático que identifica las principales tareas en las que los LLMs han demostrado efectividad: generación de código a partir de descripciones en lenguaje natural, completado automático de código, detección y corrección de errores, generación de pruebas, y traducción entre lenguajes de programación. Herramientas como GitHub Copilot ilustran la adopción industrial de estas capacidades.
+
+En el contexto específico de BDD, Karpurapu et al.~\cite{karpurapu2024llm} evalúan el uso de LLMs para la formulación automática de pruebas de aceptación. Sus hallazgos indican que la provisión de ejemplos (\textit{few-shot prompting}) mejora significativamente la precisión de las traducciones generadas, un resultado que informa directamente el diseño del sistema propuesto en este trabajo.
+
+\subsection{Limitaciones y Complementación con Métodos Formales}
+
+A pesar de sus capacidades, los LLMs presentan limitaciones relevantes para tareas que requieren corrección formal. Los modelos pueden generar salidas sintácticamente incorrectas, introducir \textit{hallucinations} (contenido plausible pero factualmente incorrecto), y exhibir inconsistencias entre ejecuciones sucesivas. Estas limitaciones son particularmente críticas cuando el objetivo es producir representaciones formales como IBDD, donde un error sintáctico invalida completamente la traducción.
+
+Esta observación motiva el enfoque híbrido adoptado en el presente trabajo: utilizar LLMs para la tarea de comprensión semántica y traducción inicial, y complementar su salida con un módulo de validación sintáctica determinístico que garantice la corrección formal de las traducciones generadas.
 
 \section{Análisis Sintáctico y Gramáticas Formales}
 
