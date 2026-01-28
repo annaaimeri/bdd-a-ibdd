@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.translator import TranslationService
 from src.parser import validate_ibdd_cases
 from src.explainer import IBDDErrorExplainer
+from src.semantic_validator import SemanticValidator
 
 
 class BDDToIBDDPipeline:
@@ -31,6 +32,7 @@ class BDDToIBDDPipeline:
         """
         self.translation_service = TranslationService(api_key)
         self.error_explainer = IBDDErrorExplainer(api_key)
+        self.semantic_validator = SemanticValidator(api_key)
 
     def run(
         self,
@@ -55,7 +57,7 @@ class BDDToIBDDPipeline:
         print("=" * 80)
 
         # Step 1: Translate BDD to IBDD
-        print("\n[Step 1/4] Translating BDD scenarios to IBDD...")
+        print("\n[Step 1/5] Translating BDD scenarios to IBDD...")
         print("-" * 80)
         try:
             self.translation_service.translate(
@@ -68,21 +70,85 @@ class BDDToIBDDPipeline:
             print(f"✗ Translation failed: {e}", file=sys.stderr)
             sys.exit(1)
 
-        # Step 2: Parse and validate IBDD
-        print("\n[Step 2/4] Parsing and validating IBDD scenarios...")
+        # Step 2: Parse and validate IBDD (Syntactic)
+        print("\n[Step 2/5] Parsing and validating IBDD syntax...")
         print("-" * 80)
         try:
             validate_ibdd_cases(
                 json_file_path=translation_output_path,
                 output_file=validation_output_path
             )
-            print(f"✓ Validation completed: {validation_output_path}")
+            print(f"✓ Syntax validation completed: {validation_output_path}")
         except Exception as e:
             print(f"✗ Validation failed: {e}", file=sys.stderr)
             sys.exit(1)
 
+        # Step 2.5: Semantic validation of syntactically valid cases
+        print("\n[Step 2.5/5] Semantic validation of valid translations...")
+        print("-" * 80)
+        semantic_results_path = validation_output_path.replace('.json', '_semantic.json')
+        try:
+            # Load original BDD dataset
+            with open(dataset_path, 'r', encoding='utf-8') as f:
+                bdd_dataset = json.load(f)
+
+            # Load translations
+            with open(translation_output_path, 'r', encoding='utf-8') as f:
+                translations = json.load(f)
+
+            # Load syntax validation results
+            with open(validation_output_path, 'r', encoding='utf-8') as f:
+                syntax_validations = json.load(f)
+
+            # Create maps for quick lookup
+            bdd_map = {case['id']: case for case in bdd_dataset}
+            translation_map = {case['id']: case for case in translations}
+
+            # Validate semantically only cases that passed syntax validation
+            semantic_results = []
+            for syntax_result in syntax_validations:
+                case_id = syntax_result['id']
+
+                # Only validate semantically if syntax is valid
+                if syntax_result.get('valid', False):
+                    bdd = bdd_map.get(case_id, {})
+                    translation = translation_map.get(case_id, {})
+                    ibdd_text = translation.get('ibdd_representation', '')
+
+                    # Run semantic validation
+                    sem_result = self.semantic_validator.validate(
+                        bdd={'given': bdd.get('given', ''),
+                             'when': bdd.get('when', ''),
+                             'then': bdd.get('then', '')},
+                        ibdd=ibdd_text,
+                        case_id=case_id
+                    )
+                    semantic_results.append(sem_result)
+                else:
+                    # Skip semantic validation for syntactically invalid cases
+                    print(f"  Skipping semantic validation for case {case_id} (syntax error)")
+
+            # Save semantic validation results
+            with open(semantic_results_path, 'w', encoding='utf-8') as f:
+                json.dump(semantic_results, indent=2, ensure_ascii=False, fp=f)
+
+            # Print summary
+            if semantic_results:
+                valid_count = sum(1 for r in semantic_results if r['overall_valid'])
+                print(f"✓ Semantic validation completed: {valid_count}/{len(semantic_results)} passed")
+                print(f"  Results saved to: {semantic_results_path}")
+                self.semantic_validator.print_summary()
+            else:
+                print("⚠ No cases available for semantic validation")
+
+        except Exception as e:
+            print(f"⚠ Semantic validation failed (non-critical): {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
+            print("Pipeline will continue despite semantic validation failure")
+
         # Step 3: Explain errors if any cases failed
-        print("\n[Step 3/4] Checking for parsing errors...")
+        print("\n[Step 3/5] Checking for parsing errors...")
         print("-" * 80)
         explanations = []
         try:
@@ -109,7 +175,7 @@ class BDDToIBDDPipeline:
             print("Pipeline will continue despite explanation failure")
 
         # Step 4: Retry failed translations with error feedback
-        print("\n[Step 4/4] Attempting to correct failed translations...")
+        print("\n[Step 4/5] Attempting to correct failed translations...")
         print("-" * 80)
         if explanations:
             try:
@@ -145,22 +211,40 @@ class BDDToIBDDPipeline:
         else:
             print("✓ No failed cases to retry - skipping correction step")
 
-        # Summary
-        print("\n" + "=" * 80)
+        # Step 5: Final Summary
+        print("\n[Step 5/5] Final Summary")
+        print("=" * 80)
         print("Pipeline completed successfully!")
         print("=" * 80)
-        print(f"Translation output: {translation_output_path}")
-        print(f"Validation output:  {validation_output_path}")
-        print(f"Validation CSV:     {validation_output_path.replace('.json', '.csv')}")
+        print(f"Translation output:      {translation_output_path}")
+        print(f"Syntax validation:       {validation_output_path}")
+        print(f"Syntax validation CSV:   {validation_output_path.replace('.json', '.csv')}")
+        print(f"Semantic validation:     {semantic_results_path}")
 
-        # Check if there were errors
-        if os.path.exists(explanations_output_path):
-            print(f"Error explanations: {explanations_output_path}")
+        # Syntax validation summary
+        if os.path.exists(validation_output_path):
             with open(validation_output_path, 'r', encoding='utf-8') as f:
                 validation_results = json.load(f)
                 total = len(validation_results)
-                failed = sum(1 for r in validation_results if not r.get('valid', True))
-                print(f"\nValidation Summary: {total - failed}/{total} cases passed, {failed} failed")
+                syntax_passed = sum(1 for r in validation_results if r.get('valid', True))
+                syntax_failed = total - syntax_passed
+                print(f"\n📊 Syntax Validation: {syntax_passed}/{total} passed ({syntax_passed/total*100:.1f}%), {syntax_failed} failed")
+
+        # Semantic validation summary
+        if os.path.exists(semantic_results_path):
+            with open(semantic_results_path, 'r', encoding='utf-8') as f:
+                semantic_results = json.load(f)
+                total_semantic = len(semantic_results)
+                semantic_passed = sum(1 for r in semantic_results if r.get('overall_valid', False))
+                semantic_failed = total_semantic - semantic_passed
+                if total_semantic > 0:
+                    print(f"📊 Semantic Validation: {semantic_passed}/{total_semantic} passed ({semantic_passed/total_semantic*100:.1f}%), {semantic_failed} failed")
+
+        # Error explanations
+        if os.path.exists(explanations_output_path):
+            print(f"\n📝 Error explanations: {explanations_output_path}")
+
+        print("=" * 80)
         print()
 
     def _merge_translations(
