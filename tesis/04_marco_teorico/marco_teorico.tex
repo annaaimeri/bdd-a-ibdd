@@ -47,8 +47,25 @@ El atractivo fundamental de MBT reside en la posibilidad de generar automáticam
 
 \section{Sistemas de Transición Simbólicos}
 
-% TODO: Definir STS formalmente. Explicar estados, transiciones,
-% guardas, variables. Relación con MBT.
+Los Sistemas de Transición Simbólicos (STS, \textit{Symbolic Transition Systems}) constituyen una extensión de los Sistemas de Transición Etiquetados (LTS) que incorpora una representación explícita de datos y flujo de control dependiente de datos~\cite{frantzen2005sts}. Mientras que en un LTS los valores de datos se representan de manera concreta---lo cual conduce a una explosión del espacio de estados cuando los dominios de datos son grandes o infinitos---los STS operan a nivel simbólico, utilizando variables y fórmulas de lógica de primer orden para expresar condiciones sobre los datos.
+
+Formalmente, un STS se define como una tupla $\langle L, l_0, V, \iota, I, \Lambda, \rightarrow \rangle$, donde~\cite{frantzen2006symbolic}:
+
+\begin{itemize}
+  \item $L$ es un conjunto finito de \textit{localidades} (estados de control).
+  \item $l_0 \in L$ es la localidad inicial.
+  \item $V$ es un conjunto de \textit{variables de localidad} que representan el estado del sistema.
+  \item $\iota$ es una valuación inicial que asigna valores a las variables en $V$.
+  \item $I$ es un conjunto de \textit{variables de interacción} utilizadas para el intercambio de datos con el entorno.
+  \item $\Lambda$ es un conjunto de \textit{gates} (etiquetas de interacción) que representan los canales de comunicación.
+  \item $\rightarrow \subseteq L \times \Lambda \times \Phi \times F \times L$ es la relación de \textit{switches} (transiciones), donde $\Phi$ denota guardas lógicas y $F$ funciones de actualización de variables.
+\end{itemize}
+
+Cada switch representa una transición entre dos localidades, condicionada por una guarda (una fórmula lógica sobre las variables de localidad y de interacción) y acompañada por una función de actualización que modifica el estado. Los gates se clasifican en gates de entrada (que reciben estímulos del entorno) y gates de salida (que emiten respuestas), reflejando la naturaleza reactiva de los sistemas modelados.
+
+La ventaja de esta representación simbólica es doble. En primer lugar, evita la enumeración explícita de valores de datos, lo cual permite modelar sistemas con dominios infinitos sin incurrir en explosión de estados. En segundo lugar, preserva la información semántica de las restricciones sobre los datos, que puede ser explotada durante la generación de casos de prueba. Frantzen et al.~\cite{frantzen2006symbolic} definen la relación de conformidad simbólica \textit{sioco}, que extiende la relación \textit{ioco} de Tretmans al nivel simbólico, proporcionando una base formal para la generación de pruebas directamente desde especificaciones STS.
+
+Los conceptos de STS resultan esenciales para comprender el lenguaje IBDD presentado en la sección siguiente, ya que IBDD adopta directamente la terminología y estructura de los STS---variables, gates, guardas y asignaciones---como elementos de su gramática formal.
 
 \section{Lenguaje Intermedio de BDD}
 
