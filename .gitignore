@@ -16,4 +16,6 @@ venv/
 /.idea/.gitignore
 /.idea/bdd-to-ibdd-nlp.iml
 /.claude/
+/documentacion/
+/documentación/
 /documentación/

@@ -1,12 +1,12 @@
 \chapter{Marco Teórico}
 
-% TODO: Párrafo introductorio que presente los conceptos fundamentales
-% necesarios para comprender el resto del trabajo.
+Este capítulo presenta los conceptos fundamentales necesarios para comprender el desarrollo del presente trabajo. Se introducen el Desarrollo Dirigido por Comportamiento y su sintaxis Gherkin, las Pruebas Basadas en Modelos y los Sistemas de Transición Simbólicos que las sustentan, el Lenguaje Intermedio de BDD que actúa como puente entre ambos paradigmas, los Modelos de Lenguaje Grandes utilizados para la traducción automática, y las técnicas de análisis sintáctico empleadas para la validación. Finalmente, se revisan los trabajos relacionados que contextualizan esta investigación.
 
 \section{Desarrollo Dirigido por Comportamiento}
 
-% TODO: Definir BDD, origen, motivación. Explicar la sintaxis Gherkin
-% (Given-When-Then). Rol en la ingeniería de software moderna.
+El Desarrollo Dirigido por Comportamiento (BDD, \textit{Behavior-Driven Development}) es una práctica de desarrollo de software que surge como evolución del Desarrollo Dirigido por Pruebas (TDD, \textit{Test-Driven Development}). Fue propuesto por Dan North en 2006~\cite{north2006bdd} como respuesta a las dificultades que encontraban los equipos al adoptar TDD: incertidumbre sobre qué probar, cómo nombrar las pruebas y cómo entender por qué una prueba falla.
+
+La innovación central de BDD consiste en desplazar el foco desde las pruebas hacia el comportamiento esperado del sistema. En lugar de escribir pruebas unitarias que verifican implementaciones específicas, BDD propone describir el comportamiento del sistema desde la perspectiva del usuario mediante escenarios concretos. Este cambio de vocabulario---de ``prueba'' a ``comportamiento''---tiene implicaciones profundas: facilita la comunicación entre desarrolladores, analistas de negocio y otros \textit{stakeholders}, y produce especificaciones que sirven simultáneamente como documentación y como base para pruebas automatizadas.
 
 \section{Pruebas Basadas en Modelos}
 
