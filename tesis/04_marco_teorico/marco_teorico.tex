@@ -1,6 +1,6 @@
 \chapter{Marco Teórico}
 
-Este capítulo presenta los conceptos fundamentales necesarios para comprender el desarrollo del presente trabajo. Se introducen el Desarrollo Dirigido por Comportamiento y su sintaxis Gherkin, las Pruebas Basadas en Modelos y los Sistemas de Transición Simbólicos que las sustentan, el Lenguaje Intermedio de BDD que actúa como puente entre ambos paradigmas, los Modelos de Lenguaje Grandes utilizados para la traducción automática, y las técnicas de análisis sintáctico empleadas para la validación. Finalmente, se revisan los trabajos relacionados que contextualizan esta investigación.
+Este capítulo presenta los conceptos fundamentales necesarios para comprender el desarrollo del presente trabajo. Se introducen el Desarrollo Dirigido por Comportamiento y su sintaxis Gherkin, las Pruebas Basadas en Modelos y los Sistemas de Transición Simbólicos que las sustentan, el Lenguaje Intermedio de BDD que actúa como puente entre ambos paradigmas, los Modelos de Lenguaje Grandes y las técnicas de análisis sintáctico basadas en gramáticas formales. Finalmente, se revisan los trabajos relacionados que contextualizan esta investigación.
 
 \section{Desarrollo Dirigido por Comportamiento}
 
@@ -33,7 +33,7 @@ Scenario: Add product to shopping cart
 
 Los escenarios Gherkin se agrupan en archivos denominados \textit{features}, donde cada \textit{feature} describe una funcionalidad del sistema e incluye uno o más escenarios que ilustran su comportamiento esperado bajo distintas condiciones. Las palabras clave \textbf{And} y \textbf{But} permiten encadenar múltiples condiciones dentro de una misma cláusula, mejorando la legibilidad sin alterar la semántica de la especificación.
 
-Esta estructura, si bien es lo suficientemente formal para ser procesada por herramientas de automatización como Cucumber, mantiene un nivel de abstracción cercano al lenguaje natural. Es precisamente esta característica la que convierte a Gherkin en un formato accesible para \textit{stakeholders} no técnicos, pero también la que introduce los desafíos de ambigüedad e imprecisión que motivan el presente trabajo.
+Esta estructura, si bien es lo suficientemente formal para ser procesada por herramientas de automatización como Cucumber, mantiene un nivel de abstracción cercano al lenguaje natural. Es precisamente esta característica la que convierte a Gherkin en un formato accesible para \textit{stakeholders} no técnicos, pero también la que introduce desafíos de ambigüedad e imprecisión inherentes al uso del lenguaje natural.
 
 \section{Pruebas Basadas en Modelos}
 
@@ -114,13 +114,13 @@ En este ejemplo, \texttt{CJ} es una variable local que representa un trabajo de 
 IBDD se sitúa en el centro de un pipeline de transformación que conecta los escenarios BDD con la generación automática de casos de prueba. Este pipeline consta de las siguientes etapas~\cite{zameni2024ibdd, zameni2023bddts}:
 
 \begin{enumerate}
-  \item \textbf{BDD $\rightarrow$ IBDD}: traducción de escenarios Gherkin al formalismo IBDD. Esta etapa, originalmente manual, es el objeto de automatización del presente trabajo.
+  \item \textbf{BDD $\rightarrow$ IBDD}: traducción de escenarios Gherkin al formalismo IBDD. Esta etapa ha sido tradicionalmente realizada de forma manual.
   \item \textbf{IBDD $\rightarrow$ BDDTS}: transformación formal de términos IBDD a Sistemas de Transición BDD (\textit{BDD Transition Systems}), una variante de STS que particiona las variables de estado en locales y globales, y añade una localidad objetivo junto con guardas de entrada y salida.
   \item \textbf{BDDTS $\rightarrow$ STS}: transformación de los BDDTS a Sistemas de Transición Simbólicos, incorporando la información necesaria para la generación de pruebas.
   \item \textbf{STS $\rightarrow$ Tests}: aplicación de algoritmos de generación automática de casos de prueba sobre los STS resultantes.
 \end{enumerate}
 
-Zameni et al.~\cite{zameni2025composition} extienden este pipeline con mecanismos de composición secuencial de BDDTS, permitiendo construir modelos complejos a partir de escenarios individuales y explotar así la capacidad de MBT para generar conjuntos extensos de pruebas. La automatización de la primera etapa de este pipeline---la traducción de BDD a IBDD---constituye la contribución central de este trabajo.
+Zameni et al.~\cite{zameni2025composition} extienden este pipeline con mecanismos de composición secuencial de BDDTS, permitiendo construir modelos complejos a partir de escenarios individuales y explotar así la capacidad de MBT para generar conjuntos extensos de pruebas. Cabe notar que la primera etapa de este pipeline---la traducción de escenarios Gherkin a IBDD---permanece sin automatizar.
 
 \section{Modelos de Lenguaje Grandes}
 
@@ -132,17 +132,15 @@ A partir de esta arquitectura base, modelos sucesivos como GPT-4~\cite{openai202
 
 La aplicación de LLMs en ingeniería de software ha experimentado un crecimiento notable. Jiang et al.~\cite{jiang2024codellm} presentan un relevamiento sistemático que identifica las principales tareas en las que los LLMs han demostrado efectividad: generación de código a partir de descripciones en lenguaje natural, completado automático de código, detección y corrección de errores, generación de pruebas, y traducción entre lenguajes de programación. Herramientas como GitHub Copilot ilustran la adopción industrial de estas capacidades.
 
-En el contexto específico de BDD, Karpurapu et al.~\cite{karpurapu2024llm} evalúan el uso de LLMs para la formulación automática de pruebas de aceptación. Sus hallazgos indican que la provisión de ejemplos (\textit{few-shot prompting}) mejora significativamente la precisión de las traducciones generadas, un resultado que informa directamente el diseño del sistema propuesto en este trabajo.
+En el contexto específico de BDD, Karpurapu et al.~\cite{karpurapu2024llm} evalúan el uso de LLMs para la formulación automática de pruebas de aceptación. Sus hallazgos indican que la provisión de ejemplos (\textit{few-shot prompting}) mejora significativamente la precisión de las traducciones generadas en comparación con estrategias de \textit{zero-shot prompting}.
 
-\subsection{Limitaciones y Complementación con Métodos Formales}
+\subsection{Limitaciones}
 
-A pesar de sus capacidades, los LLMs presentan limitaciones relevantes para tareas que requieren corrección formal. Los modelos pueden generar salidas sintácticamente incorrectas, introducir \textit{hallucinations} (contenido plausible pero factualmente incorrecto), y exhibir inconsistencias entre ejecuciones sucesivas. Estas limitaciones son particularmente críticas cuando el objetivo es producir representaciones formales como IBDD, donde un error sintáctico invalida completamente la traducción.
-
-Esta observación motiva el enfoque híbrido adoptado en el presente trabajo: utilizar LLMs para la tarea de comprensión semántica y traducción inicial, y complementar su salida con un módulo de validación sintáctica determinístico que garantice la corrección formal de las traducciones generadas.
+A pesar de sus capacidades, los LLMs presentan limitaciones relevantes para tareas que requieren corrección formal. Los modelos pueden generar salidas sintácticamente incorrectas, introducir \textit{hallucinations} (contenido plausible pero factualmente incorrecto), y exhibir inconsistencias entre ejecuciones sucesivas. Estas limitaciones son particularmente críticas cuando el objetivo es producir representaciones formales, donde un error sintáctico puede invalidar completamente la salida generada.
 
 \section{Análisis Sintáctico y Gramáticas Formales}
 
-El análisis sintáctico (\textit{parsing}) es el proceso de verificar si una cadena de texto pertenece al lenguaje definido por una gramática formal, y de construir una representación estructurada (típicamente un árbol de derivación) que refleje la estructura jerárquica de la entrada. En el contexto de este trabajo, el análisis sintáctico desempeña un rol central: verificar que las traducciones IBDD generadas por el LLM sean sintácticamente válidas respecto de la gramática formal del lenguaje.
+El análisis sintáctico (\textit{parsing}) es el proceso de verificar si una cadena de texto pertenece al lenguaje definido por una gramática formal, y de construir una representación estructurada (típicamente un árbol de derivación) que refleje la estructura jerárquica de la entrada.
 
 \subsection{Notación EBNF}
 
@@ -150,34 +148,34 @@ La gramática IBDD se especifica utilizando la notación EBNF (\textit{Extended 
 
 \subsection{Algoritmo de Earley}
 
-Para el análisis sintáctico de las traducciones IBDD, este trabajo emplea el algoritmo de Earley~\cite{earley1970parsing}, un algoritmo de análisis descendente basado en programación dinámica que opera sobre gramáticas libres de contexto arbitrarias. A diferencia de los analizadores LR o LALR, que requieren gramáticas restringidas a subclases específicas, el algoritmo de Earley acepta cualquier gramática libre de contexto sin necesidad de transformaciones previas.
+El algoritmo de Earley~\cite{earley1970parsing} es un algoritmo de análisis descendente basado en programación dinámica que opera sobre gramáticas libres de contexto arbitrarias. A diferencia de los analizadores LR o LALR, que requieren gramáticas restringidas a subclases específicas, el algoritmo de Earley acepta cualquier gramática libre de contexto sin necesidad de transformaciones previas.
 
 El algoritmo procesa la cadena de entrada de izquierda a derecha, manteniendo un conjunto de \textit{items} (reglas de producción parcialmente reconocidas) organizados en columnas correspondientes a cada posición de la entrada. En cada paso, tres operaciones fundamentales avanzan el reconocimiento: \textit{prediction} (predice qué reglas pueden aplicarse), \textit{scanning} (consume un terminal de la entrada) y \textit{completion} (propaga el reconocimiento de un no-terminal completado). Su complejidad temporal es $O(n^3)$ en el caso general, $O(n^2)$ para gramáticas no ambiguas, y $O(n)$ para gramáticas LR($k$), donde $n$ es la longitud de la entrada.
 
-La elección del algoritmo de Earley se justifica por dos razones. En primer lugar, la gramática IBDD---que combina elementos EBNF con estructuras matemáticas de lógica de primer orden---no se ajusta a las restricciones de los analizadores LALR convencionales. En segundo lugar, la flexibilidad del algoritmo de Earley permite modificar y extender la gramática durante el desarrollo del sistema sin necesidad de reestructurarla para satisfacer requisitos de un analizador más restrictivo.
+Una ventaja significativa del algoritmo de Earley es su capacidad para operar con gramáticas que no se ajustan a las restricciones de los analizadores LALR convencionales, como aquellas que combinan elementos EBNF con estructuras matemáticas de lógica de primer orden. Además, su flexibilidad permite modificar y extender gramáticas sin necesidad de reestructurarlas para satisfacer requisitos de analizadores más restrictivos.
 
 \subsection{Lark como Herramienta de Análisis}
 
-La implementación del módulo de validación utiliza Lark~\cite{lark_github}, una biblioteca de análisis sintáctico para Python que soporta múltiples algoritmos, incluyendo Earley y LALR(1). Lark permite definir gramáticas en una variante de EBNF y genera automáticamente el analizador correspondiente, proporcionando árboles de derivación tipados y mensajes de error detallados que facilitan el diagnóstico de fallos en las traducciones generadas.
+Lark~\cite{lark_github} es una biblioteca de análisis sintáctico para Python que soporta múltiples algoritmos, incluyendo Earley y LALR(1). Lark permite definir gramáticas en una variante de EBNF y genera automáticamente el analizador correspondiente, proporcionando árboles de derivación tipados y mensajes de error detallados que facilitan el diagnóstico de fallos sintácticos.
 
 \section{Trabajos Relacionados}
 
-Esta sección revisa los trabajos previos más relevantes, organizados según su relación con las distintas dimensiones del presente trabajo: el pipeline formal BDD-a-MBT, el uso de técnicas de procesamiento de lenguaje natural para la automatización de BDD, y la aplicación de modelos de lenguaje grandes en este dominio.
+Esta sección revisa los trabajos previos más relevantes, organizados según tres dimensiones: el pipeline formal BDD-a-MBT, el uso de técnicas de procesamiento de lenguaje natural para la automatización de BDD, y la aplicación de modelos de lenguaje grandes en este dominio.
 
 \subsection{Pipeline Formal BDD-a-MBT}
 
-El presente trabajo se inscribe directamente en la línea de investigación iniciada por Zameni et al., quienes han desarrollado progresivamente el pipeline de transformación desde escenarios BDD hasta la generación automática de casos de prueba. En su trabajo inicial~\cite{zameni2023bddts}, los autores presentaron la idea de transformar manualmente escenarios BDD en modelos formales sobre los cuales aplicar técnicas de MBT, demostrando la viabilidad del enfoque pero señalando la dificultad de automatizar la transformación debido a la gran discrepancia entre los escenarios textuales y los modelos formales. Posteriormente, Zameni et al.~\cite{zameni2024ibdd} definieron el lenguaje intermedio IBDD y formalizaron la transformación de IBDD a BDDTS y de BDDTS a STS, estableciendo así los eslabones formales de la cadena. Más recientemente~\cite{zameni2025composition}, extendieron el framework con mecanismos de composición secuencial de BDDTS que permiten construir modelos complejos a partir de escenarios individuales. El paso que permanece sin automatizar en este pipeline---y que constituye el objetivo del presente trabajo---es la traducción inicial de escenarios Gherkin a IBDD.
+La línea de investigación iniciada por Zameni et al. ha desarrollado progresivamente un pipeline de transformación desde escenarios BDD hasta la generación automática de casos de prueba. En su trabajo inicial~\cite{zameni2023bddts}, los autores presentaron la idea de transformar manualmente escenarios BDD en modelos formales sobre los cuales aplicar técnicas de MBT, demostrando la viabilidad del enfoque pero señalando la dificultad de automatizar la transformación debido a la gran discrepancia entre los escenarios textuales y los modelos formales. Posteriormente, Zameni et al.~\cite{zameni2024ibdd} definieron el lenguaje intermedio IBDD y formalizaron la transformación de IBDD a BDDTS y de BDDTS a STS, estableciendo así los eslabones formales de la cadena. Más recientemente~\cite{zameni2025composition}, extendieron el framework con mecanismos de composición secuencial de BDDTS que permiten construir modelos complejos a partir de escenarios individuales. El paso que permanece sin automatizar en este pipeline es la traducción inicial de escenarios Gherkin a IBDD.
 
 \subsection{Automatización de BDD mediante NLP}
 
 La aplicación de técnicas de procesamiento de lenguaje natural a escenarios BDD tiene antecedentes previos a la era de los LLMs. Soeken et al.~\cite{soeken2012nlp} propusieron un flujo asistido para BDD donde el sistema utiliza NLP para extraer semi-automáticamente la estructura del código de implementación y los casos de prueba a partir de escenarios textuales, estableciendo un diálogo interactivo con el usuario. Este enfoque opera a nivel de código fuente y no genera representaciones formales intermedias.
 
-Fischbach et al.~\cite{fischbach2020specmate} desarrollaron SPECMATE, una herramienta que automatiza la creación de casos de prueba a partir de criterios de aceptación expresados en lenguaje natural. SPECMATE utiliza técnicas de NLP para extraer relaciones causales de los criterios de aceptación y generar árboles de causa-efecto, a partir de los cuales se derivan automáticamente los casos de prueba. A diferencia del presente trabajo, SPECMATE no genera representaciones formales intermedias ni se integra con el framework de MBT basado en STS.
+Fischbach et al.~\cite{fischbach2020specmate} desarrollaron SPECMATE, una herramienta que automatiza la creación de casos de prueba a partir de criterios de aceptación expresados en lenguaje natural. SPECMATE utiliza técnicas de NLP para extraer relaciones causales de los criterios de aceptación y generar árboles de causa-efecto, a partir de los cuales se derivan automáticamente los casos de prueba. SPECMATE no genera representaciones formales intermedias ni se integra con frameworks de MBT basados en STS.
 
 \subsection{LLMs para la Automatización de BDD}
 
-El trabajo más directamente relacionado con el enfoque propuesto es el de Karpurapu et al.~\cite{karpurapu2024llm}, quienes realizaron una evaluación exhaustiva del uso de LLMs para la formulación automática de pruebas de aceptación en BDD. Sus experimentos abarcan múltiples modelos y estrategias de prompting, y sus resultados demuestran que la técnica de \textit{few-shot prompting}---donde se proveen ejemplos de la tarea al modelo---mejora significativamente la calidad de las salidas en comparación con \textit{zero-shot prompting}. Este hallazgo informó directamente el diseño del sistema de traducción propuesto en este trabajo.
+Un trabajo particularmente relevante es el de Karpurapu et al.~\cite{karpurapu2024llm}, quienes realizaron una evaluación exhaustiva del uso de LLMs para la formulación automática de pruebas de aceptación en BDD. Sus experimentos abarcan múltiples modelos y estrategias de prompting, y sus resultados demuestran que la técnica de \textit{few-shot prompting}---donde se proveen ejemplos de la tarea al modelo---mejora significativamente la calidad de las salidas en comparación con \textit{zero-shot prompting}.
 
-\subsection{Posicionamiento del Presente Trabajo}
+\subsection{Brechas Identificadas en la Literatura}
 
-El presente trabajo se diferencia de los anteriores en varios aspectos. En primer lugar, aborda específicamente la traducción a IBDD, un formalismo diseñado como puente hacia MBT, mientras que los trabajos previos de NLP para BDD generan código fuente o casos de prueba directamente, sin pasar por una representación formal intermedia. En segundo lugar, combina las capacidades de comprensión semántica de los LLMs con un módulo de validación sintáctica determinístico basado en gramáticas formales, un enfoque híbrido que no ha sido explorado en la literatura para este problema específico. Finalmente, al automatizar la primera etapa del pipeline propuesto por Zameni et al., este trabajo busca completar la cadena de automatización BDD-a-MBT.
+A partir de la revisión de los trabajos previos, se pueden identificar aspectos no explorados en la literatura. En primer lugar, ninguno de los enfoques de NLP aplicados a BDD genera representaciones formales intermedias como IBDD; en su lugar, producen código fuente o casos de prueba directamente, sin pasar por una representación formal intermedia. En segundo lugar, no se ha explorado la combinación de las capacidades de comprensión semántica de los LLMs con mecanismos de validación sintáctica determinísticos basados en gramáticas formales. Finalmente, la primera etapa del pipeline propuesto por Zameni et al.---la traducción de escenarios Gherkin a IBDD---permanece sin automatizar.
