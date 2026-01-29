@@ -6,7 +6,7 @@ Sistema de traducción automática de escenarios BDD (Behavior-Driven Developmen
 
 Este proyecto implementa un pipeline completo para la traducción automática de escenarios de prueba escritos en lenguaje natural (formato BDD) a una representación formal intermedia (IBDD). El sistema incluye:
 
-- **Traductor**: Convierte escenarios BDD a IBDD usando la API de OpenAI
+- **Traductor**: Convierte escenarios BDD a IBDD usando LLMs (OpenAI u Ollama)
 - **Parser**: Valida y parsea la sintaxis IBDD generada
 - **Explicador**: Analiza errores de parsing y proporciona explicaciones detalladas para corrección
 - **Sistema de Reintentos**: Corrige automáticamente traducciones fallidas usando feedback del parser y explicador
@@ -14,7 +14,7 @@ Este proyecto implementa un pipeline completo para la traducción automática de
 ## Requisitos
 
 - Python 3.8 o superior
-- API key de OpenAI
+- API key de OpenAI (solo si usás provider=openai)
 - Dependencias listadas en `requirements.txt`
 
 ## Instalación
@@ -36,7 +36,7 @@ source venv/bin/activate  # En Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Configurar credenciales de OpenAI:
+4. Configurar credenciales de OpenAI (solo si usás provider=openai):
 ```bash
 # Crear archivo .env en la raíz del proyecto
 echo "OPENAI_API_KEY=tu-api-key" > .env
@@ -59,7 +59,7 @@ python src/main.py data/Dataset.json docs/PROMPT_EN.md \
   -t data/mi_traduccion.json \
   -v data/mi_validacion.json \
   -k sk-tu-api-key \
-  -m gpt-4o-2024-08-06
+  -m gpt-5.2
 ```
 
 Argumentos:
@@ -68,7 +68,23 @@ Argumentos:
 - `-t, --translation-output`: Ruta para guardar la traducción (default: data/output.json)
 - `-v, --validation-output`: Ruta para guardar validación (default: data/parsed_ibdd_results.json)
 - `-k, --api-key`: API key de OpenAI (opcional si está en .env)
-- `-m, --model`: Modelo de OpenAI a usar (default: gpt-4o)
+- `-m, --model`: Modelo a usar (default: gpt-5.2)
+- `--provider`: Proveedor LLM: openai u ollama (default: openai)
+- `--base-url`: Base URL opcional (útil para OpenAI compatible u Ollama remoto)
+
+Variables de entorno opcionales:
+- `LLM_PROVIDER`: openai u ollama
+- `LLM_MODEL`: nombre del modelo
+- `LLM_BASE_URL`: base URL del proveedor
+
+### Ejemplo con modelo local (Ollama)
+
+```bash
+python src/main.py data/Dataset.json docs/PROMPT_EN.md \
+  --provider ollama \
+  --model llama3.1 \
+  --base-url http://localhost:11434
+```
 
 ### Módulos Individuales
 
@@ -284,8 +300,8 @@ Ubicación de resultados:
 ## Notas Técnicas
 
 - El parser usa la biblioteca Lark con estrategia Earley para manejar ambigüedades
-- Las traducciones usan Structured Outputs de OpenAI para garantizar formato JSON válido
-- El explainer usa el modelo gpt-4o con temperatura 0.3
+- Se usan Structured Outputs con OpenAI (JSON Schema estricto). En modelos locales se fuerza JSON y se valida contra el schema cuando es posible.
+- El explainer usa el mismo modelo configurado, con temperatura 0.3
 - El sistema de reintentos procesa múltiples casos en lote para eficiencia
 - Los reintentos son automáticos y no requieren intervención manual
 - Todos los módulos soportan tanto ejecución independiente como integrada

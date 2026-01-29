@@ -23,15 +23,31 @@ from src.semantic_validator import SemanticValidator
 class BDDToIBDDPipeline:
     """Orchestrates the complete BDD to IBDD translation and validation pipeline"""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        provider: Optional[str] = None,
+        model: Optional[str] = None,
+        base_url: Optional[str] = None,
+    ):
         """
         Initialize the pipeline.
 
         Args:
             api_key: OpenAI API key (optional, defaults to OPENAI_API_KEY env variable)
         """
-        self.translation_service = TranslationService(api_key)
-        self.error_explainer = IBDDErrorExplainer(api_key)
+        self.translation_service = TranslationService(
+            api_key,
+            provider=provider,
+            model=model,
+            base_url=base_url,
+        )
+        self.error_explainer = IBDDErrorExplainer(
+            api_key,
+            provider=provider,
+            model=model,
+            base_url=base_url,
+        )
         self.semantic_validator = SemanticValidator(api_key)
 
     def run(
@@ -375,7 +391,17 @@ Examples:
     )
     parser.add_argument(
         '-m', '--model',
-        help='OpenAI model to use (default: gpt-5.2)'
+        help='Model to use (default: gpt-5.2)'
+    )
+    parser.add_argument(
+        '--provider',
+        default=None,
+        help='LLM provider: openai or ollama (default: openai)'
+    )
+    parser.add_argument(
+        '--base-url',
+        default=None,
+        help='Optional base URL for LLM provider'
     )
 
     args = parser.parse_args()
@@ -394,16 +420,17 @@ Examples:
     os.makedirs(os.path.dirname(args.validation_output) or '.', exist_ok=True)
 
     # Initialize and run pipeline
-    pipeline = BDDToIBDDPipeline(api_key=args.api_key)
-
-    # Set custom model if provided
-    if args.model:
-        pipeline.translation_service.model = args.model
-        pipeline.error_explainer.model = args.model
+    pipeline = BDDToIBDDPipeline(
+        api_key=args.api_key,
+        provider=args.provider,
+        model=args.model,
+        base_url=args.base_url,
+    )
 
     # Display which model is being used
-    print(f"🤖 Using OpenAI model: {pipeline.translation_service.model}")
-    print(f"📊 Explainer model: {pipeline.error_explainer.model}")
+    print(f"LLM provider: {pipeline.translation_service.provider}")
+    print(f"Model: {pipeline.translation_service.model}")
+    print(f"Explainer model: {pipeline.error_explainer.model}")
     print()
 
     # Run the pipeline

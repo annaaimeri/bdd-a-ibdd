@@ -7,13 +7,24 @@ import sys
 import time
 from typing import Dict, Any, Optional, Union, List
 
-import requests
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+try:
+    from src.llm_client import LLMClient
+except ModuleNotFoundError:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+    from src.llm_client import LLMClient
+
 
 class TranslationService:
-    def __init__(self, openai_api_key: str = None):
+    def __init__(
+        self,
+        openai_api_key: str = None,
+        provider: str = None,
+        model: str = None,
+        base_url: str = None,
+    ):
         """
         Initialize the translation service.
 
@@ -23,14 +34,20 @@ class TranslationService:
         load_dotenv()
 
         self.api_key = openai_api_key or os.environ.get("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError(
-                "OpenAI API key is required. Provide it as an argument or set OPENAI_API_KEY environment variable.")
-
-        self.model = "gpt-5.2"  # GPT-5.2 Thinking - Best for complex reasoning and formal translations
-        self.api_endpoint = "https://api.openai.com/v1/chat/completions"
+        self.model = model or "gpt-5.2"  # GPT-5.2 Thinking - Best for complex reasoning and formal translations
+        self.provider = provider or os.environ.get("LLM_PROVIDER", "openai")
+        self.base_url = base_url or os.environ.get("LLM_BASE_URL")
         self.max_retries = 5
         self.base_delay = 1
+
+        self.llm_client = LLMClient(
+            provider=self.provider,
+            model=self.model,
+            api_key=self.api_key,
+            base_url=self.base_url,
+            temperature=0.7,
+            max_retries=self.max_retries,
+        )
 
     @staticmethod
     def read_json_file(json_file_path: str) -> Union[Dict[str, Any], List[Any]]:
@@ -177,7 +194,7 @@ class TranslationService:
 
         return schema
 
-    def call_openai_api(self, prompt: str, json_data: Union[Dict[str, Any], List[Any]]) -> Optional[
+    def call_llm_api(self, prompt: str, json_data: Union[Dict[str, Any], List[Any]]) -> Optional[
         Union[Dict[str, Any], List[Any]]]:
         """
         Call OpenAI API with the prepared prompt and structured output.
@@ -189,99 +206,28 @@ class TranslationService:
         Returns:
             API response as dict/list or None on failure
         """
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
-
         schema = self.create_response_schema(json_data)
         is_array_input = isinstance(json_data, list)
 
-        data = {
-            "model": self.model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a translation assistant. Translate the provided JSON content according to the instructions. Maintain the exact same structure as the input."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "translation_response",
-                    "strict": True,
-                    "schema": schema
-                }
-            },
-            "temperature": 0.7
-        }
+        print(f"Calling LLM provider: {self.provider} | model: {self.model}")
+        print("Using Structured Outputs with JSON Schema when supported")
 
-        print(f"Calling OpenAI API with model: {self.model}")
-        print("Using Structured Outputs with JSON Schema")
+        response = self.llm_client.generate_json(
+            system_prompt=(
+                "You are a translation assistant. Translate the provided JSON content "
+                "according to the instructions. Maintain the exact same structure as the input."
+            ),
+            user_prompt=prompt,
+            schema=schema,
+        )
 
-        for attempt in range(1, self.max_retries + 1):
-            try:
-                response = requests.post(self.api_endpoint, headers=headers, json=data)
+        if response is None:
+            return None
 
-                if response.status_code == 200:
-                    print("Translation completed successfully")
-                    response_data = response.json()
+        if is_array_input and isinstance(response, dict) and "items" in response:
+            return response["items"]
 
-                    message = response_data["choices"][0]["message"]
-
-                    if message.get("refusal"):
-                        print(f"API refused the request: {message['refusal']}", file=sys.stderr)
-                        return None
-
-                    content = message["content"]
-                    parsed_content = json.loads(content)
-
-                    if is_array_input and isinstance(parsed_content, dict) and "items" in parsed_content:
-                        return parsed_content["items"]
-
-                    return parsed_content
-
-                elif response.status_code == 429:
-                    print(response.text)
-                    if attempt < self.max_retries:
-                        delay = self.base_delay * (2 ** (attempt - 1)) + random.uniform(0, 1)
-                        print(f"Rate limit exceeded. Waiting {delay:.2f} seconds before retry...")
-                        time.sleep(delay)
-                    else:
-                        print("Max retries reached. Rate limit still exceeded.", file=sys.stderr)
-                        return None
-
-                else:
-                    print(f"API error: {response.status_code} - {response.text}", file=sys.stderr)
-                    if attempt < self.max_retries:
-                        delay = self.base_delay * (2 ** (attempt - 1))
-                        print(f"Retrying in {delay:.2f} seconds...")
-                        time.sleep(delay)
-                    else:
-                        return None
-
-            except requests.exceptions.RequestException as e:
-                print(f"Request error: {e}", file=sys.stderr)
-                if attempt < self.max_retries:
-                    delay = self.base_delay * (2 ** (attempt - 1))
-                    print(f"Retrying in {delay:.2f} seconds...")
-                    time.sleep(delay)
-                else:
-                    return None
-            except json.JSONDecodeError as e:
-                print(f"JSON decode error: {e}", file=sys.stderr)
-                if attempt < self.max_retries:
-                    delay = self.base_delay * (2 ** (attempt - 1))
-                    print(f"Retrying in {delay:.2f} seconds...")
-                    time.sleep(delay)
-                else:
-                    return None
-
-        return None
+        return response
 
     def translate_single_case(
         self,
@@ -304,7 +250,7 @@ class TranslationService:
         final_prompt = self.prepare_prompt([case], prompt_template)
 
         # Call API
-        response = self.call_openai_api(final_prompt, [case])
+        response = self.call_llm_api(final_prompt, [case])
 
         elapsed_time = time.time() - start_time
 
@@ -512,17 +458,21 @@ def main():
     parser.add_argument('prompt_file', help='Path to the prompt template file (.md)')
     parser.add_argument('-o', '--output', help='Path to the output file (default: translation_output.json)')
     parser.add_argument('-k', '--api-key', help='OpenAI API key (optional, can use OPENAI_API_KEY env variable)')
-    parser.add_argument('-m', '--model', help=f'OpenAI model to use (default: gpt-5.2)')
+    parser.add_argument('-m', '--model', help='Model to use (default: gpt-5.2)')
     parser.add_argument('-r', '--max-retries', type=int, help=f'Maximum number of retries (default: 5)')
+    parser.add_argument('--provider', default=None, help='LLM provider: openai or ollama (default: openai)')
+    parser.add_argument('--base-url', default=None, help='Optional base URL for LLM provider')
 
     args = parser.parse_args()
 
     output_file = args.output or 'translation_output.json'
 
-    service = TranslationService(args.api_key)
-
-    if args.model:
-        service.model = args.model
+    service = TranslationService(
+        args.api_key,
+        provider=args.provider,
+        model=args.model,
+        base_url=args.base_url,
+    )
     if args.max_retries:
         service.max_retries = args.max_retries
 

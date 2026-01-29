@@ -7,8 +7,13 @@ import json
 import os
 import sys
 from typing import Dict, Any, Optional
-import requests
 from dotenv import load_dotenv
+
+try:
+    from src.llm_client import LLMClient
+except ModuleNotFoundError:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+    from src.llm_client import LLMClient
 
 
 class IBDDErrorExplainer:
@@ -17,7 +22,13 @@ class IBDDErrorExplainer:
     para ayudar al traductor a corregir los problemas.
     """
 
-    def __init__(self, openai_api_key: Optional[str] = None):
+    def __init__(
+        self,
+        openai_api_key: Optional[str] = None,
+        provider: str = None,
+        model: str = None,
+        base_url: str = None,
+    ):
         """
         Inicializa el agente explicador.
 
@@ -27,12 +38,17 @@ class IBDDErrorExplainer:
         load_dotenv()
 
         self.api_key = openai_api_key or os.environ.get("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError(
-                "Se requiere una clave API de OpenAI. Proporciónala como argumento o configura la variable OPENAI_API_KEY.")
+        self.model = model or "gpt-5.2"  # GPT-5.2 Thinking - Best for complex reasoning and error analysis
+        self.provider = provider or os.environ.get("LLM_PROVIDER", "openai")
+        self.base_url = base_url or os.environ.get("LLM_BASE_URL")
 
-        self.model = "gpt-5.2"  # GPT-5.2 Thinking - Best for complex reasoning and error analysis
-        self.api_endpoint = "https://api.openai.com/v1/chat/completions"
+        self.llm_client = LLMClient(
+            provider=self.provider,
+            model=self.model,
+            api_key=self.api_key,
+            base_url=self.base_url,
+            temperature=0.3,
+        )
 
         self.system_prompt = self._load_system_prompt()
 
@@ -177,11 +193,6 @@ Responde en formato JSON."""
     def _call_openai_api(self, prompt: str) -> Optional[Dict[str, Any]]:
         """Llama a la API de OpenAI para analizar el error"""
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
-
         # Definir el schema de respuesta
         response_schema = {
             "type": "object",
@@ -199,50 +210,15 @@ Responde en formato JSON."""
             "additionalProperties": False
         }
 
-        data = {
-            "model": self.model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": self.system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "response_format": {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "error_analysis",
-                    "strict": True,
-                    "schema": response_schema
-                }
-            },
-            "temperature": 0.3
-        }
-
         try:
-            response = requests.post(self.api_endpoint, headers=headers, json=data)
-
-            if response.status_code == 200:
-                response_data = response.json()
-                message = response_data["choices"][0]["message"]
-
-                if message.get("refusal"):
-                    print(f"API refused the request: {message['refusal']}", file=sys.stderr)
-                    return None
-
-                content = message["content"]
-                parsed_content = json.loads(content)
-                return parsed_content
-
-            else:
-                print(f"API error: {response.status_code} - {response.text}", file=sys.stderr)
-                return None
-
+            response = self.llm_client.generate_json(
+                system_prompt=self.system_prompt,
+                user_prompt=prompt,
+                schema=response_schema,
+            )
+            return response
         except Exception as e:
-            print(f"Error calling OpenAI API: {e}", file=sys.stderr)
+            print(f"Error calling LLM API: {e}", file=sys.stderr)
             return None
 
     def explain_multiple_errors(self, failed_cases: list) -> list:
