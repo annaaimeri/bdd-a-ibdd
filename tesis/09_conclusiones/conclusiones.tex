@@ -5,4 +5,8 @@
 
 \section{Trabajo Futuro}
 
-% TODO: Líneas de investigación futura. Extensiones posibles del sistema.
+Una extensión relevante del sistema es la incorporación de un módulo de \textbf{validación semántica} que complemente la validación sintáctica implementada en este trabajo. La validación sintáctica verifica que las traducciones IBDD se ajusten a la gramática formal, pero no evalúa si el contenido de la traducción preserva el significado del escenario BDD original. Una traducción puede ser sintácticamente correcta y al mismo tiempo semánticamente deficiente: por ejemplo, podría omitir una entidad mencionada en el escenario, utilizar un gate de salida donde el BDD describe una acción del usuario, o perder un valor numérico relevante para una postcondición.
+
+Durante el desarrollo de este trabajo se analizó la viabilidad de un validador semántico multi-capa que combinara heurísticas léxicas (cotejo de entidades, acciones y valores numéricos entre el texto BDD y la traducción IBDD), verificación de consistencia numérica, y el uso del propio LLM como juez semántico. Este análisis reveló que la validación semántica constituye un desafío de considerable complejidad: la naturaleza abreviada de IBDD---donde variables como \texttt{JF} representan entidades como ``job file'' y gates como \texttt{?submit} condensan frases completas---dificulta el cotejo directo con el lenguaje natural, y la evaluación de la correspondencia semántica entre construcciones lingüísticas y elementos formales requiere un nivel de comprensión que excede las capacidades de las heurísticas convencionales. Se concluye que la validación semántica automatizada de traducciones BDD$\rightarrow$IBDD es una línea de investigación abierta que merece un tratamiento dedicado en trabajos posteriores.
+
+% TODO: Otras líneas de investigación futura. Extensiones posibles del sistema.
