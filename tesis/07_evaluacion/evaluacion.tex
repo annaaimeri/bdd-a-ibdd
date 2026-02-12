@@ -80,13 +80,80 @@ El pipeline registra automáticamente las métricas de cada ejecución en un arc
 
 \section{Dataset}
 
-% TODO: Descripción del conjunto de escenarios BDD utilizados.
-% Origen, dominios cubiertos, características.
+El dataset utilizado en los experimentos es el descrito en la Sección~\ref{sec:dataset}. Para la evaluación se emplean dos versiones del dataset: la versión original en inglés y su traducción al español, lo que permite ejecutar las cuatro configuraciones del diseño factorial.
+
+% TODO: Actualizar con el tamaño final del dataset cuando esté definido.
+% Actualmente son 30 casos (15 printer, 15 calculator, distribución
+% de complejidad: 16 simple, 10 medium, 4 complex).
+
+La Tabla~\ref{tab:dataset-composicion} resume la composición del dataset utilizado.
+
+\begin{table}[htbp]
+\centering
+\caption{Composición del dataset de evaluación}
+\label{tab:dataset-composicion}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Dominio} & \textbf{Simple} & \textbf{Medio} & \textbf{Complejo} & \textbf{Total} \\
+\hline
+% TODO: Actualizar estos valores con el dataset final.
+Impresora    & --  & --  & -- & -- \\
+Calculadora  & --  & --  & -- & -- \\
+\hline
+\textbf{Total} & -- & -- & -- & -- \\
+\hline
+\end{tabular}
+\end{table}
+
+Cada escenario está clasificado por dominio de aplicación y por nivel de complejidad. La complejidad se determina en función de la cantidad de pasos en las cláusulas Given, When y Then, la presencia de conjunciones (And) y la cantidad de variables e interacciones que el escenario implica. Los escenarios simples involucran una o dos interacciones con pocas variables, los de complejidad media presentan múltiples pasos con variables locales y globales, y los complejos combinan guardas condicionales, múltiples gates y asignaciones compuestas.
 
 \section{Métricas}
 
-% TODO: Métricas utilizadas para evaluar las traducciones
-% (validez sintáctica, completitud, etc.).
+La evaluación utiliza métricas que capturan aspectos complementarios del desempeño del sistema. Se distinguen tres categorías: métricas de validez sintáctica, métricas del ciclo de corrección y métricas operativas.
+
+\subsection{Validez sintáctica}
+
+La métrica principal es la \textit{tasa de validez sintáctica} (SVR, \textit{Syntactic Validity Rate}), definida como la proporción de escenarios cuya traducción IBDD es aceptada por el parser Earley:
+
+\begin{equation}
+\text{SVR} = \frac{\text{número de traducciones sintácticamente válidas}}{\text{número total de escenarios}}
+\label{eq:svr}
+\end{equation}
+
+Se distinguen dos variantes de esta métrica. $\text{SVR}_\text{inicial}$ mide la tasa de validez tras la primera traducción, sin correcciones. $\text{SVR}_\text{final}$ mide la tasa de validez tras completar el ciclo de corrección iterativo. La diferencia $\text{SVR}_\text{final} - \text{SVR}_\text{inicial}$ cuantifica la ganancia atribuible al mecanismo de corrección.
+
+Para cada configuración, se reportan la media y la desviación estándar de ambas variantes sobre las $N$ ejecuciones independientes.
+
+\subsection{Ciclo de corrección}
+
+Para evaluar la efectividad del ciclo de corrección (RQ3) se definen las siguientes métricas:
+
+\begin{description}
+  \item[Tasa de recuperación:] proporción de traducciones inicialmente fallidas que se corrigen tras el ciclo completo. Formalmente:
+  \begin{equation}
+    \text{RR} = \frac{\text{fallidas iniciales} - \text{fallidas finales}}{\text{fallidas iniciales}}
+    \label{eq:rr}
+  \end{equation}
+
+  \item[Rondas hasta convergencia:] número de rondas de corrección necesarias hasta que no se producen correcciones adicionales o se alcanza el límite configurado. Esta métrica indica la velocidad de convergencia del ciclo.
+
+  \item[Correcciones por ronda:] cantidad de casos corregidos en cada ronda individual. Permite construir una curva de convergencia que muestra si la mayoría de las correcciones ocurren en las primeras rondas o si se distribuyen de forma uniforme.
+\end{description}
+
+\subsection{Estabilidad por caso}
+
+Para identificar escenarios que presentan dificultad persistente para el sistema, se analiza la estabilidad de los resultados a nivel de caso individual. Para cada escenario $i$ se calcula la proporción de ejecuciones (sobre las $N$ repeticiones) en las que su traducción resultó sintácticamente válida tras el ciclo completo:
+
+\begin{equation}
+  \text{Estabilidad}(i) = \frac{\text{ejecuciones en que el caso } i \text{ fue válido}}{N}
+\label{eq:estabilidad}
+\end{equation}
+
+Un caso con estabilidad igual a 1 se traduce correctamente en todas las ejecuciones; un caso con estabilidad cercana a 0 resiste sistemáticamente la traducción. Esta métrica permite identificar patrones en los escenarios que resultan problemáticos para el LLM, como estructuras sintácticas inusuales o niveles de complejidad que exceden la capacidad del modelo.
+
+\subsection{Métricas operativas}
+
+Se registra el tiempo de traducción por caso y el tiempo total del pipeline por ejecución. Si bien estas métricas no inciden directamente en la calidad de la traducción, permiten evaluar la viabilidad práctica del sistema y el costo computacional del ciclo de corrección iterativo.
 
 \section{Resultados}
 
