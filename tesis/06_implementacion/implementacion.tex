@@ -167,7 +167,7 @@ El formato del diagnóstico inyectado incluye el escenario BDD original, la trad
 
 El procesamiento de reintentos opera de manera individual: cada caso fallido se reenvía como una solicitud independiente a la API, utilizando el mismo mecanismo de Structured Outputs y reintentos con \textit{exponential backoff} del módulo de traducción inicial. Esta independencia permite que el fallo de un reintento no afecte la corrección de los demás casos.
 
-\subsection{Fusión No Destructiva y Re-validación}
+\subsection{Integración de Correcciones}
 
 Las traducciones corregidas se integran al conjunto de resultados mediante una estrategia de fusión no destructiva. El sistema carga las traducciones originales, construye un mapa indexado por identificador de caso con las traducciones corregidas, y recorre secuencialmente las traducciones originales: para cada caso cuyo identificador coincide con una corrección, se reemplaza la traducción original por la corregida; los casos que no presentaron errores se preservan intactos. Este diseño garantiza que las traducciones exitosas nunca se sobrescriban como efecto colateral del proceso de corrección.
 

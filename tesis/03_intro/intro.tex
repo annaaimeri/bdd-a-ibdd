@@ -51,13 +51,13 @@ Los trabajos de Zameni et al. han demostrado que, una vez que los escenarios est
 
 Actualmente, esta traducción es un proceso enteramente manual que requiere experiencia especializada en teoría de sistemas de transición y conocimiento profundo de la gramática IBDD. Un analista debe identificar variables implícitas, inferir gates de interacción apropiados, establecer guardas lógicas correctas y determinar las asignaciones de estado necesarias---información que típicamente no está explícita en el texto natural del escenario BDD. Este cuello de botella limita la escalabilidad industrial de todo el pipeline BDD-a-MBT.
 
-\section{Problema de Investigación}
+\section{Problema}
 
 El problema central que aborda este trabajo es: \textit{¿cómo automatizar la traducción de escenarios BDD en formato Gherkin al lenguaje intermedio formal IBDD, de manera que se preserve la semántica del comportamiento especificado y se generen representaciones formalmente válidas para alimentar herramientas de generación automática de casos de prueba?}
 
 Este problema presenta múltiples desafíos técnicos. En primer lugar, los escenarios Gherkin contienen imprecisiones inherentes al lenguaje natural que deben resolverse para producir especificaciones formales. A esto se suma que elementos cruciales de IBDD---variables globales, tipos de datos, funciones del dominio, gates del sistema---no están explícitos en el texto Gherkin y deben inferirse del contexto o del conocimiento del dominio. La correspondencia entre construcciones lingüísticas en Gherkin y elementos formales de IBDD tampoco es trivial; por ejemplo, la frase ``el usuario hace clic en agregar al carrito'' debe traducirse a un gate de entrada específico (\texttt{?click.add\_button}) con variables de interacción apropiadas. Las traducciones generadas, a su vez, deben ser sintácticamente correctas según la gramática IBDD y semánticamente consistentes con la especificación BDD original. Finalmente, la diversidad de dominios que abarcan los escenarios BDD---e-commerce, sistemas industriales, aplicaciones financieras---introduce vocabularios y patrones de interacción específicos que el sistema debe manejar.
 
-\section{Enfoque Propuesto}
+\section{Enfoque}
 
 Este trabajo propone un enfoque híbrido que combina las capacidades de comprensión semántica de Modelos de Lenguaje Grandes (LLMs, \textit{Large Language Models}) con la estructura formal proporcionada por la gramática IBDD y técnicas de análisis sintáctico determinístico.
 
@@ -72,6 +72,6 @@ La elección de LLMs se fundamenta en su demostrada capacidad para tareas de tra
 % TODO: Describir la organización del resto del documento,
 % indicando brevemente el contenido de cada capítulo.
 
-\section{Trabajo Realizado}
+\section{Contribuciones}
 
 % TODO: Resumir las contribuciones y el trabajo efectivamente realizado.
