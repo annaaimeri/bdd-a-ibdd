@@ -138,26 +138,6 @@ En el contexto específico de BDD, Karpurapu et al.~\cite{karpurapu2024llm} eval
 
 A pesar de sus capacidades, los LLMs presentan limitaciones relevantes para tareas que requieren corrección formal. Los modelos pueden generar salidas sintácticamente incorrectas, introducir \textit{hallucinations} (contenido plausible pero factualmente incorrecto), y exhibir inconsistencias entre ejecuciones sucesivas. Estas limitaciones son particularmente críticas cuando el objetivo es producir representaciones formales, donde un error sintáctico puede invalidar completamente la salida generada.
 
-\section{Análisis Sintáctico y Gramáticas Formales}
-
-El análisis sintáctico (\textit{parsing}) es el proceso de verificar si una cadena de texto pertenece al lenguaje definido por una gramática formal, y de construir una representación estructurada (típicamente un árbol de derivación) que refleje la estructura jerárquica de la entrada.
-
-\subsection{Notación EBNF}
-
-La gramática IBDD se especifica utilizando la notación EBNF (\textit{Extended Backus-Naur Form}), propuesta por Niklaus Wirth~\cite{wirth1977ebnf} como extensión de la notación BNF (\textit{Backus-Naur Form}) introducida por John Backus en 1959 para describir la sintaxis de ALGOL~60. Wirth observó que la diversidad innecesaria de notaciones sintácticas en la literatura dificultaba la comunicación, y propuso EBNF como notación unificada que incorpora operadores de expresiones regulares: corchetes~\texttt{[ ]} para secuencias opcionales, llaves~\texttt{\{ \}} para repeticiones, y paréntesis~\texttt{( )} para agrupamiento. Estas extensiones permiten expresar gramáticas de manera más compacta, evitando el uso intensivo de recursión para representar repeticiones simples.
-
-\subsection{Algoritmo de Earley}
-
-El algoritmo de Earley~\cite{earley1970parsing} es un algoritmo de análisis descendente basado en programación dinámica que opera sobre gramáticas libres de contexto arbitrarias. A diferencia de los analizadores LR o LALR, que requieren gramáticas restringidas a subclases específicas, el algoritmo de Earley acepta cualquier gramática libre de contexto sin necesidad de transformaciones previas.
-
-El algoritmo procesa la cadena de entrada de izquierda a derecha, manteniendo un conjunto de \textit{items} (reglas de producción parcialmente reconocidas) organizados en columnas correspondientes a cada posición de la entrada. En cada paso, tres operaciones fundamentales avanzan el reconocimiento: \textit{prediction} (predice qué reglas pueden aplicarse), \textit{scanning} (consume un terminal de la entrada) y \textit{completion} (propaga el reconocimiento de un no-terminal completado). Su complejidad temporal es $O(n^3)$ en el caso general, $O(n^2)$ para gramáticas no ambiguas, y $O(n)$ para gramáticas LR($k$), donde $n$ es la longitud de la entrada.
-
-Una ventaja significativa del algoritmo de Earley es su capacidad para operar con gramáticas que no se ajustan a las restricciones de los analizadores LALR convencionales, como aquellas que combinan elementos EBNF con estructuras matemáticas de lógica de primer orden~\cite{earley1970parsing, grune2008parsing}. Además, su flexibilidad permite modificar y extender gramáticas sin necesidad de reestructurarlas para satisfacer requisitos de analizadores más restrictivos~\cite{grune2008parsing}.
-
-\subsection{Lark como Herramienta de Análisis}
-
-Lark~\cite{lark_github} es una biblioteca de análisis sintáctico para Python que soporta múltiples algoritmos, incluyendo Earley y LALR(1). Lark permite definir gramáticas en una variante de EBNF y genera automáticamente el analizador correspondiente, proporcionando árboles de derivación tipados y mensajes de error detallados que facilitan el diagnóstico de fallos sintácticos.
-
 \section{Trabajos Relacionados}
 
 Esta sección revisa los trabajos previos más relevantes, organizados según tres dimensiones: el pipeline formal BDD-a-MBT, el uso de técnicas de procesamiento de lenguaje natural para la automatización de BDD, y la aplicación de modelos de lenguaje grandes en este dominio.
@@ -179,3 +159,23 @@ Un trabajo particularmente relevante es el de Karpurapu et al.~\cite{karpurapu20
 \subsection{Brechas Identificadas en la Literatura}
 
 A partir de la revisión de los trabajos previos, se pueden identificar aspectos no explorados en la literatura. En primer lugar, ninguno de los enfoques de NLP aplicados a BDD genera representaciones formales intermedias como IBDD; en su lugar, producen código fuente o casos de prueba directamente, sin pasar por una representación formal intermedia. En segundo lugar, no se ha explorado la combinación de las capacidades de comprensión semántica de los LLMs con mecanismos de validación sintáctica determinísticos basados en gramáticas formales. Finalmente, la primera etapa del pipeline propuesto por Zameni et al.---la traducción de escenarios Gherkin a IBDD---permanece sin automatizar.
+
+\section{Análisis Sintáctico y Gramáticas Formales}
+
+El análisis sintáctico (\textit{parsing}) es el proceso de verificar si una cadena de texto pertenece al lenguaje definido por una gramática formal, y de construir una representación estructurada (típicamente un árbol de derivación) que refleje la estructura jerárquica de la entrada.
+
+\subsection{Notación EBNF}
+
+La gramática IBDD se especifica utilizando la notación EBNF (\textit{Extended Backus-Naur Form}), propuesta por Niklaus Wirth~\cite{wirth1977ebnf} como extensión de la notación BNF (\textit{Backus-Naur Form}) introducida por John Backus en 1959 para describir la sintaxis de ALGOL~60. Wirth observó que la diversidad innecesaria de notaciones sintácticas en la literatura dificultaba la comunicación, y propuso EBNF como notación unificada que incorpora operadores de expresiones regulares: corchetes~\texttt{[ ]} para secuencias opcionales, llaves~\texttt{\{ \}} para repeticiones, y paréntesis~\texttt{( )} para agrupamiento. Estas extensiones permiten expresar gramáticas de manera más compacta, evitando el uso intensivo de recursión para representar repeticiones simples.
+
+\subsection{Algoritmo de Earley}
+
+El algoritmo de Earley~\cite{earley1970parsing} es un algoritmo de análisis descendente basado en programación dinámica que opera sobre gramáticas libres de contexto arbitrarias. A diferencia de los analizadores LR o LALR, que requieren gramáticas restringidas a subclases específicas, el algoritmo de Earley acepta cualquier gramática libre de contexto sin necesidad de transformaciones previas.
+
+El algoritmo procesa la cadena de entrada de izquierda a derecha, manteniendo un conjunto de \textit{items} (reglas de producción parcialmente reconocidas) organizados en columnas correspondientes a cada posición de la entrada. En cada paso, tres operaciones fundamentales avanzan el reconocimiento: \textit{prediction} (predice qué reglas pueden aplicarse), \textit{scanning} (consume un terminal de la entrada) y \textit{completion} (propaga el reconocimiento de un no-terminal completado). Su complejidad temporal es $O(n^3)$ en el caso general, $O(n^2)$ para gramáticas no ambiguas, y $O(n)$ para gramáticas LR($k$), donde $n$ es la longitud de la entrada.
+
+Una ventaja significativa del algoritmo de Earley es su capacidad para operar con gramáticas que no se ajustan a las restricciones de los analizadores LALR convencionales, como aquellas que combinan elementos EBNF con estructuras matemáticas de lógica de primer orden~\cite{earley1970parsing, grune2008parsing}. Además, su flexibilidad permite modificar y extender gramáticas sin necesidad de reestructurarlas para satisfacer requisitos de analizadores más restrictivos~\cite{grune2008parsing}.
+
+\subsection{Lark como Herramienta de Análisis}
+
+Lark~\cite{lark_github} es una biblioteca de análisis sintáctico para Python que soporta múltiples algoritmos, incluyendo Earley y LALR(1). Lark permite definir gramáticas en una variante de EBNF y genera automáticamente el analizador correspondiente, proporcionando árboles de derivación tipados y mensajes de error detallados que facilitan el diagnóstico de fallos sintácticos.
