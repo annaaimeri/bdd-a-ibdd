@@ -1,15 +1,82 @@
 \chapter{Evaluación}
 
-% TODO: Párrafo introductorio que presente el diseño experimental
-% y las preguntas de investigación que guían la evaluación.
+Este capítulo presenta la evaluación del sistema de traducción BDD$\rightarrow$IBDD. Se formulan las preguntas de investigación que guían los experimentos, se describe el diseño experimental adoptado para abordarlas, se definen las métricas utilizadas y se presentan y analizan los resultados obtenidos.
 
 \section{Preguntas de Investigación}
 
-% TODO: Formular las RQs que la evaluación busca responder.
+La evaluación se organiza en torno a tres preguntas de investigación:
+
+\begin{description}
+  \item[RQ1:] \textit{¿En qué medida el sistema genera traducciones IBDD sintácticamente válidas a partir de escenarios BDD?}
+
+  Esta pregunta evalúa la capacidad del sistema para producir traducciones que se ajusten a la gramática formal IBDD. Dado que la validación sintáctica es determinística (realizada por el parser Earley), la variabilidad en los resultados proviene exclusivamente de la naturaleza estocástica del LLM. Por ello, la respuesta a esta pregunta requiere múltiples ejecuciones del pipeline sobre el mismo dataset para cuantificar tanto la tasa de éxito promedio como su dispersión.
+
+  \item[RQ2:] \textit{¿Cómo incide el idioma del prompt y del dataset en la calidad de la traducción?}
+
+  El sistema soporta prompts en inglés y en español, y los escenarios BDD pueden estar redactados en cualquiera de los dos idiomas. Esta pregunta investiga si la combinación de idiomas entre el prompt y el dataset afecta la tasa de validez sintáctica de las traducciones. La respuesta permite determinar si el sistema es robusto ante variaciones lingüísticas o si existe una configuración de idioma preferible.
+
+  \item[RQ3:] \textit{¿Cuál es la efectividad del ciclo de corrección iterativo?}
+
+  El pipeline incluye un mecanismo de corrección que analiza los errores sintácticos de las traducciones fallidas y reintenta la traducción con retroalimentación del diagnóstico. Esta pregunta evalúa cuántas de las traducciones inicialmente fallidas se corrigen mediante este ciclo, cuántas iteraciones son necesarias para converger y si existen casos que resisten la corrección de forma persistente.
+\end{description}
 
 \section{Diseño Experimental}
 
-% TODO: Protocolo de evaluación. Descripción del procedimiento.
+\subsection{Configuraciones}
+
+Para responder a las tres preguntas de investigación, se define un conjunto de configuraciones experimentales que combinan dos factores: el idioma del prompt de traducción y el idioma del dataset de escenarios BDD. Esto da lugar a un diseño factorial $2 \times 2$:
+
+\begin{table}[htbp]
+\centering
+\caption{Configuraciones experimentales}
+\label{tab:configuraciones}
+\begin{tabular}{lcc}
+\hline
+\textbf{Configuración} & \textbf{Prompt} & \textbf{Dataset} \\
+\hline
+EN--EN & Inglés  & Inglés  \\
+ES--EN & Español & Inglés  \\
+EN--ES & Inglés  & Español \\
+ES--ES & Español & Español \\
+\hline
+\end{tabular}
+\end{table}
+
+La configuración EN--EN constituye la línea base, ya que tanto el prompt como el dataset fueron diseñados originalmente en inglés. Las configuraciones ES--EN y EN--ES aíslan el efecto del idioma del prompt y del dataset respectivamente, mientras que ES--ES evalúa el sistema operando íntegramente en español. Este diseño permite separar el efecto del idioma del prompt del efecto del idioma del dataset, y detectar si la coincidencia entre ambos idiomas incide en los resultados.
+
+\subsection{Repeticiones y manejo de la estocasticidad}
+
+Los LLMs son modelos estocásticos: ante la misma entrada y con temperatura mayor a cero, pueden producir salidas distintas en cada ejecución. Una única corrida del pipeline no permite distinguir si un resultado refleja el comportamiento típico del sistema o una fluctuación aleatoria. Para obtener estimaciones confiables de las métricas, cada configuración se ejecuta $N$ veces de forma independiente.
+
+% TODO: Definir N (cantidad de repeticiones). Se recomienda N=30
+% para poder aplicar el Teorema Central del Límite y obtener
+% intervalos de confianza robustos. Si el presupuesto de API
+% es limitado, N=10 es un mínimo razonable.
+
+A partir de las $N$ ejecuciones de cada configuración se calcula la media y la desviación estándar de cada métrica, y se construyen intervalos de confianza al 95\,\% mediante la distribución $t$ de Student.
+% TODO: Para comparar pares de configuraciones (por ejemplo, EN--EN vs ES--EN) se utiliza el test de Wilcoxon de rangos con signo, que no requiere el supuesto de normalidad y es apropiado para muestras pareadas de tamaño moderado.
+
+\subsection{Ciclo de corrección}
+
+En todas las configuraciones, el pipeline se ejecuta con un número máximo de rondas de corrección configurable mediante el parámetro \texttt{-{}-max-rounds}. En cada ronda, los casos que fallaron la validación sintáctica son procesados por el agente de análisis de errores y retraducidos con retroalimentación del diagnóstico. El ciclo se detiene cuando todos los casos superan la validación o cuando se alcanza el límite de rondas.
+
+% TODO: Definir el valor de max-rounds utilizado en los experimentos.
+
+Este diseño permite evaluar la convergencia del ciclo de corrección: para cada ejecución se registra cuántos casos se corrigen en cada ronda, lo que permite construir una curva de convergencia promediada sobre las $N$ repeticiones.
+
+\subsection{Protocolo de ejecución}
+
+Cada ejecución del pipeline sigue el protocolo descrito a continuación:
+
+\begin{enumerate}
+  \item Se invoca el pipeline con la configuración correspondiente (prompt, dataset, modelo, número máximo de rondas).
+  \item El sistema traduce cada escenario BDD de forma individual, registrando el tiempo de traducción por caso.
+  \item Se valida sintácticamente cada traducción mediante el parser Earley.
+  \item Se ejecuta el ciclo de corrección iterativo hasta convergencia o agotamiento del límite de rondas.
+  \item Se persisten las traducciones finales, los resultados de validación y las métricas del pipeline en archivos JSON.
+\end{enumerate}
+
+El pipeline registra automáticamente las métricas de cada ejecución en un archivo \texttt{*\_metrics.json} que incluye: el modelo y proveedor utilizados, los resultados de validación iniciales y finales, el detalle por ronda de corrección (casos fallidos, casos corregidos, tiempo) y el tiempo total del pipeline.
 
 \section{Dataset}
 

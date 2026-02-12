@@ -191,6 +191,13 @@ El formato de entrada representa cada escenario BDD como un objeto JSON con camp
 
 La evaluación del sistema de traducción requiere un conjunto de escenarios BDD que cubra diversidad de dominios, estructuras sintácticas y niveles de complejidad. Dado que no existe un corpus público de escenarios BDD anotados con traducciones IBDD de referencia, fue necesario construir un dataset específico para este trabajo.
 
+% TODO: Completar con detalles del proceso de construcción:
+% - Número total de escenarios en el dataset final
+% - Distribución por dominio
+% - Criterios de filtrado y curación manual aplicados
+% - Modelo utilizado para la generación sintética
+% - Métricas del dataset resultante (complejidad promedio, etc.)
+
 \subsection{Escenarios Canónicos de Referencia}
 
 El punto de partida para la construcción del dataset fueron los escenarios canónicos provenientes de dos dominios: el dominio de impresora industrial, extraído de los trabajos de Zameni et al.~\cite{zameni2024ibdd}, y el dominio de calculadora. Estos escenarios cuentan con traducciones IBDD verificadas manualmente y cubren los patrones fundamentales del lenguaje: declaración de variables locales con y sin guardas, switches con gates de entrada y salida, asignaciones simples y compuestas, y postcondiciones con funciones de verificación. Su inclusión en el dataset cumple una doble función: sirven como ejemplos de referencia dentro del prompt de traducción (Sección~\ref{sec:prompt-design}) y como casos de validación cuya traducción correcta es conocida de antemano.
@@ -201,6 +208,14 @@ A partir de los escenarios canónicos, se generó un dataset sintético más amp
 
 La generación sintética mediante un LLM presenta la ventaja de producir escenarios lingüísticamente diversos---con variaciones naturales en la redacción de las cláusulas Given, When y Then---que ejercitan la capacidad del sistema de traducción para manejar formulaciones heterogéneas de un mismo tipo de interacción. Esta diversidad es particularmente relevante dado que los escenarios BDD en entornos reales exhiben una variabilidad considerable en estilo y nivel de detalle según el autor. Al mismo tiempo, la generación sintética introduce el riesgo de escenarios que, si bien son gramaticalmente correctos en Gherkin, describen situaciones funcionalmente implausibles o ambiguas, lo cual requirió una revisión manual posterior del dataset generado.
 % TODO: Agregar referencia a sección/apéndice donde se documenta el proceso y criterios de la revisión manual del dataset.
+
+\subsection{Dataset en Español}
+
+La literatura sobre BDD y los repositorios públicos de escenarios Gherkin están dominados por el idioma inglés. Los trabajos de Zameni et al.~\cite{zameni2024ibdd, zameni2023bddts, zameni2025composition} emplean exclusivamente escenarios en inglés, al igual que los estudios de Karpurapu et al.~\cite{karpurapu2024llm} sobre generación de tests BDD con LLMs. Esta predominancia del inglés se extiende a las herramientas del ecosistema BDD: si bien Cucumber soporta palabras clave en múltiples idiomas, la gran mayoría de los ejemplos, tutoriales y documentación se encuentran en inglés.
+
+Sin embargo, una porción significativa de la comunidad de desarrollo de software opera en español, y las especificaciones de comportamiento en entornos hispanohablantes se redactan frecuentemente en este idioma. Un sistema de traducción BDD$\rightarrow$IBDD que solo funcione con escenarios en inglés tendría una aplicabilidad limitada en estos contextos. Por este motivo, se construyó una versión en español del dataset de escenarios BDD, traduciendo los escenarios del dataset original y verificando que las traducciones preserven la estructura y la intención del escenario sin introducir ambigüedades.
+
+La inclusión de un dataset bilingüe permite evaluar el comportamiento del sistema ante escenarios en español, lo cual constituye una contribución relevante dado que no se han encontrado trabajos previos que aborden la traducción BDD$\rightarrow$IBDD desde escenarios en un idioma distinto del inglés. Se espera que el desempeño del sistema sea superior con escenarios en inglés, dado que los LLMs fueron entrenados sobre corpus con una proporción considerablemente mayor de texto en este idioma, y que la gramática IBDD emplea palabras clave en inglés (\texttt{GIVEN}, \texttt{WHEN}, \texttt{THEN}). No obstante, la evaluación bilingüe permite cuantificar esta diferencia y determinar si el sistema mantiene un nivel de desempeño aceptable con escenarios en español.
 
 % TODO: Completar con detalles del proceso de construcción:
 % - Número total de escenarios en el dataset final
