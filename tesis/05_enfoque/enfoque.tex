@@ -138,7 +138,9 @@ En el ámbito académico, Hundvin~\cite{hundvin2022code} desarrolló en la Unive
 
 \subsection{Manejo de Gramáticas Ambiguas}
 
-El analizador Earley de Lark puede almacenar eficientemente todas las ambigüedades presentes en una gramática~\cite{lark_docs}. La biblioteca ofrece tres estrategias de resolución: el modo \texttt{resolve} (predeterminado) elige automáticamente la derivación más simple; el modo \texttt{explicit} retorna todas las derivaciones posibles para selección manual; y el modo \texttt{forest} retorna el bosque de análisis completo, con mayor eficiencia en memoria para gramáticas altamente ambiguas. Esta flexibilidad resulta relevante para IBDD, donde ciertas construcciones sintácticas pueden admitir múltiples interpretaciones válidas.
+La gramática IBDD presenta ambigüedades inherentes a su diseño. En particular, la regla del \textit{switch} acepta una secuencia flexible de guardas, expresiones y asignaciones tras la interacción, lo que significa que una construcción como \texttt{[true]} puede interpretarse como una guarda con valor booleano o como una asignación trivial encerrada entre corchetes, y que una expresión de la forma \texttt{x = 5} admite lectura tanto como asignación como comparación de igualdad. Un analizador LALR requeriría desambiguar estas construcciones mediante transformaciones de la gramática que sacrificarían su legibilidad; el algoritmo Earley, en cambio, las resuelve de forma automática.
+
+El analizador Earley de Lark puede almacenar eficientemente todas las derivaciones posibles ante una ambigüedad~\cite{lark_docs}. La biblioteca ofrece tres estrategias de resolución: el modo \texttt{resolve} (predeterminado) elige automáticamente la derivación más simple; el modo \texttt{explicit} retorna todas las derivaciones para selección manual; y el modo \texttt{forest} retorna el bosque de análisis completo. En el presente trabajo se utiliza el modo \texttt{resolve}, que resulta adecuado para las ambigüedades de la gramática IBDD ya que la derivación más simple coincide con la interpretación semánticamente correcta en todos los casos observados.
 
 \subsection{Decisión: Earley en Lark}
 
