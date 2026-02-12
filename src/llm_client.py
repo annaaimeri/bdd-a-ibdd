@@ -32,7 +32,7 @@ class LLMClient:
         max_retries: int = 5,
     ) -> None:
         self.provider = (provider or os.environ.get("LLM_PROVIDER", "openai")).lower()
-        self.model = model or os.environ.get("LLM_MODEL", "gpt-5.2")
+        self.model = model or os.environ.get("LLM_MODEL", "gpt-4o")
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         self.base_url = base_url or os.environ.get("LLM_BASE_URL")
         self.temperature = temperature

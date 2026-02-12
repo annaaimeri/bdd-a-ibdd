@@ -24,7 +24,7 @@ class IBDDErrorExplainer:
 
     def __init__(
         self,
-        openai_api_key: Optional[str] = None,
+        api_key: Optional[str] = None,
         provider: str = None,
         model: str = None,
         base_url: str = None,
@@ -33,12 +33,15 @@ class IBDDErrorExplainer:
         Inicializa el agente explicador.
 
         Args:
-            openai_api_key: Clave API de OpenAI (opcional, usa variable de entorno OPENAI_API_KEY por defecto)
+            api_key: Clave API (opcional, usa variable de entorno OPENAI_API_KEY por defecto)
+            provider: Proveedor LLM (openai, ollama)
+            model: Identificador del modelo
+            base_url: URL base opcional para el proveedor LLM
         """
         load_dotenv()
 
-        self.api_key = openai_api_key or os.environ.get("OPENAI_API_KEY")
-        self.model = model or "gpt-5.2"  # GPT-5.2 Thinking - Best for complex reasoning and error analysis
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.model = model or os.environ.get("LLM_MODEL", "gpt-4o")
         self.provider = provider or os.environ.get("LLM_PROVIDER", "openai")
         self.base_url = base_url or os.environ.get("LLM_BASE_URL")
 
@@ -191,7 +194,7 @@ Responde en formato JSON."""
         return prompt
 
     def _call_openai_api(self, prompt: str) -> Optional[Dict[str, Any]]:
-        """Llama a la API de OpenAI para analizar el error"""
+        """Llama al LLM para analizar el error"""
 
         # Definir el schema de respuesta
         response_schema = {

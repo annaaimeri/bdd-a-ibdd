@@ -2,22 +2,23 @@
 """
 Main orchestration script for BDD to IBDD translation workflow.
 This script coordinates the complete pipeline:
-1. Load dataset JSON
-2. Translate BDD scenarios to IBDD using OpenAI
-3. Parse and validate IBDD results
+1. Translate BDD scenarios to IBDD via LLM
+2. Parse and validate IBDD syntax
+3. Iterative correction loop (explain errors → retry → re-validate)
+4. Final summary with metrics
 """
 import argparse
 import json
 import os
 import sys
+import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.translator import TranslationService
 from src.parser import validate_ibdd_cases
 from src.explainer import IBDDErrorExplainer
-from src.semantic_validator import SemanticValidator
 
 
 class BDDToIBDDPipeline:
@@ -34,7 +35,10 @@ class BDDToIBDDPipeline:
         Initialize the pipeline.
 
         Args:
-            api_key: OpenAI API key (optional, defaults to OPENAI_API_KEY env variable)
+            api_key: API key (optional, defaults to OPENAI_API_KEY env variable)
+            provider: LLM provider (openai, ollama)
+            model: Model identifier
+            base_url: Optional base URL for the LLM provider
         """
         self.translation_service = TranslationService(
             api_key,
@@ -48,7 +52,53 @@ class BDDToIBDDPipeline:
             model=model,
             base_url=base_url,
         )
-        self.semantic_validator = SemanticValidator(api_key)
+
+    @staticmethod
+    def _detect_retry_prompt_path(prompt_path: str) -> str:
+        """
+        Auto-detect the retry prompt path based on the main prompt language.
+
+        If the main prompt contains '_ES' in its filename, the Spanish retry
+        prompt is used; otherwise the English one is used.
+        """
+        prompt_dir = os.path.dirname(prompt_path)
+        prompt_name = os.path.basename(prompt_path).upper()
+
+        if '_ES' in prompt_name:
+            retry_name = 'PROMPT_ES_RETRY.md'
+        else:
+            retry_name = 'PROMPT_EN_RETRY.md'
+
+        retry_path = os.path.join(prompt_dir, retry_name)
+        if os.path.exists(retry_path):
+            return retry_path
+
+        # Fallback to English
+        fallback = os.path.join(prompt_dir, 'PROMPT_EN_RETRY.md')
+        if os.path.exists(fallback):
+            return fallback
+
+        raise FileNotFoundError(
+            f"Retry prompt not found. Tried: {retry_path}, {fallback}"
+        )
+
+    def _get_validation_summary(
+        self, validation_output_path: str
+    ) -> Dict[str, Any]:
+        """Load validation results and return a summary dict."""
+        with open(validation_output_path, 'r', encoding='utf-8') as f:
+            results = json.load(f)
+
+        total = len(results)
+        passed = sum(1 for r in results if r.get('valid', True))
+        failed_ids = [r['id'] for r in results if not r.get('valid', True)]
+
+        return {
+            'total': total,
+            'passed': passed,
+            'failed': total - passed,
+            'failed_case_ids': failed_ids,
+        }
 
     def run(
         self,
@@ -56,24 +106,40 @@ class BDDToIBDDPipeline:
         prompt_path: str,
         translation_output_path: str = "data/output.json",
         validation_output_path: str = "data/parsed_ibdd_results.json",
-        explanations_output_path: str = "data/error_explanations.json"
-    ) -> None:
+        explanations_output_path: str = "data/error_explanations.json",
+        max_rounds: int = 3,
+    ) -> Dict[str, Any]:
         """
-        Run the complete pipeline: dataset → translation → parsing/validation → error explanation (if needed)
+        Run the complete pipeline with iterative correction.
+
+        Pipeline:
+            1. Translate BDD → IBDD via LLM
+            2. Validate syntax (Lark parser)
+            3. Iterative correction loop (up to max_rounds):
+               explain errors → retry translation → re-validate
+            4. Final summary
 
         Args:
             dataset_path: Path to the input dataset JSON file
             prompt_path: Path to the prompt template file (.md)
             translation_output_path: Path where translated IBDD will be saved
             validation_output_path: Path where validation results will be saved
-            explanations_output_path: Path where error explanations will be saved (if errors exist)
+            explanations_output_path: Path where error explanations will be saved
+            max_rounds: Maximum number of correction rounds (0 = no retries)
+
+        Returns:
+            Dict with pipeline results and per-round metrics
         """
+        pipeline_start = time.time()
+        retry_prompt_path = self._detect_retry_prompt_path(prompt_path)
+
         print("=" * 80)
         print("BDD to IBDD Translation Pipeline")
+        print(f"Max correction rounds: {max_rounds}")
         print("=" * 80)
 
-        # Step 1: Translate BDD to IBDD
-        print("\n[Step 1/5] Translating BDD scenarios to IBDD...")
+        # ── Step 1: Translate BDD to IBDD ──────────────────────────────
+        print("\n[Step 1/4] Translating BDD scenarios to IBDD...")
         print("-" * 80)
         try:
             self.translation_service.translate(
@@ -86,8 +152,8 @@ class BDDToIBDDPipeline:
             print(f"✗ Translation failed: {e}", file=sys.stderr)
             sys.exit(1)
 
-        # Step 2: Parse and validate IBDD (Syntactic)
-        print("\n[Step 2/5] Parsing and validating IBDD syntax...")
+        # ── Step 2: Validate syntax ────────────────────────────────────
+        print("\n[Step 2/4] Parsing and validating IBDD syntax...")
         print("-" * 80)
         try:
             validate_ibdd_cases(
@@ -99,169 +165,150 @@ class BDDToIBDDPipeline:
             print(f"✗ Validation failed: {e}", file=sys.stderr)
             sys.exit(1)
 
-        # Step 2.5: Semantic validation of syntactically valid cases
-        print("\n[Step 2.5/5] Semantic validation of valid translations...")
+        # Record initial validation results
+        initial_summary = self._get_validation_summary(validation_output_path)
+        print(f"\n   Initial result: {initial_summary['passed']}/{initial_summary['total']} "
+              f"passed ({initial_summary['passed']/initial_summary['total']*100:.1f}%)")
+
+        # ── Step 3: Iterative correction loop ──────────────────────────
+        print("\n[Step 3/4] Iterative correction loop...")
         print("-" * 80)
-        semantic_results_path = validation_output_path.replace('.json', '_semantic.json')
-        try:
-            # Load original BDD dataset
-            with open(dataset_path, 'r', encoding='utf-8') as f:
-                bdd_dataset = json.load(f)
 
-            # Load translations
-            with open(translation_output_path, 'r', encoding='utf-8') as f:
-                translations = json.load(f)
+        round_metrics: List[Dict[str, Any]] = []
+        all_explanations: List[Dict[str, Any]] = []
 
-            # Load syntax validation results
-            with open(validation_output_path, 'r', encoding='utf-8') as f:
-                syntax_validations = json.load(f)
+        for round_num in range(1, max_rounds + 1):
+            round_start = time.time()
 
-            # Create maps for quick lookup
-            bdd_map = {case['id']: case for case in bdd_dataset}
-            translation_map = {case['id']: case for case in translations}
-
-            # Validate semantically only cases that passed syntax validation
-            semantic_results = []
-            for syntax_result in syntax_validations:
-                case_id = syntax_result['id']
-
-                # Only validate semantically if syntax is valid
-                if syntax_result.get('valid', False):
-                    bdd = bdd_map.get(case_id, {})
-                    translation = translation_map.get(case_id, {})
-                    ibdd_text = translation.get('ibdd_representation', '')
-
-                    # Run semantic validation
-                    sem_result = self.semantic_validator.validate(
-                        bdd={'given': bdd.get('given', ''),
-                             'when': bdd.get('when', ''),
-                             'then': bdd.get('then', '')},
-                        ibdd=ibdd_text,
-                        case_id=case_id
-                    )
-                    semantic_results.append(sem_result)
-                else:
-                    # Skip semantic validation for syntactically invalid cases
-                    print(f"  Skipping semantic validation for case {case_id} (syntax error)")
-
-            # Save semantic validation results
-            with open(semantic_results_path, 'w', encoding='utf-8') as f:
-                json.dump(semantic_results, indent=2, ensure_ascii=False, fp=f)
-
-            # Print summary
-            if semantic_results:
-                valid_count = sum(1 for r in semantic_results if r['overall_valid'])
-                print(f"✓ Semantic validation completed: {valid_count}/{len(semantic_results)} passed")
-                print(f"  Results saved to: {semantic_results_path}")
-                self.semantic_validator.print_summary()
-            else:
-                print("⚠ No cases available for semantic validation")
-
-        except Exception as e:
-            print(f"⚠ Semantic validation failed (non-critical): {e}", file=sys.stderr)
-            import traceback
-            traceback.print_exc()
-            print("Pipeline will continue despite semantic validation failure")
-
-        # Step 3: Explain errors if any cases failed
-        print("\n[Step 3/5] Checking for parsing errors...")
-        print("-" * 80)
-        explanations = []
-        try:
+            # Collect failed cases
             failed_cases = self._collect_failed_cases(
                 translation_output_path,
                 validation_output_path
             )
 
-            if failed_cases:
-                print(f"⚠ Found {len(failed_cases)} case(s) with parsing errors")
-                print("Generating error explanations...")
+            if not failed_cases:
+                print(f"\n✓ All cases passed — no correction needed"
+                      + (f" (converged at round {round_num - 1})" if round_num > 1 else ""))
+                break
 
-                explanations = self.error_explainer.explain_multiple_errors(failed_cases)
+            print(f"\n── Round {round_num}/{max_rounds}: "
+                  f"{len(failed_cases)} case(s) still failing ──")
 
-                # Save explanations
-                with open(explanations_output_path, 'w', encoding='utf-8') as f:
-                    json.dump(explanations, indent=2, ensure_ascii=False, fp=f)
-
-                print(f"✓ Error explanations saved: {explanations_output_path}")
-            else:
-                print("✓ All cases parsed successfully - no errors to explain")
-        except Exception as e:
-            print(f"⚠ Error explanation step failed (non-critical): {e}", file=sys.stderr)
-            print("Pipeline will continue despite explanation failure")
-
-        # Step 4: Retry failed translations with error feedback
-        print("\n[Step 4/5] Attempting to correct failed translations...")
-        print("-" * 80)
-        if explanations:
+            # Explain errors
             try:
-                corrected_translations = self.translation_service.retry_failed_translations(
-                    error_explanations=explanations
+                explanations = self.error_explainer.explain_multiple_errors(failed_cases)
+                all_explanations.extend(explanations)
+            except Exception as e:
+                print(f"⚠ Error explanation failed: {e}", file=sys.stderr)
+                round_metrics.append({
+                    'round': round_num,
+                    'error': str(e),
+                })
+                break
+
+            # Retry translations with error feedback
+            corrected_ids = []
+            try:
+                corrected = self.translation_service.retry_failed_translations(
+                    error_explanations=explanations,
+                    retry_prompt_path=retry_prompt_path,
                 )
 
-                if corrected_translations:
-                    # Merge corrected translations with original successful ones
-                    updated_translations = self._merge_translations(
-                        translation_output_path,
-                        corrected_translations
+                if corrected:
+                    corrected_ids = [c['id'] for c in corrected]
+
+                    # Merge corrected translations
+                    updated = self._merge_translations(
+                        translation_output_path, corrected
                     )
-
-                    # Save updated translations
                     with open(translation_output_path, 'w', encoding='utf-8') as f:
-                        json.dump(updated_translations, indent=2, ensure_ascii=False, fp=f)
+                        json.dump(updated, indent=2, ensure_ascii=False, fp=f)
 
-                    print(f"✓ Updated translations saved: {translation_output_path}")
-
-                    # Re-validate the corrected cases
-                    print("\n[Re-validation] Validating corrected translations...")
+                    # Re-validate
                     validate_ibdd_cases(
                         json_file_path=translation_output_path,
                         output_file=validation_output_path
                     )
-                    print(f"✓ Re-validation completed: {validation_output_path}")
-                else:
-                    print("⚠ No corrections were generated - keeping original translations")
             except Exception as e:
-                print(f"⚠ Retry step failed (non-critical): {e}", file=sys.stderr)
-                print("Pipeline will continue with original translations")
+                print(f"⚠ Retry failed: {e}", file=sys.stderr)
+
+            # Gather post-round summary
+            post_summary = self._get_validation_summary(validation_output_path)
+            round_time = time.time() - round_start
+
+            round_metrics.append({
+                'round': round_num,
+                'failed_before': len(failed_cases),
+                'failed_case_ids_before': [c['case_id'] for c in failed_cases],
+                'corrected_case_ids': corrected_ids,
+                'passed_after': post_summary['passed'],
+                'failed_after': post_summary['failed'],
+                'failed_case_ids_after': post_summary['failed_case_ids'],
+                'round_time': round(round_time, 2),
+            })
+
+            print(f"   Round {round_num} result: {post_summary['passed']}/{post_summary['total']} "
+                  f"passed ({post_summary['passed']/post_summary['total']*100:.1f}%) "
+                  f"[{round_time:.1f}s]")
+
+            if post_summary['failed'] == 0:
+                print(f"\n✓ All cases passed — converged at round {round_num}")
+                break
         else:
-            print("✓ No failed cases to retry - skipping correction step")
+            if max_rounds > 0:
+                print(f"\n⚠ Max correction rounds ({max_rounds}) reached")
 
-        # Step 5: Final Summary
-        print("\n[Step 5/5] Final Summary")
+        # Save all error explanations
+        if all_explanations:
+            with open(explanations_output_path, 'w', encoding='utf-8') as f:
+                json.dump(all_explanations, indent=2, ensure_ascii=False, fp=f)
+
+        # ── Step 4: Final Summary ──────────────────────────────────────
+        pipeline_time = time.time() - pipeline_start
+        final_summary = self._get_validation_summary(validation_output_path)
+
+        print("\n[Step 4/4] Final Summary")
         print("=" * 80)
-        print("Pipeline completed successfully!")
-        print("=" * 80)
-        print(f"Translation output:      {translation_output_path}")
-        print(f"Syntax validation:       {validation_output_path}")
-        print(f"Syntax validation CSV:   {validation_output_path.replace('.json', '.csv')}")
-        print(f"Semantic validation:     {semantic_results_path}")
 
-        # Syntax validation summary
-        if os.path.exists(validation_output_path):
-            with open(validation_output_path, 'r', encoding='utf-8') as f:
-                validation_results = json.load(f)
-                total = len(validation_results)
-                syntax_passed = sum(1 for r in validation_results if r.get('valid', True))
-                syntax_failed = total - syntax_passed
-                print(f"\n📊 Syntax Validation: {syntax_passed}/{total} passed ({syntax_passed/total*100:.1f}%), {syntax_failed} failed")
+        print(f"Translation output:   {translation_output_path}")
+        print(f"Syntax validation:    {validation_output_path}")
+        if all_explanations:
+            print(f"Error explanations:   {explanations_output_path}")
 
-        # Semantic validation summary
-        if os.path.exists(semantic_results_path):
-            with open(semantic_results_path, 'r', encoding='utf-8') as f:
-                semantic_results = json.load(f)
-                total_semantic = len(semantic_results)
-                semantic_passed = sum(1 for r in semantic_results if r.get('overall_valid', False))
-                semantic_failed = total_semantic - semantic_passed
-                if total_semantic > 0:
-                    print(f"📊 Semantic Validation: {semantic_passed}/{total_semantic} passed ({semantic_passed/total_semantic*100:.1f}%), {semantic_failed} failed")
+        print(f"\nSyntax Validation: {final_summary['passed']}/{final_summary['total']} "
+              f"passed ({final_summary['passed']/final_summary['total']*100:.1f}%)")
+        if final_summary['failed_case_ids']:
+            print(f"Still failing: {final_summary['failed_case_ids']}")
 
-        # Error explanations
-        if os.path.exists(explanations_output_path):
-            print(f"\n📝 Error explanations: {explanations_output_path}")
-
+        print(f"Correction rounds used: {len(round_metrics)}/{max_rounds}")
+        print(f"Total pipeline time: {pipeline_time:.1f}s")
         print("=" * 80)
         print()
+
+        # Build and save pipeline metrics
+        pipeline_metrics = {
+            'model': self.translation_service.model,
+            'provider': self.translation_service.provider,
+            'prompt': prompt_path,
+            'dataset': dataset_path,
+            'max_rounds': max_rounds,
+            'initial_passed': initial_summary['passed'],
+            'initial_failed': initial_summary['failed'],
+            'initial_failed_case_ids': initial_summary['failed_case_ids'],
+            'final_passed': final_summary['passed'],
+            'final_failed': final_summary['failed'],
+            'final_failed_case_ids': final_summary['failed_case_ids'],
+            'total_cases': final_summary['total'],
+            'rounds': round_metrics,
+            'total_pipeline_time': round(pipeline_time, 2),
+        }
+
+        metrics_path = translation_output_path.replace('.json', '_metrics.json')
+        with open(metrics_path, 'w', encoding='utf-8') as f:
+            json.dump(pipeline_metrics, indent=2, ensure_ascii=False, fp=f)
+        print(f"Pipeline metrics saved: {metrics_path}")
+
+        return pipeline_metrics
 
     def _merge_translations(
         self,
@@ -357,13 +404,15 @@ Examples:
   # Run with default paths
   python src/main.py data/Dataset.json docs/PROMPT_EN.md
 
-  # Run with custom output paths
-  python src/main.py data/Dataset.json docs/PROMPT_EN.md \\
-    -t data/my_translation.json \\
-    -v data/my_validation.json
+  # Run with Spanish prompt (retry prompt auto-detected)
+  python src/main.py data/Dataset.json docs/PROMPT_ES.md
 
-  # Run with custom API key
-  python src/main.py data/Dataset.json docs/PROMPT_EN.md -k sk-...
+  # Run with more correction rounds
+  python src/main.py data/Dataset.json docs/PROMPT_EN.md --max-rounds 5
+
+  # Run with a specific model via Ollama
+  python src/main.py data/Dataset.json docs/PROMPT_EN.md \\
+    --provider ollama -m llama3.3:70b
         """
     )
 
@@ -387,11 +436,11 @@ Examples:
     )
     parser.add_argument(
         '-k', '--api-key',
-        help='OpenAI API key (optional, can use OPENAI_API_KEY env variable)'
+        help='API key (optional, can use OPENAI_API_KEY env variable)'
     )
     parser.add_argument(
         '-m', '--model',
-        help='Model to use (default: gpt-5.2)'
+        help='Model to use (e.g., gpt-4o, llama3.3:70b)'
     )
     parser.add_argument(
         '--provider',
@@ -402,6 +451,12 @@ Examples:
         '--base-url',
         default=None,
         help='Optional base URL for LLM provider'
+    )
+    parser.add_argument(
+        '--max-rounds',
+        type=int,
+        default=3,
+        help='Maximum number of correction rounds (default: 3, 0 = no retries)'
     )
 
     args = parser.parse_args()
@@ -427,10 +482,9 @@ Examples:
         base_url=args.base_url,
     )
 
-    # Display which model is being used
-    print(f"LLM provider: {pipeline.translation_service.provider}")
-    print(f"Model: {pipeline.translation_service.model}")
-    print(f"Explainer model: {pipeline.error_explainer.model}")
+    # Display configuration
+    print(f"Provider: {pipeline.translation_service.provider}")
+    print(f"Model:    {pipeline.translation_service.model}")
     print()
 
     # Run the pipeline
@@ -438,7 +492,8 @@ Examples:
         dataset_path=args.dataset,
         prompt_path=args.prompt,
         translation_output_path=args.translation_output,
-        validation_output_path=args.validation_output
+        validation_output_path=args.validation_output,
+        max_rounds=args.max_rounds,
     )
 
 

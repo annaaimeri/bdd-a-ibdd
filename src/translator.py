@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 class TranslationService:
     def __init__(
         self,
-        openai_api_key: str = None,
+        api_key: str = None,
         provider: str = None,
         model: str = None,
         base_url: str = None,
@@ -29,12 +29,15 @@ class TranslationService:
         Initialize the translation service.
 
         Args:
-            openai_api_key: OpenAI API key (optional, defaults to OPENAI_API_KEY env variable)
+            api_key: API key (optional, defaults to OPENAI_API_KEY env variable)
+            provider: LLM provider (openai, ollama)
+            model: Model identifier
+            base_url: Optional base URL for the LLM provider
         """
         load_dotenv()
 
-        self.api_key = openai_api_key or os.environ.get("OPENAI_API_KEY")
-        self.model = model or "gpt-5.2"  # GPT-5.2 Thinking - Best for complex reasoning and formal translations
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.model = model or os.environ.get("LLM_MODEL", "gpt-4o")
         self.provider = provider or os.environ.get("LLM_PROVIDER", "openai")
         self.base_url = base_url or os.environ.get("LLM_BASE_URL")
         self.max_retries = 5
@@ -197,10 +200,10 @@ class TranslationService:
     def call_llm_api(self, prompt: str, json_data: Union[Dict[str, Any], List[Any]]) -> Optional[
         Union[Dict[str, Any], List[Any]]]:
         """
-        Call OpenAI API with the prepared prompt and structured output.
+        Call the LLM with the prepared prompt and structured output.
 
         Args:
-            prompt: The prompt to send to OpenAI
+            prompt: The prompt to send
             json_data: Original JSON data for schema inference
 
         Returns:
@@ -284,7 +287,7 @@ class TranslationService:
 
     def translate(self, json_file_path: str, prompt_file_path: str, output_file_path: str) -> None:
         """
-        Complete translation workflow from JSON to output via GPT.
+        Complete translation workflow from JSON to output via LLM.
         Processes cases individually with incremental saving and progress tracking.
 
         Args:
@@ -453,13 +456,13 @@ class TranslationService:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Translate JSON content using GPT with Structured Outputs')
+    parser = argparse.ArgumentParser(description='Translate JSON content using LLM with Structured Outputs')
     parser.add_argument('json_file', help='Path to the JSON file')
     parser.add_argument('prompt_file', help='Path to the prompt template file (.md)')
     parser.add_argument('-o', '--output', help='Path to the output file (default: translation_output.json)')
-    parser.add_argument('-k', '--api-key', help='OpenAI API key (optional, can use OPENAI_API_KEY env variable)')
-    parser.add_argument('-m', '--model', help='Model to use (default: gpt-5.2)')
-    parser.add_argument('-r', '--max-retries', type=int, help=f'Maximum number of retries (default: 5)')
+    parser.add_argument('-k', '--api-key', help='API key (optional, can use OPENAI_API_KEY env variable)')
+    parser.add_argument('-m', '--model', help='Model to use (e.g., gpt-4o, llama3.3:70b)')
+    parser.add_argument('-r', '--max-retries', type=int, help='Maximum number of API retries (default: 5)')
     parser.add_argument('--provider', default=None, help='LLM provider: openai or ollama (default: openai)')
     parser.add_argument('--base-url', default=None, help='Optional base URL for LLM provider')
 
