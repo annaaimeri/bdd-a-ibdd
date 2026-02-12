@@ -26,7 +26,7 @@ La arquitectura del sistema se organiza en torno a dos componentes principales. 
 
 El flujo del sistema opera de la siguiente manera: un escenario Gherkin es procesado por el LLM, que genera tres candidatos de traducción IBDD; estos candidatos son luego validados sintácticamente mediante Lark. Si la validación falla, se inicia un ciclo de corrección iterativa hasta obtener una representación IBDD válida.
 
-La elección de LLMs se fundamenta en su demostrada capacidad para tareas de traducción entre lenguajes formales y naturales, como se evidencia en trabajos recientes sobre generación de código desde especificaciones \cite{placeholder:llm-code-generation} y traducción de requisitos a modelos formales \cite{placeholder:nl-to-formal}. Sin embargo, los LLMs por sí solos no garantizan corrección sintáctica ni consistencia formal, de ahí la necesidad del componente de validación.
+La elección de LLMs se fundamenta en su demostrada capacidad para tareas de traducción entre lenguajes formales y naturales, como se evidencia en trabajos recientes sobre generación de código desde especificaciones \cite{jiang2024codellm} y traducción de requisitos a modelos formales \cite{soeken2012nlp}. Sin embargo, los LLMs por sí solos no garantizan corrección sintáctica ni consistencia formal, de ahí la necesidad del componente de validación.
 
 \section{Estructura del Documento}
 
