@@ -8,7 +8,46 @@ Por otro lado, las Pruebas Basadas en Modelos (MBT, \textit{Model-Based Testing}
 
 Sin embargo, existe una discontinuidad entre estos dos mundos. Los escenarios BDD, expresados en lenguaje natural, carecen de la precisión formal necesaria para alimentar directamente las herramientas de MBT. Investigaciones recientes han propuesto el Lenguaje Intermedio de BDD (IBDD) como puente entre ambos paradigmas~\cite{zameni2024ibdd}. IBDD mantiene la estructura Given-When-Then de BDD pero incorpora elementos formales de los STS, incluyendo variables globales y locales, guardas lógicas, gates de interacción y asignaciones explícitas de estado.
 
-Los trabajos de Zameni et al. han demostrado que, una vez que los escenarios están representados en IBDD, es posible transformarlos automáticamente en Sistemas de Transición BDD (BDDTS) y posteriormente en STS, desde donde se pueden generar casos de prueba completos y formalmente válidos~\cite{zameni2023bddts}. El paso faltante en esta cadena de automatización es precisamente la traducción inicial: convertir escenarios Gherkin escritos por humanos en representaciones IBDD formalmente correctas.
+Los trabajos de Zameni et al. han demostrado que, una vez que los escenarios están representados en IBDD, es posible transformarlos automáticamente en Sistemas de Transición BDD (BDDTS) y posteriormente en STS, desde donde se pueden generar casos de prueba completos y formalmente válidos~\cite{zameni2023bddts}. Sin embargo, un eslabón de esta cadena de automatización aún no ha sido abordado: la traducción inicial de escenarios Gherkin escritos por humanos a representaciones IBDD formalmente correctas. La Figura~\ref{fig:pipeline-overview} ilustra este pipeline y señala la etapa que aborda el presente trabajo.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=1cm,
+    stage/.style={
+        rectangle, rounded corners=4pt, draw=black, thick,
+        minimum height=1cm, minimum width=2cm,
+        text centered, font=\small
+    },
+    arr/.style={-{Stealth[length=5pt]}, thick},
+    lbl/.style={font=\footnotesize\itshape, text=black!70}
+]
+    \node[stage] (gherkin) {Gherkin};
+    \node[stage, right=of gherkin] (ibdd) {IBDD};
+    \node[stage, right=of ibdd] (bddts) {BDDTS};
+    \node[stage, right=of bddts] (sts) {STS};
+    \node[stage, right=of sts, text width=1.8cm, align=center] (tests) {Casos de prueba};
+
+    \draw[arr] (gherkin) -- (ibdd);
+    \draw[arr] (ibdd) -- (bddts);
+    \draw[arr] (bddts) -- (sts);
+    \draw[arr] (sts) -- (tests);
+
+    % Brace for "Este trabajo"
+    \draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+        ([yshift=-0.6cm]gherkin.south west) -- ([yshift=-0.6cm]ibdd.south east)
+        node[midway, below=6pt, lbl] {Este trabajo};
+
+    % Brace for "Formalmente definido"
+    \draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick]
+        ([yshift=-0.6cm]ibdd.south east) -- ([yshift=-0.6cm]tests.south east)
+        node[midway, below=6pt, lbl] {Formalmente definido~\cite{zameni2024ibdd, zameni2025composition}};
+\end{tikzpicture}%
+}
+\caption{Pipeline de transformación BDD-a-MBT y ubicación del presente trabajo}
+\label{fig:pipeline-overview}
+\end{figure}
 
 Actualmente, esta traducción es un proceso enteramente manual que requiere experiencia especializada en teoría de sistemas de transición y conocimiento profundo de la gramática IBDD. Un analista debe identificar variables implícitas, inferir gates de interacción apropiados, establecer guardas lógicas correctas y determinar las asignaciones de estado necesarias---información que típicamente no está explícita en el texto natural del escenario BDD. Este cuello de botella limita la escalabilidad industrial de todo el pipeline BDD-a-MBT.
 

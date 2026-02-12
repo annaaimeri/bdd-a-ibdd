@@ -33,7 +33,7 @@ Scenario: Add product to shopping cart
 
 Los escenarios Gherkin se agrupan en archivos denominados \textit{features}, donde cada \textit{feature} describe una funcionalidad del sistema e incluye uno o más escenarios que ilustran su comportamiento esperado bajo distintas condiciones. Las palabras clave \textbf{And} y \textbf{But} permiten encadenar múltiples condiciones dentro de una misma cláusula, mejorando la legibilidad sin alterar la semántica de la especificación.
 
-Esta estructura, si bien es lo suficientemente formal para ser procesada por herramientas de automatización como Cucumber\footnote{Cucumber es un \textit{framework} de código abierto que ejecuta especificaciones Gherkin como pruebas automatizadas, vinculando cada paso del escenario con código de prueba mediante expresiones regulares~\cite{cucumber}.}, mantiene un nivel de abstracción cercano al lenguaje natural. Es precisamente esta característica la que convierte a Gherkin en un formato accesible para \textit{stakeholders} no técnicos, pero también la que introduce desafíos de ambigüedad e imprecisión inherentes al uso del lenguaje natural.
+Esta estructura, si bien es lo suficientemente formal para ser procesada por herramientas de automatización como Cucumber\footnote{Cucumber es un \textit{framework} de código abierto que ejecuta especificaciones Gherkin como pruebas automatizadas, vinculando cada paso del escenario con código de prueba mediante expresiones regulares~\cite{cucumber}.}, mantiene un nivel de abstracción cercano al lenguaje natural. Es precisamente esta característica la que convierte a Gherkin en un formato accesible para \textit{stakeholders} no técnicos, pero también la que introduce desafíos de ambigüedad e imprecisión inherentes al uso del lenguaje natural. Estos desafíos se vuelven críticos cuando se busca integrar los escenarios BDD con técnicas de verificación formal, como las Pruebas Basadas en Modelos que se describen a continuación.
 
 \section{Pruebas Basadas en Modelos}
 
@@ -43,7 +43,7 @@ Utting et al.~\cite{utting2012taxonomy} proponen una taxonomía que clasifica lo
 
 En el contexto de sistemas reactivos---sistemas que interactúan con su entorno mediante estímulos y respuestas---Tretmans~\cite{tretmans2008mbt} formaliza la relación de conformidad \textit{ioco} (\textit{input-output conformance}) como criterio para determinar si una implementación se comporta de acuerdo con su especificación. Bajo esta teoría, el modelo del sistema se expresa como un Sistema de Transición Etiquetado (\textit{Labelled Transition System}, LTS), y los casos de prueba se generan como secuencias de estímulos y observaciones que verifican la conformidad de la implementación con respecto al modelo.
 
-El atractivo fundamental de MBT reside en la posibilidad de generar automáticamente grandes conjuntos de casos de prueba con garantías formales de cobertura, lo cual resulta particularmente valioso en dominios donde la exhaustividad de las pruebas es crítica. Sin embargo, la aplicación de MBT requiere la existencia de un modelo formal del sistema, cuya construcción constituye en sí misma un desafío significativo. En la tesis doctoral de Brandán Briones~\cite{brandan2007mbt} se desarrollan teorías para MBT que abordan aspectos de tiempo real y cobertura en este tipo de sistemas.
+El atractivo fundamental de MBT reside en la posibilidad de generar automáticamente grandes conjuntos de casos de prueba con garantías formales de cobertura, lo cual resulta particularmente valioso en dominios donde la exhaustividad de las pruebas es crítica. Sin embargo, la aplicación de MBT requiere la existencia de un modelo formal del sistema, cuya construcción constituye en sí misma un desafío significativo. En la tesis doctoral de Brandán Briones~\cite{brandan2007mbt} se desarrollan teorías para MBT que abordan aspectos de tiempo real y cobertura en este tipo de sistemas. Entre los formalismos utilizados como base para MBT se encuentran los Sistemas de Transición Simbólicos, que se presentan en la sección siguiente.
 
 \section{Sistemas de Transición Simbólicos}
 
@@ -120,7 +120,7 @@ IBDD se sitúa en el centro de un pipeline de transformación que conecta los es
   \item \textbf{STS $\rightarrow$ Tests}: aplicación de algoritmos de generación automática de casos de prueba sobre los STS resultantes. Esta etapa se apoya en algoritmos preexistentes desarrollados por Frantzen et al.~\cite{frantzen2006symbolic} y van den Bos y Tretmans~\cite{vandenbos2019coverage}.
 \end{enumerate}
 
-Zameni et al.~\cite{zameni2025composition} extienden este pipeline en 2025 con un operador formal de composición secuencial de BDDTS, que permite construir modelos complejos a partir de escenarios individuales. Los autores demuestran la corrección del operador mediante pruebas de solidez y completitud, y reportan su aplicación a un caso de estudio industrial de sistemas de iluminación aeroportuaria. Cabe notar que la primera etapa de este pipeline---la traducción de escenarios Gherkin a IBDD---permanece sin automatizar.
+Zameni et al.~\cite{zameni2025composition} extienden este pipeline en 2025 con un operador formal de composición secuencial de BDDTS, que permite construir modelos complejos a partir de escenarios individuales. Los autores demuestran la corrección del operador mediante pruebas de solidez y completitud, y reportan su aplicación a un caso de estudio industrial de sistemas de iluminación aeroportuaria. Cabe notar que, hasta el momento, la primera etapa de este pipeline---la traducción de escenarios Gherkin a IBDD---no ha sido abordada de forma automática en la literatura. La automatización de esta etapa requiere un mecanismo capaz de interpretar texto en lenguaje natural y generar representaciones formales, capacidad que ofrecen los Modelos de Lenguaje Grandes.
 
 \section{Modelos de Lenguaje Grandes}
 
@@ -136,7 +136,7 @@ En el contexto específico de BDD, Karpurapu et al.~\cite{karpurapu2024llm} eval
 
 \subsection{Limitaciones}
 
-A pesar de sus capacidades, los LLMs presentan limitaciones relevantes para tareas que requieren corrección formal. Los modelos pueden generar salidas sintácticamente incorrectas, introducir \textit{hallucinations} (contenido plausible pero factualmente incorrecto), y exhibir inconsistencias entre ejecuciones sucesivas. Estas limitaciones son particularmente críticas cuando el objetivo es producir representaciones formales, donde un error sintáctico puede invalidar completamente la salida generada.
+A pesar de sus capacidades, los LLMs presentan limitaciones relevantes para tareas que requieren corrección formal. Los modelos pueden generar salidas sintácticamente incorrectas, introducir \textit{hallucinations} (contenido plausible pero factualmente incorrecto), y exhibir inconsistencias entre ejecuciones sucesivas. Estas limitaciones son particularmente críticas cuando el objetivo es producir representaciones formales, donde un error sintáctico puede invalidar completamente la salida generada. Estas limitaciones motivan la necesidad de complementar los LLMs con mecanismos de verificación formal, aspecto que se abordará tras revisar los trabajos relacionados.
 
 \section{Trabajos Relacionados}
 
@@ -144,7 +144,7 @@ Esta sección revisa los trabajos previos más relevantes, organizados según tr
 
 \subsection{Pipeline Formal BDD-a-MBT}
 
-La línea de investigación iniciada por Zameni et al. ha desarrollado progresivamente un pipeline de transformación desde escenarios BDD hasta la generación automática de casos de prueba. En su trabajo inicial~\cite{zameni2023bddts}, los autores presentaron la idea de transformar manualmente escenarios BDD en modelos formales sobre los cuales aplicar técnicas de MBT, demostrando la viabilidad del enfoque pero señalando la dificultad de automatizar la transformación debido a la gran discrepancia entre los escenarios textuales y los modelos formales. Posteriormente, Zameni et al.~\cite{zameni2024ibdd} definieron el lenguaje intermedio IBDD y formalizaron la transformación de IBDD a BDDTS y de BDDTS a STS, estableciendo así los eslabones formales de la cadena. Más recientemente~\cite{zameni2025composition}, extendieron el framework con mecanismos de composición secuencial de BDDTS que permiten construir modelos complejos a partir de escenarios individuales. El paso que permanece sin automatizar en este pipeline es la traducción inicial de escenarios Gherkin a IBDD.
+La línea de investigación iniciada por Zameni et al. ha desarrollado progresivamente un pipeline de transformación desde escenarios BDD hasta la generación automática de casos de prueba. En su trabajo inicial~\cite{zameni2023bddts}, los autores presentaron la idea de transformar manualmente escenarios BDD en modelos formales sobre los cuales aplicar técnicas de MBT, demostrando la viabilidad del enfoque pero señalando la dificultad de automatizar la transformación debido a la gran discrepancia entre los escenarios textuales y los modelos formales. Posteriormente, Zameni et al.~\cite{zameni2024ibdd} definieron el lenguaje intermedio IBDD y formalizaron la transformación de IBDD a BDDTS y de BDDTS a STS, estableciendo así los eslabones formales de la cadena. Más recientemente~\cite{zameni2025composition}, extendieron el framework con mecanismos de composición secuencial de BDDTS que permiten construir modelos complejos a partir de escenarios individuales. Sin embargo, la traducción inicial de escenarios Gherkin a IBDD no ha sido explorada de forma automática hasta el momento.
 
 \subsection{Automatización de BDD mediante NLP}
 
@@ -156,9 +156,17 @@ Fischbach et al.~\cite{fischbach2020specmate} desarrollaron SPECMATE, una herram
 
 Un trabajo particularmente relevante es el de Karpurapu et al.~\cite{karpurapu2024llm}, quienes realizaron una evaluación exhaustiva del uso de LLMs para la formulación automática de pruebas de aceptación en BDD. Sus experimentos abarcan múltiples modelos y estrategias de prompting, y sus resultados demuestran que la técnica de \textit{few-shot prompting}---donde se proveen ejemplos de la tarea al modelo---mejora significativamente la calidad de las salidas en comparación con \textit{zero-shot prompting}.
 
-\subsection{Brechas Identificadas en la Literatura}
+\subsection{Posicionamiento del Presente Trabajo}
 
-A partir de la revisión de los trabajos previos, se pueden identificar aspectos no explorados en la literatura. En primer lugar, ninguno de los enfoques de NLP aplicados a BDD genera representaciones formales intermedias como IBDD; en su lugar, producen código fuente o casos de prueba directamente, sin pasar por una representación formal intermedia. En segundo lugar, no se ha explorado la combinación de las capacidades de comprensión semántica de los LLMs con mecanismos de validación sintáctica determinísticos basados en gramáticas formales. Finalmente, la primera etapa del pipeline propuesto por Zameni et al.---la traducción de escenarios Gherkin a IBDD---permanece sin automatizar.
+La revisión de los trabajos previos permite situar la contribución del presente trabajo en relación con el estado del arte e identificar el espacio que este busca cubrir.
+
+Los enfoques de NLP aplicados a BDD, como los de Soeken et al.~\cite{soeken2012nlp} y Fischbach et al.~\cite{fischbach2020specmate}, demuestran la viabilidad de aplicar técnicas de procesamiento de lenguaje natural a escenarios BDD. No obstante, estos trabajos operan a nivel de código fuente o casos de prueba directamente, sin generar representaciones formales intermedias como IBDD que puedan alimentar un pipeline de MBT.
+
+Por otra parte, los trabajos de Karpurapu et al.~\cite{karpurapu2024llm} evidencian el potencial de estos modelos para tareas de generación estructurada en el contexto de BDD, aunque su enfoque se concentra en la dirección inversa (historias de usuario a Gherkin) y no contempla la integración con mecanismos de validación sintáctica determinísticos basados en gramáticas formales.
+
+En cuanto al pipeline formal, Zameni et al.~\cite{zameni2024ibdd, zameni2023bddts, zameni2025composition} han formalizado las transformaciones desde IBDD hasta la generación de casos de prueba; sin embargo, la primera etapa---la traducción de escenarios Gherkin a IBDD---no parece haber sido abordada de forma automática en los trabajos existentes.
+
+El presente trabajo se sitúa en la convergencia de estas líneas de investigación, proponiendo un enfoque que articula la capacidad de comprensión semántica de los LLMs con la validación sintáctica determinística mediante gramáticas formales, aplicado específicamente a la traducción de escenarios Gherkin al formalismo IBDD. El componente de validación formal de este enfoque se sustenta en las técnicas de análisis sintáctico que se describen a continuación.
 
 \section{Análisis Sintáctico y Gramáticas Formales}
 
