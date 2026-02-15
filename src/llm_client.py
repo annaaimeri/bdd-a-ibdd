@@ -122,3 +122,4 @@ class LLMClient:
                     time.sleep(delay)
                 else:
                     return None
+        return None

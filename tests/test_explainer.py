@@ -13,12 +13,12 @@ from src.explainer import IBDDErrorExplainer
 from src.parser import IBDDParser  # Usar el parser directamente, sin fallback
 
 
-def test_explainer_with_errors(json_file: str):
+def test_explainer_with_errors(file: str):
     """Prueba el explainer con casos que contienen errores"""
 
     # Cargar casos de prueba
-    print(f"Cargando casos de prueba desde: {json_file}")
-    with open(json_file, 'r', encoding='utf-8') as f:
+    print(f"Cargando casos de prueba desde: {file}")
+    with open(file, 'r', encoding='utf-8') as f:
         test_cases = json.load(f)
 
     print(f"Se cargaron {len(test_cases)} casos de prueba\n")
@@ -40,7 +40,7 @@ def test_explainer_with_errors(json_file: str):
 
         # Intentar parsear (sin fallback para detectar errores reales)
         try:
-            parsed = parser.parse_text(ibdd)  # Usar parse_text directamente
+            parser.parse_text(ibdd)
             print(f"✓ Parseo exitoso (no hay error para analizar)")
             continue
         except Exception as e:

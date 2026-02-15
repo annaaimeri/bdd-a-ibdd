@@ -149,9 +149,9 @@ class IBDDErrorExplainer:
                 "error": "No se pudo generar la explicación"
             }
 
+    @staticmethod
     def _create_analysis_prompt(
-        self,
-        case_id: str,
+            case_id: str,
         original_bdd: Dict[str, str],
         generated_ibdd: str,
         parse_error: str

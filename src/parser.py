@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
+import json
 import re
+import sys
+import time
 from dataclasses import dataclass, field
 from typing import List, Any, Union, Tuple, Optional
-import sys
-import json
-import pandas as pd
-import time
 
 from lark import Lark, Transformer, v_args
 
@@ -49,9 +48,9 @@ IBDD_GRAMMAR = r"""
     product: power ((STAR|SLASH|PERCENT) power)*
     power: atom [CIRCUMFLEX atom]
 
-    atom: literal | var | func_call | prop_access | neg_number | LPAR expr RPAR
+    atom: literal | var | func_call | prop_access | unary_minus | LPAR expr RPAR
 
-    neg_number: MINUS NUMBER
+    unary_minus: MINUS atom
 
     literal: TRUE | FALSE | NUMBER
 
@@ -465,15 +464,19 @@ class IBDDTransformer(Transformer):
         return children[0] if children else IBDDExpression('true', 'true')
 
     @staticmethod
+    def unary_minus(children):
+        return IBDDExpression('negative', '-', [children[1]]) if len(children) > 1 else IBDDExpression('number', '0')
+
+    @staticmethod
     def neg_number(children):
         return IBDDExpression('negative', '-', [children[1]]) if len(children) > 1 else IBDDExpression('number', '0')
 
     @staticmethod
-    def true_val(children):
+    def true_val():
         return IBDDExpression('true', 'true')
 
     @staticmethod
-    def false_val(children):
+    def false_val():
         return IBDDExpression('false', 'false')
 
     @staticmethod
@@ -507,7 +510,7 @@ class IBDDTransformer(Transformer):
         return IBDDExpression('property', f"{obj}.{prop}", [obj, prop])
 
     @staticmethod
-    def true_assignment(children):
+    def true_assignment():
         return []
 
     @staticmethod
@@ -643,13 +646,13 @@ def parse_ibdd(text: str) -> IBDDScenario:
         return parser.parse_ibdd_fallback(text)
 
 
-def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) -> None:
+def validate_ibdd_cases(json_file_path: str, output_destination: Optional[str] = None) -> None:
     """
     Valida casos IBDD de un archivo JSON y genera un informe
 
     Args:
         json_file_path: Ruta al archivo JSON con los casos IBDD
-        output_file: Ruta al archivo de salida (opcional)
+        output_destination: Ruta al archivo de salida (opcional)
     """
     try:
         print(f"Loading JSON file: {json_file_path}")
@@ -722,9 +725,9 @@ def validate_ibdd_cases(json_file_path: str, output_file: Optional[str] = None) 
         if len(results) > 0:
             print(f"\nSummary: {valid_count} of {len(results)} valid cases ({valid_count / len(results) * 100:.1f}%)")
 
-        if output_file:
-            print(f"\nSaving results to: {output_file}")
-            with open(output_file, 'w', encoding='utf-8') as f:
+        if output_destination:
+            print(f"\nSaving results to: {output_destination}")
+            with open(output_destination, 'w', encoding='utf-8') as f:
                 json.dump(results, f, indent=2, ensure_ascii=False)
             print(f"Results saved successfully")
 

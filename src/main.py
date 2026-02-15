@@ -82,8 +82,9 @@ class BDDToIBDDPipeline:
             f"Retry prompt not found. Tried: {retry_path}, {fallback}"
         )
 
+    @staticmethod
     def _get_validation_summary(
-        self, validation_output_path: str
+            validation_output_path: str
     ) -> Dict[str, Any]:
         """Load validation results and return a summary dict."""
         with open(validation_output_path, 'r', encoding='utf-8') as f:
@@ -158,7 +159,7 @@ class BDDToIBDDPipeline:
         try:
             validate_ibdd_cases(
                 json_file_path=translation_output_path,
-                output_file=validation_output_path
+                output_destination=validation_output_path
             )
             print(f"✓ Syntax validation completed: {validation_output_path}")
         except Exception as e:
@@ -227,7 +228,7 @@ class BDDToIBDDPipeline:
                     # Re-validate
                     validate_ibdd_cases(
                         json_file_path=translation_output_path,
-                        output_file=validation_output_path
+                        output_destination=validation_output_path
                     )
             except Exception as e:
                 print(f"⚠ Retry failed: {e}", file=sys.stderr)
@@ -310,9 +311,9 @@ class BDDToIBDDPipeline:
 
         return pipeline_metrics
 
+    @staticmethod
     def _merge_translations(
-        self,
-        original_translations_path: str,
+            original_translations_path: str,
         corrected_translations: list
     ) -> list:
         """
@@ -346,9 +347,9 @@ class BDDToIBDDPipeline:
 
         return updated_translations
 
+    @staticmethod
     def _collect_failed_cases(
-        self,
-        translation_output_path: str,
+            translation_output_path: str,
         validation_output_path: str
     ) -> list:
         """

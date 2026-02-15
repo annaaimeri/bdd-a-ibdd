@@ -2,7 +2,6 @@
 import argparse
 import json
 import os
-import random
 import sys
 import time
 from typing import Dict, Any, Optional, Union, List
@@ -124,35 +123,35 @@ class TranslationService:
             JSON schema for structured output (always wrapped in object)
         """
 
-        def infer_type(value):
-            if isinstance(value, str):
+        def infer_type(val):
+            if isinstance(val, str):
                 return {"type": "string"}
-            elif isinstance(value, bool):
+            elif isinstance(val, bool):
                 return {"type": "boolean"}
-            elif isinstance(value, int):
+            elif isinstance(val, int):
                 return {"type": "integer"}
-            elif isinstance(value, float):
+            elif isinstance(val, float):
                 return {"type": "number"}
-            elif isinstance(value, list):
-                if value:
+            elif isinstance(val, list):
+                if val:
                     return {
                         "type": "array",
-                        "items": infer_type(value[0])
+                        "items": infer_type(val[0])
                     }
                 return {"type": "array", "items": {"type": "string"}}
-            elif isinstance(value, dict):
-                properties = {}
-                required = []
-                for k, v in value.items():
-                    properties[k] = infer_type(v)
-                    required.append(k)
+            elif isinstance(val, dict):
+                props = {}
+                req = []
+                for k, v in val.items():
+                    props[k] = infer_type(v)
+                    req.append(k)
                 return {
                     "type": "object",
-                    "properties": properties,
-                    "required": required,
+                    "properties": props,
+                    "required": req,
                     "additionalProperties": False
                 }
-            elif value is None:
+            elif val is None:
                 return {"type": ["string", "null"]}
             else:
                 return {"type": "string"}
