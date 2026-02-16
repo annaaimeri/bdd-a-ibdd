@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, Optional, Union, List
 
 from dotenv import load_dotenv
@@ -17,12 +18,15 @@ except ModuleNotFoundError:
 
 
 class TranslationService:
+    # TODO: Consider adaptive parallelism (dynamic workers based on observed
+    # API errors/rate limits) to optimize throughput without losing cases.
     def __init__(
         self,
         api_key: str = None,
         provider: str = None,
         model: str = None,
         base_url: str = None,
+        workers: int = None,
     ):
         """
         Initialize the translation service.
@@ -32,6 +36,7 @@ class TranslationService:
             provider: LLM provider (openai, ollama)
             model: Model identifier
             base_url: Optional base URL for the LLM provider
+            workers: Number of parallel workers for API calls
         """
         load_dotenv()
 
@@ -39,6 +44,13 @@ class TranslationService:
         self.model = model or os.environ.get("LLM_MODEL", "gpt-4o")
         self.provider = provider or os.environ.get("LLM_PROVIDER", "openai")
         self.base_url = base_url or os.environ.get("LLM_BASE_URL")
+        env_workers = os.environ.get("LLM_WORKERS")
+        if workers is not None:
+            self.workers = max(1, int(workers))
+        elif env_workers:
+            self.workers = max(1, int(env_workers))
+        else:
+            self.workers = 1
         self.max_retries = 5
         self.base_delay = 1
 
@@ -284,7 +296,13 @@ class TranslationService:
         except Exception as e:
             print(f"Error saving response: {e}", file=sys.stderr)
 
-    def translate(self, json_file_path: str, prompt_file_path: str, output_file_path: str) -> None:
+    def translate(
+        self,
+        json_file_path: str,
+        prompt_file_path: str,
+        output_file_path: str,
+        workers: Optional[int] = None,
+    ) -> None:
         """
         Complete translation workflow from JSON to output via LLM.
         Processes cases individually with incremental saving and progress tracking.
@@ -293,10 +311,12 @@ class TranslationService:
             json_file_path: Path to the JSON file
             prompt_file_path: Path to the prompt template file
             output_file_path: Path where to save the translation
+            workers: Number of parallel workers (defaults to self.workers)
         """
         print("=" * 80)
         print("Starting individual case translation process...")
         print("=" * 80)
+        translation_start = time.time()
 
         # Load data
         json_data = self.read_json_file(json_file_path)
@@ -308,7 +328,9 @@ class TranslationService:
             sys.exit(1)
 
         total_cases = len(json_data)
+        workers = max(1, int(workers if workers is not None else self.workers))
         print(f"\nProcessing {total_cases} cases individually...")
+        print(f"Parallel workers: {workers}")
         print(f"Output will be saved incrementally to: {output_file_path}")
         print("-" * 80)
 
@@ -317,37 +339,72 @@ class TranslationService:
         failed_cases = []
         total_time = 0
 
-        # Process each case individually with progress bar
-        for case in tqdm(json_data, desc="Translating", unit="case"):
-            case_id = case.get('id', 'unknown')
+        case_order = [case.get('id', idx) for idx, case in enumerate(json_data)]
+        translated_map = {}
 
-            try:
-                translated_case = self.translate_single_case(case, prompt_template)
+        def save_incremental() -> None:
+            ordered_cases = [translated_map[cid] for cid in case_order if cid in translated_map]
+            self.save_response(ordered_cases, output_file_path)
 
-                if translated_case:
-                    translated_cases.append(translated_case)
-                    if '_metrics' in translated_case:
-                        total_time += translated_case['_metrics'].get('translation_time', 0)
+        if workers == 1:
+            # Sequential mode
+            for case in tqdm(json_data, desc="Translating", unit="case"):
+                case_id = case.get('id', 'unknown')
 
-                    # Incremental save after each successful translation
-                    self.save_response(translated_cases, output_file_path)
-                else:
+                try:
+                    translated_case = self.translate_single_case(case, prompt_template)
+
+                    if translated_case:
+                        translated_map[case_id] = translated_case
+                        translated_cases.append(translated_case)
+                        if '_metrics' in translated_case:
+                            total_time += translated_case['_metrics'].get('translation_time', 0)
+                        save_incremental()
+                    else:
+                        failed_cases.append({
+                            'id': case_id,
+                            'reason': 'API returned None'
+                        })
+                        print(f"\n⚠ Warning: Case {case_id} failed to translate", file=sys.stderr)
+
+                except Exception as e:
                     failed_cases.append({
                         'id': case_id,
-                        'reason': 'API returned None'
+                        'reason': str(e)
                     })
-                    print(f"\n⚠ Warning: Case {case_id} failed to translate", file=sys.stderr)
+                    print(f"\n✗ Error translating case {case_id}: {e}", file=sys.stderr)
+                    # Continue with next case instead of failing completely
+        else:
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                future_to_case_id = {
+                    executor.submit(self.translate_single_case, case, prompt_template): case.get('id', 'unknown')
+                    for case in json_data
+                }
+                for future in tqdm(as_completed(future_to_case_id), total=total_cases, desc="Translating", unit="case"):
+                    case_id = future_to_case_id[future]
+                    try:
+                        translated_case = future.result()
+                        if translated_case:
+                            translated_map[case_id] = translated_case
+                            translated_cases.append(translated_case)
+                            if '_metrics' in translated_case:
+                                total_time += translated_case['_metrics'].get('translation_time', 0)
+                            save_incremental()
+                        else:
+                            failed_cases.append({
+                                'id': case_id,
+                                'reason': 'API returned None'
+                            })
+                            print(f"\n⚠ Warning: Case {case_id} failed to translate", file=sys.stderr)
+                    except Exception as e:
+                        failed_cases.append({
+                            'id': case_id,
+                            'reason': str(e)
+                        })
+                        print(f"\n✗ Error translating case {case_id}: {e}", file=sys.stderr)
 
-            except Exception as e:
-                failed_cases.append({
-                    'id': case_id,
-                    'reason': str(e)
-                })
-                print(f"\n✗ Error translating case {case_id}: {e}", file=sys.stderr)
-                # Continue with next case instead of failing completely
-
-        # Final save
-        self.save_response(translated_cases, output_file_path)
+        # Final save (ordered)
+        save_incremental()
 
         # Print summary
         print("\n" + "=" * 80)
@@ -357,7 +414,8 @@ class TranslationService:
         print(f"Successfully translated: {len(translated_cases)}")
         print(f"Failed:            {len(failed_cases)}")
         print(f"Success rate:      {len(translated_cases)/total_cases*100:.1f}%")
-        print(f"Total time:        {total_time:.1f}s")
+        print(f"Wall-clock time:   {time.time() - translation_start:.1f}s")
+        print(f"Accumulated model time: {total_time:.1f}s")
         print(f"Average per case:  {total_time/len(translated_cases):.1f}s" if translated_cases else "N/A")
         print(f"Output saved to:   {output_file_path}")
 
@@ -375,7 +433,8 @@ class TranslationService:
     def retry_failed_translations(
         self,
         error_explanations: List[Dict[str, Any]],
-        retry_prompt_path: str = "docs/PROMPT_EN_RETRY.md"
+        retry_prompt_path: str = "docs/PROMPT_EN_RETRY.md",
+        workers: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         Retry translation for cases that failed parsing, using error analysis.
@@ -384,6 +443,7 @@ class TranslationService:
         Args:
             error_explanations: List of error explanation dicts (from IBDDErrorExplainer)
             retry_prompt_path: Path to the retry prompt template
+            workers: Number of parallel workers (defaults to self.workers)
 
         Returns:
             List of corrected translations (same format as original translation output)
@@ -400,46 +460,60 @@ class TranslationService:
         corrected_cases = []
         retry_failed_cases = []
 
-        # Process each failed case individually with progress bar
-        for error_exp in tqdm(error_explanations, desc="Retrying", unit="case"):
+        workers = max(1, int(workers if workers is not None else self.workers))
+
+        def process_retry_case(error_exp: Dict[str, Any]):
             case_id = error_exp.get('case_id', 'unknown')
-
             if not error_exp.get('success', False):
-                print(f"\n⚠ Skipping case {case_id} - error explanation failed")
-                retry_failed_cases.append(case_id)
-                continue
+                return case_id, None, 'error explanation failed'
 
-            try:
-                # Build the case JSON from original BDD
-                original_bdd = error_exp.get('original_bdd', {})
-                case_data = {
-                    'id': case_id,
-                    'given': original_bdd.get('given', ''),
-                    'when': original_bdd.get('when', ''),
-                    'then': original_bdd.get('then', '')
-                }
+            original_bdd = error_exp.get('original_bdd', {})
+            case_data = {
+                'id': case_id,
+                'given': original_bdd.get('given', ''),
+                'when': original_bdd.get('when', ''),
+                'then': original_bdd.get('then', '')
+            }
 
-                # Format error analysis for this specific case
-                error_analysis_text = IBDDErrorExplainer.format_error_analysis_for_retry(error_exp)
+            error_analysis_text = IBDDErrorExplainer.format_error_analysis_for_retry(error_exp)
+            case_retry_prompt = retry_prompt_template.replace('{error_analysis}', error_analysis_text)
+            corrected_case = self.translate_single_case(case_data, case_retry_prompt)
+            if corrected_case:
+                return case_id, corrected_case, None
+            return case_id, None, 'API returned None'
 
-                # Replace placeholder in retry prompt with this case's error analysis
-                case_retry_prompt = retry_prompt_template.replace(
-                    '{error_analysis}',
-                    error_analysis_text
-                )
-
-                # Translate this single case with error context
-                corrected_case = self.translate_single_case(case_data, case_retry_prompt)
-
-                if corrected_case:
-                    corrected_cases.append(corrected_case)
-                else:
-                    print(f"\n⚠ Warning: Retry failed for case {case_id}")
+        if workers == 1:
+            # Sequential mode
+            for error_exp in tqdm(error_explanations, desc="Retrying", unit="case"):
+                case_id = error_exp.get('case_id', 'unknown')
+                try:
+                    _, corrected_case, reason = process_retry_case(error_exp)
+                    if corrected_case:
+                        corrected_cases.append(corrected_case)
+                    else:
+                        print(f"\n⚠ Warning: Retry failed for case {case_id}: {reason}")
+                        retry_failed_cases.append(case_id)
+                except Exception as e:
+                    print(f"\n✗ Error retrying case {case_id}: {e}", file=sys.stderr)
                     retry_failed_cases.append(case_id)
-
-            except Exception as e:
-                print(f"\n✗ Error retrying case {case_id}: {e}", file=sys.stderr)
-                retry_failed_cases.append(case_id)
+        else:
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                future_to_case_id = {
+                    executor.submit(process_retry_case, error_exp): error_exp.get('case_id', 'unknown')
+                    for error_exp in error_explanations
+                }
+                for future in tqdm(as_completed(future_to_case_id), total=len(error_explanations), desc="Retrying", unit="case"):
+                    case_id = future_to_case_id[future]
+                    try:
+                        _, corrected_case, reason = future.result()
+                        if corrected_case:
+                            corrected_cases.append(corrected_case)
+                        else:
+                            print(f"\n⚠ Warning: Retry failed for case {case_id}: {reason}")
+                            retry_failed_cases.append(case_id)
+                    except Exception as e:
+                        print(f"\n✗ Error retrying case {case_id}: {e}", file=sys.stderr)
+                        retry_failed_cases.append(case_id)
 
         # Print summary
         print("\n" + "-" * 80)
@@ -462,6 +536,7 @@ def main():
     parser.add_argument('-k', '--api-key', help='API key (optional, can use OPENAI_API_KEY env variable)')
     parser.add_argument('-m', '--model', help='Model to use (e.g., gpt-4o, llama3.3:70b)')
     parser.add_argument('-r', '--max-retries', type=int, help='Maximum number of API retries (default: 5)')
+    parser.add_argument('-w', '--workers', type=int, default=1, help='Parallel workers for API calls (default: 1)')
     parser.add_argument('--provider', default=None, help='LLM provider: openai or ollama (default: openai)')
     parser.add_argument('--base-url', default=None, help='Optional base URL for LLM provider')
 
@@ -474,11 +549,12 @@ def main():
         provider=args.provider,
         model=args.model,
         base_url=args.base_url,
+        workers=args.workers,
     )
     if args.max_retries:
         service.max_retries = args.max_retries
 
-    service.translate(args.json_file, args.prompt_file, output_file)
+    service.translate(args.json_file, args.prompt_file, output_file, workers=args.workers)
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ LLM client abstraction using LangChain.
 import json
 import os
 import random
+import threading
 import time
 from typing import Any, Dict, List, Optional, Union
 
@@ -37,7 +38,15 @@ class LLMClient:
         self.base_url = base_url or os.environ.get("LLM_BASE_URL")
         self.temperature = temperature
         self.max_retries = max_retries
-        self._llm = self._build_llm()
+        self._thread_local = threading.local()
+
+    def _get_llm(self):
+        """Create one LLM client per thread to avoid concurrency issues."""
+        llm = getattr(self._thread_local, "llm", None)
+        if llm is None:
+            llm = self._build_llm()
+            self._thread_local.llm = llm
+        return llm
 
     def _build_llm(self):
         if self.provider == "openai":
@@ -89,12 +98,17 @@ class LLMClient:
                 },
             }
 
-            llm = self._llm.bind(response_format=response_format)
-            try:
-                msg = llm.invoke(messages)
-                return json.loads(msg.content)
-            except Exception:
-                return None
+            llm = self._get_llm().bind(response_format=response_format)
+            for attempt in range(1, self.max_retries + 1):
+                try:
+                    msg = llm.invoke(messages)
+                    return json.loads(msg.content)
+                except Exception:
+                    if attempt < self.max_retries:
+                        delay = 0.5 * (2 ** (attempt - 1)) + random.uniform(0, 0.5)
+                        time.sleep(delay)
+                    else:
+                        return None
 
         # Best-effort JSON for local models (validate if jsonschema is available)
         schema_hint = (
@@ -108,7 +122,7 @@ class LLMClient:
         ]
         for attempt in range(1, self.max_retries + 1):
             try:
-                msg = self._llm.invoke(messages_with_schema)
+                msg = self._get_llm().invoke(messages_with_schema)
                 content = msg.content
                 parsed = json.loads(content)
 

@@ -30,6 +30,7 @@ class BDDToIBDDPipeline:
         provider: Optional[str] = None,
         model: Optional[str] = None,
         base_url: Optional[str] = None,
+        workers: int = 1,
     ):
         """
         Initialize the pipeline.
@@ -39,12 +40,14 @@ class BDDToIBDDPipeline:
             provider: LLM provider (openai, ollama)
             model: Model identifier
             base_url: Optional base URL for the LLM provider
+            workers: Number of parallel workers for LLM API calls
         """
         self.translation_service = TranslationService(
             api_key,
             provider=provider,
             model=model,
             base_url=base_url,
+            workers=workers,
         )
         self.error_explainer = IBDDErrorExplainer(
             api_key,
@@ -146,7 +149,8 @@ class BDDToIBDDPipeline:
             self.translation_service.translate(
                 json_file_path=dataset_path,
                 prompt_file_path=prompt_path,
-                output_file_path=translation_output_path
+                output_file_path=translation_output_path,
+                workers=self.translation_service.workers,
             )
             print(f"✓ Translation completed: {translation_output_path}")
         except Exception as e:
@@ -213,6 +217,7 @@ class BDDToIBDDPipeline:
                 corrected = self.translation_service.retry_failed_translations(
                     error_explanations=explanations,
                     retry_prompt_path=retry_prompt_path,
+                    workers=self.translation_service.workers,
                 )
 
                 if corrected:
@@ -459,6 +464,14 @@ Examples:
         default=3,
         help='Maximum number of correction rounds (default: 3, 0 = no retries)'
     )
+    parser.add_argument(
+        '--workers',
+        type=int,
+        default=1,
+        help='Parallel workers for LLM API calls (default: 1)'
+    )
+    # TODO: Add a CLI flag for translation temperature to make performance
+    # and quality comparisons reproducible across runs.
 
     args = parser.parse_args()
 
@@ -481,11 +494,13 @@ Examples:
         provider=args.provider,
         model=args.model,
         base_url=args.base_url,
+        workers=args.workers,
     )
 
     # Display configuration
     print(f"Provider: {pipeline.translation_service.provider}")
     print(f"Model:    {pipeline.translation_service.model}")
+    print(f"Workers:  {pipeline.translation_service.workers}")
     print()
 
     # Run the pipeline

@@ -7,11 +7,11 @@
 \section{Selección del Modelo de Lenguaje}
 \label{sec:seleccion-modelo}
 
-La tarea central de este trabajo---traducir escenarios BDD en lenguaje natural a representaciones formales IBDD---requiere un modelo de lenguaje con capacidades de comprensión semántica, generación estructurada y consistencia sintáctica. Esta sección describe el proceso de evaluación comparativa que condujo a la selección del modelo utilizado.
+La tarea central de este trabajo, traducir escenarios BDD en lenguaje natural a representaciones formales IBDD, requiere un modelo de lenguaje con capacidades de comprensión semántica, generación estructurada y consistencia sintáctica. Esta sección describe el proceso de evaluación comparativa que condujo a la selección del modelo utilizado.
 
 \subsection{Metodología de Evaluación}
 
-Se evaluaron tres modelos de última generación: GPT-4o de OpenAI, Claude Sonnet 4 de Anthropic y Llama 3.3 70B de Meta. La selección de estos modelos responde a la diversidad de sus orígenes---propietario de uso general, propietario orientado a razonamiento, y de código abierto---y a su representatividad del estado del arte al momento de la evaluación.
+Se evaluaron tres modelos de última generación: GPT-4o de OpenAI, Claude Sonnet 4 de Anthropic y Llama 3.3 70B de Meta. La selección de estos modelos responde a la diversidad de sus orígenes (propietario de uso general, propietario orientado a razonamiento, y de código abierto) y a su representatividad del estado del arte al momento de la evaluación.
 
 La evaluación se realizó sobre un escenario de \textit{e-commerce} que involucra interacciones típicas de sistemas web: gestión de productos, carritos de compra, inventario y sesiones de usuario. Este escenario presenta desafíos característicos de la traducción BDD$\rightarrow$IBDD, ya que requiere identificar variables globales (inventario, carrito) y locales (producto, cantidad), inferir gates de interacción apropiados (\texttt{?click}, \texttt{?input}, \texttt{!add}, \texttt{!update}), establecer guardas lógicas para validaciones y definir asignaciones de estado correctas.
 
@@ -110,7 +110,7 @@ En esta traducción, el gate \texttt{!select\_prod} (gate de salida) se utiliza 
 
 Los resultados obtenidos son consistentes con hallazgos de la literatura. Karpurapu et al.~\cite{karpurapu2024llm} evaluaron varios LLMs (GPT-3.5, GPT-4, Llama-2-13B, PaLM-2) para la generación automática de tests de aceptación BDD a partir de historias de usuario. En su estudio, los modelos GPT exhibieron menor cantidad de errores sintácticos y mejor adherencia a las reglas y mejores prácticas de Gherkin al generar archivos \textit{feature}, mientras que Llama-2-13B mostró dificultades significativas en evaluaciones \textit{zero-shot}, con 130 instancias de palabras clave Gherkin ausentes y 335 instancias de patrones restringidos. Sus resultados también confirman que la técnica de \textit{few-shot prompting} produce mayor precisión que \textit{zero-shot}.
 
-Aunque el trabajo de Karpurapu et al. aborda la dirección inversa a la de este trabajo (historias de usuario $\rightarrow$ Gherkin, frente a Gherkin $\rightarrow$ IBDD), los patrones observados son similares: los modelos GPT mantienen consistencia sintáctica superior, Llama presenta dificultades recurrentes con formalismos sintácticos, y la provisión de ejemplos---como el caso de la impresora industrial incluido en el prompt de traducción---mejora los resultados. Esta convergencia refuerza la validez de la selección realizada.
+Aunque el trabajo de Karpurapu et al. aborda la dirección inversa a la de este trabajo (historias de usuario $\rightarrow$ Gherkin, frente a Gherkin $\rightarrow$ IBDD), los patrones observados son similares: los modelos GPT mantienen consistencia sintáctica superior, Llama presenta dificultades recurrentes con formalismos sintácticos, y la provisión de ejemplos (como el caso de la impresora industrial incluido en el prompt de traducción) mejora los resultados. Esta convergencia refuerza la validez de la selección realizada.
 
 \subsection{Modelo Seleccionado}
 
@@ -125,7 +125,7 @@ En la práctica, el sistema soporta actualmente dos proveedores: OpenAI (para mo
 
 \section{Selección de la Herramienta de Análisis Sintáctico}
 
-La validación sintáctica de las traducciones IBDD generadas por el LLM requiere una herramienta de análisis sintáctico (\textit{parsing}) capaz de verificar conformidad con la gramática formal IBDD. El analizador debe resolver ambigüedades sintácticas, proveer reportes de errores precisos, integrarse con Python---lenguaje de implementación del sistema---, ofrecer confiabilidad para uso en investigación, y permitir la especificación declarativa de la gramática en un formato legible.
+La validación sintáctica de las traducciones IBDD generadas por el LLM requiere una herramienta de análisis sintáctico (\textit{parsing}) capaz de verificar conformidad con la gramática formal IBDD. El analizador debe resolver ambigüedades sintácticas, proveer reportes de errores precisos, integrarse con Python (lenguaje de implementación del sistema), ofrecer confiabilidad para uso en investigación, y permitir la especificación declarativa de la gramática en un formato legible.
 
 \subsection{Lark: Características y Algoritmos}
 
@@ -149,7 +149,7 @@ El analizador Earley de Lark puede almacenar eficientemente todas las derivacion
 
 Se seleccionó Lark con el algoritmo Earley como herramienta de análisis sintáctico. El algoritmo Earley ofrece la flexibilidad necesaria para manejar la estructura anidada y las potenciales ambigüedades de la gramática IBDD, permite iteración ágil durante el desarrollo de dicha gramática, y cuenta con respaldo tanto industrial como académico. La gramática se especifica en formato EBNF, lo que facilita su lectura y mantenimiento, y el analizador provee información detallada sobre violaciones sintácticas que resulta útil para el ciclo de corrección iterativa.
 
-El compromiso de rendimiento respecto a LALR---aproximadamente un orden de magnitud más lento---se considera aceptable dado que el volumen de escenarios a procesar es moderado y la corrección es prioritaria sobre la velocidad en esta fase de investigación. Para un sistema de producción futuro, la migración a LALR sería recomendable una vez estabilizada la gramática IBDD.
+El compromiso de rendimiento respecto a LALR (aproximadamente un orden de magnitud más lento) se considera aceptable dado que el volumen de escenarios a procesar es moderado y la corrección es prioritaria sobre la velocidad en esta fase de investigación. Para un sistema de producción futuro, la migración a LALR sería recomendable una vez estabilizada la gramática IBDD.
 
 \section{Diseño del Prompt de Traducción}
 \label{sec:prompt-design}
@@ -182,7 +182,7 @@ Para la cláusula Then, las verificaciones del estado final se expresan como pos
 \subsection{Formato de Intercambio}
 \label{sec:formato-json}
 
-Se seleccionó JSON como formato de intercambio entre el sistema y el modelo de lenguaje, tanto para la representación de los escenarios BDD de entrada como para las traducciones IBDD de salida. Esta decisión se fundamenta en la relación entre los datos de entrenamiento de los modelos de lenguaje y su desempeño en tareas de generación estructurada. Los modelos de la familia GPT fueron entrenados sobre corpus masivos que incluyen una proporción significativa de datos en formato JSON, provenientes de repositorios de código fuente, documentación de APIs web, archivos de configuración y conjuntos de datos abiertos~\cite{placeholder:gpt-training-data}. Dado que estos modelos observaron millones de ejemplos de JSON bien formado durante su entrenamiento, han desarrollado una familiaridad inherente con la sintaxis de este formato que se manifiesta en dos niveles. A nivel de tokenización, el algoritmo \textit{Byte Pair Encoding} (BPE) utilizado por estos modelos ha aprendido a segmentar eficientemente las estructuras sintácticas características de JSON (llaves, corchetes, comillas, dos puntos), produciendo secuencias de tokens más compactas que las obtenidas con formatos menos representados en los datos de entrenamiento~\cite{sennrich2016bpe}. A nivel de generación, el modelo produce JSON con mayor consistencia estructural y menor tasa de errores de formato que otros formatos de serialización, precisamente porque ha internalizado los patrones sintácticos de JSON a partir de la exposición extensiva durante el entrenamiento. En consecuencia, la elección de JSON como formato de intercambio maximiza tanto la eficiencia de tokenización---reduciendo el consumo de tokens por solicitud---como la confiabilidad de las respuestas generadas.
+Se seleccionó JSON como formato de intercambio entre el sistema y el modelo de lenguaje, tanto para la representación de los escenarios BDD de entrada como para las traducciones IBDD de salida. Esta decisión se fundamenta en la relación entre los datos de entrenamiento de los modelos de lenguaje y su desempeño en tareas de generación estructurada. Los modelos de la familia GPT fueron entrenados sobre corpus masivos que incluyen una proporción significativa de datos en formato JSON, provenientes de repositorios de código fuente, documentación de APIs web, archivos de configuración y conjuntos de datos abiertos~\cite{openai2023gpt4}. Dado que estos modelos observaron millones de ejemplos de JSON bien formado durante su entrenamiento, han desarrollado una familiaridad inherente con la sintaxis de este formato que se manifiesta en dos niveles. A nivel de tokenización, el algoritmo \textit{Byte Pair Encoding} (BPE) utilizado por estos modelos ha aprendido a segmentar eficientemente las estructuras sintácticas características de JSON (llaves, corchetes, comillas, dos puntos), produciendo secuencias de tokens más compactas que las obtenidas con formatos menos representados en los datos de entrenamiento~\cite{sennrich2016bpe}. A nivel de generación, el modelo produce JSON con mayor consistencia estructural y menor tasa de errores de formato que otros formatos de serialización, precisamente porque ha internalizado los patrones sintácticos de JSON a partir de la exposición extensiva durante el entrenamiento. En consecuencia, la elección de JSON como formato de intercambio maximiza tanto la eficiencia de tokenización, al reducir el consumo de tokens por solicitud, como la confiabilidad de las respuestas generadas.
 
 El formato de entrada representa cada escenario BDD como un objeto JSON con campos \texttt{id}, \texttt{domain}, \texttt{title}, \texttt{given}, \texttt{when} y \texttt{then}. El formato de salida replica esta estructura incorporando un campo adicional, \texttt{ibdd\_representation}, que contiene la traducción IBDD como una cadena de texto con saltos de línea (\texttt{\textbackslash n}) para separar las cláusulas del escenario. Esta correspondencia estructural entre entrada y salida facilita la trazabilidad entre el escenario original y su traducción formal, y permite que el sistema preserve los metadatos del escenario (dominio, título) a lo largo del pipeline de procesamiento.
 
@@ -191,12 +191,28 @@ El formato de entrada representa cada escenario BDD como un objeto JSON con camp
 
 La evaluación del sistema de traducción requiere un conjunto de escenarios BDD que cubra diversidad de dominios, estructuras sintácticas y niveles de complejidad. Dado que no existe un corpus público de escenarios BDD anotados con traducciones IBDD de referencia, fue necesario construir un dataset específico para este trabajo.
 
-% TODO: Completar con detalles del proceso de construcción:
-% - Número total de escenarios en el dataset final
-% - Distribución por dominio
-% - Criterios de filtrado y curación manual aplicados
-% - Modelo utilizado para la generación sintética
-% - Métricas del dataset resultante (complejidad promedio, etc.)
+El dataset resultante contiene 120 escenarios BDD distribuidos en cinco dominios de aplicación y tres niveles de complejidad. La Tabla~\ref{tab:dataset-enfoque} resume su composición.
+
+\begin{table}[htbp]
+\centering
+\caption{Composición del dataset de escenarios BDD}
+\label{tab:dataset-enfoque}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Dominio} & \textbf{Simple} & \textbf{Medio} & \textbf{Complejo} & \textbf{Total} \\
+\hline
+Impresora       & 8  & 8  & 8  & 24 \\
+Calculadora     & 12 & 8  & 4  & 24 \\
+Comercio electrónico & 7  & 8  & 9  & 24 \\
+Banco           & 7  & 8  & 9  & 24 \\
+Biblioteca      & 7  & 8  & 9  & 24 \\
+\hline
+\textbf{Total}  & 41 & 40 & 39 & 120 \\
+\hline
+\end{tabular}
+\end{table}
+
+La selección del tamaño y la distribución del dataset responde a criterios estadísticos. Con 120 escenarios, cada caso individual representa el 0{,}83\,\% de la tasa de validez sintáctica (SVR), lo que proporciona una granularidad suficiente para detectar diferencias entre configuraciones experimentales. El diseño de cinco dominios y tres niveles de complejidad genera 15 celdas en la matriz dominio$\times$complejidad, con un mínimo de 7 y un promedio de 8 escenarios por celda. Este tamaño permite realizar análisis de estabilidad por subgrupo con intervalos de confianza razonables y aplicar pruebas estadísticas no paramétricas para comparaciones entre configuraciones.
 
 \subsection{Escenarios Canónicos de Referencia}
 
@@ -204,10 +220,13 @@ El punto de partida para la construcción del dataset fueron los escenarios can�
 
 \subsection{Generación Sintética de Escenarios}
 
-A partir de los escenarios canónicos, se generó un dataset sintético más amplio utilizando un modelo de lenguaje. El proceso de generación consistió en proveer al modelo los escenarios canónicos como ejemplos de referencia junto con instrucciones para producir nuevos escenarios BDD en formato Gherkin, representados como objetos JSON con la estructura estándar del sistema (campos \texttt{id}, \texttt{domain}, \texttt{title}, \texttt{given}, \texttt{when}, \texttt{then}). Se solicitaron escenarios que variaran en dominio de aplicación, complejidad de las interacciones y cantidad de pasos, manteniendo la plausibilidad funcional de las situaciones descritas.
+Los escenarios canónicos de referencia, si bien cubren los patrones fundamentales de IBDD, resultan insuficientes para una evaluación robusta del sistema. Un dataset de pocos escenarios concentrados en dos dominios no permite evaluar la capacidad de generalización del traductor ni proporciona la potencia estadística necesaria para comparar configuraciones experimentales. Para abordar esta limitación, se aplicó una estrategia de generación sintética de datos~\cite{feng2021survey_augmentation}, utilizando un LLM para producir nuevos escenarios BDD a partir de los canónicos.
 
-La generación sintética mediante un LLM presenta la ventaja de producir escenarios lingüísticamente diversos---con variaciones naturales en la redacción de las cláusulas Given, When y Then---que ejercitan la capacidad del sistema de traducción para manejar formulaciones heterogéneas de un mismo tipo de interacción. Esta diversidad es particularmente relevante dado que los escenarios BDD en entornos reales exhiben una variabilidad considerable en estilo y nivel de detalle según el autor. Al mismo tiempo, la generación sintética introduce el riesgo de escenarios que, si bien son gramaticalmente correctos en Gherkin, describen situaciones funcionalmente implausibles o ambiguas, lo cual requirió una revisión manual posterior del dataset generado.
-% TODO: Agregar referencia a sección/apéndice donde se documenta el proceso y criterios de la revisión manual del dataset.
+El proceso de ampliación del dataset se organizó en dos etapas. En la primera, se expandieron los dominios existentes para equilibrar la distribución de complejidad: el dominio de calculadora, que contenía casi exclusivamente escenarios simples, se complementó con escenarios de complejidad media y alta; el dominio de impresora se completó con escenarios simples adicionales. En la segunda etapa, se incorporaron tres nuevos dominios de aplicación: comercio electrónico, banco y biblioteca. Estos dominios fueron seleccionados por representar sistemas de software con patrones de interacción diferenciados entre sí: gestión de inventario y pagos, operaciones financieras con autorizaciones y cálculos numéricos, y administración de recursos compartidos con reservas y políticas temporales.
+
+La generación se realizó mediante prompting al LLM, proveyendo los escenarios canónicos como ejemplos de referencia junto con instrucciones para producir nuevos escenarios en formato Gherkin. Los escenarios generados se representaron como objetos JSON con la estructura estándar del sistema (campos \texttt{id}, \texttt{domain}, \texttt{title}, \texttt{given}, \texttt{when}, \texttt{then}, \texttt{complexity}). Se solicitó que los escenarios variaran en la cantidad de pasos, el tipo de interacciones y la presencia de precondiciones y postcondiciones compuestas, manteniendo la plausibilidad funcional de las situaciones descritas. Para cada dominio se generaron 24 escenarios con distribución aproximadamente uniforme entre los tres niveles de complejidad.
+
+La utilización de un LLM como herramienta de generación sintética permite obtener escenarios con variaciones naturales en la redacción de las cláusulas Given, When y Then~\cite{li2023synthetic_data}. Esta diversidad lingüística resulta relevante porque los escenarios BDD en entornos reales exhiben una variabilidad considerable en estilo y nivel de detalle según el autor, y el sistema de traducción debe ser capaz de manejar formulaciones heterogéneas de un mismo tipo de interacción. Como contrapartida, la generación sintética introduce el riesgo de producir escenarios que, si bien son gramaticalmente correctos en Gherkin, describen situaciones funcionalmente implausibles o ambiguas. Para mitigar este riesgo, cada escenario generado fue revisado manualmente, verificando su plausibilidad funcional, la coherencia entre las cláusulas Given, When y Then, y la ausencia de ambigüedades que pudieran afectar la traducción. Los escenarios que no cumplieron estos criterios fueron descartados o reformulados.
 
 \subsection{Dataset en Español}
 
@@ -217,9 +236,4 @@ Sin embargo, una porción significativa de la comunidad de desarrollo de softwar
 
 La inclusión de un dataset bilingüe permite evaluar el comportamiento del sistema ante escenarios en español, lo cual constituye una contribución relevante dado que no se han encontrado trabajos previos que aborden la traducción BDD$\rightarrow$IBDD desde escenarios en un idioma distinto del inglés. Se espera que el desempeño del sistema sea superior con escenarios en inglés, dado que los LLMs fueron entrenados sobre corpus con una proporción considerablemente mayor de texto en este idioma, y que la gramática IBDD emplea palabras clave en inglés (\texttt{GIVEN}, \texttt{WHEN}, \texttt{THEN}). No obstante, la evaluación bilingüe permite cuantificar esta diferencia y determinar si el sistema mantiene un nivel de desempeño aceptable con escenarios en español.
 
-% TODO: Completar con detalles del proceso de construcción:
-% - Número total de escenarios en el dataset final
-% - Distribución por dominio
-% - Criterios de filtrado y curación manual aplicados
-% - Modelo utilizado para la generación sintética
-% - Métricas del dataset resultante (complejidad promedio, etc.)
+La versión en español del dataset contiene los mismos 120 escenarios traducidos, preservando la estructura, la intención y el nivel de complejidad de cada caso. La traducción fue realizada de forma asistida y verificada manualmente para evitar ambigüedades introducidas por el cambio de idioma.

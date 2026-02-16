@@ -6,9 +6,9 @@
 \newcommand*{\supervisor}[1]{\gdef\@supervisor{#1}%
 }
 
-\def\default@supervisor{supervisor not set. Por favor.}
+\newcommand{\default@supervisor}{supervisor not set. Por favor.}
 % Initially set @supervisor to the default
-\def\@supervisor{\default@supervisor}
+\newcommand{\@supervisor}{\default@supervisor}
 
 % Single command to list all supervisors, using \and for line breaks
 \newcommand*{\supervisors}[1]{%
@@ -16,7 +16,7 @@
   \gdef\@supervisor{#1}%
 }
 
-\def\@carrera{Licenciado en (setear carrera)} % Default career title
+\newcommand{\@carrera}{Licenciado en (setear carrera)} % Default career title
 
 \newcommand*{\carrera}[1]{%
   \ifstrequal{#1}{computacion}{%

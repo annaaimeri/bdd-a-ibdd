@@ -82,10 +82,6 @@ El pipeline registra automáticamente las métricas de cada ejecución en un arc
 
 El dataset utilizado en los experimentos es el descrito en la Sección~\ref{sec:dataset}. Para la evaluación se emplean dos versiones del dataset: la versión original en inglés y su traducción al español, lo que permite ejecutar las cuatro configuraciones del diseño factorial.
 
-% TODO: Actualizar con el tamaño final del dataset cuando esté definido.
-% Actualmente son 30 casos (15 printer, 15 calculator, distribución
-% de complejidad: 16 simple, 10 medium, 4 complex).
-
 La Tabla~\ref{tab:dataset-composicion} resume la composición del dataset utilizado.
 
 \begin{table}[htbp]
@@ -96,11 +92,13 @@ La Tabla~\ref{tab:dataset-composicion} resume la composición del dataset utiliz
 \hline
 \textbf{Dominio} & \textbf{Simple} & \textbf{Medio} & \textbf{Complejo} & \textbf{Total} \\
 \hline
-% TODO: Actualizar estos valores con el dataset final.
-Impresora    & --  & --  & -- & -- \\
-Calculadora  & --  & --  & -- & -- \\
+Impresora       & 8  & 8  & 8  & 24 \\
+Calculadora     & 12 & 8  & 4  & 24 \\
+Comercio electrónico & 7  & 8  & 9  & 24 \\
+Banco           & 7  & 8  & 9  & 24 \\
+Biblioteca      & 7  & 8  & 9  & 24 \\
 \hline
-\textbf{Total} & -- & -- & -- & -- \\
+\textbf{Total}  & 41 & 40 & 39 & 120 \\
 \hline
 \end{tabular}
 \end{table}

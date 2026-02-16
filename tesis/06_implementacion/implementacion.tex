@@ -18,7 +18,7 @@ El sistema implementa un pipeline de cuatro etapas orquestado por la clase
     \texttt{parsed\_ibdd\_results.json}.
 
   \item \textbf{Análisis de errores} (Sección~\ref{sec:modulo-correccion}).
-    Los escenarios que fallaron en la validación sintáctica son procesados por un agente especializado---el \textit{explainer}---que diagnostica la causa del error y genera una explicación estructurada con sugerencias de corrección.
+    Los escenarios que fallaron en la validación sintáctica son procesados por un agente especializado, el \textit{explainer}, que diagnostica la causa del error y genera una explicación estructurada con sugerencias de corrección.
 
   \item \textbf{Reintento con correcciones} (Sección~\ref{sec:modulo-correccion}).
     Las explicaciones de error se inyectan en un prompt de reintento que solicita al LLM una nueva traducción informada por el diagnóstico previo. Las traducciones corregidas reemplazan únicamente los casos fallidos mediante una estrategia de fusión no destructiva, y el ciclo de validación se repite sobre los casos retraducidos.
@@ -51,7 +51,7 @@ var_list: var (COMMA var)*
 guard: LBRACKET expr RBRACKET
 \end{lstlisting}
 
-La cláusula \texttt{given} acepta opcionalmente una lista de variables locales seguida de una guarda entre corchetes. La cláusula \texttt{when} requiere al menos un switch, mientras que \texttt{then} acepta cero o más switches seguidos de una guarda final que representa la postcondición. Cada switch se compone de una interacción---un gate con dirección~(\texttt{?} para entrada, \texttt{!} para salida) y opcionalmente una lista de variables de interacción---seguida de una secuencia flexible de guardas, expresiones y asignaciones.
+La cláusula \texttt{given} acepta opcionalmente una lista de variables locales seguida de una guarda entre corchetes. La cláusula \texttt{when} requiere al menos un switch, mientras que \texttt{then} acepta cero o más switches seguidos de una guarda final que representa la postcondición. Cada switch se compone de una interacción (un gate con dirección~\texttt{?} para entrada o~\texttt{!} para salida, y opcionalmente una lista de variables de interacción) seguida de una secuencia flexible de guardas, expresiones y asignaciones.
 
 La regla \texttt{switch} merece atención particular. Su definición emplea una alternancia con repetición:
 
@@ -109,19 +109,19 @@ El sistema utiliza la funcionalidad de \textit{Structured Outputs} de OpenAI~\ci
 
 El uso de Structured Outputs en este sistema presenta dos ventajas concretas. La primera es la eliminación de errores de formato: sin esta restricción, el modelo podría devolver JSON malformado, incluir campos adicionales no solicitados, o envolver la respuesta en bloques de código Markdown, lo cual requeriría lógica de post-procesamiento frágil y propensa a errores. La segunda ventaja es la garantía de presencia del campo \texttt{ibdd\_representation}, que es donde el modelo deposita la traducción IBDD para cada escenario. Al declarar este campo como obligatorio en el esquema, se asegura que toda respuesta válida contenga la traducción solicitada.
 
-Cabe señalar que Structured Outputs garantiza la corrección estructural del JSON pero no la corrección sintáctica del contenido IBDD. El campo \texttt{ibdd\_representation} contiene una cadena de texto cuyo contenido---la traducción IBDD---requiere validación adicional mediante el analizador sintáctico descrito en la sección anterior. Esta distinción entre validación de formato (a cargo de Structured Outputs) y validación de contenido (a cargo del parser Earley) es fundamental en la arquitectura del sistema.
+Structured Outputs garantiza la corrección estructural del JSON pero no la corrección sintáctica del contenido IBDD. El campo \texttt{ibdd\_representation} contiene una cadena de texto cuyo contenido, la traducción IBDD, requiere validación adicional mediante el analizador sintáctico descrito en la sección anterior. Esta distinción entre validación de formato (a cargo de Structured Outputs) y validación de contenido (a cargo del parser Earley) es fundamental en la arquitectura del sistema.
 
 \subsection{Inferencia Dinámica del Esquema}
 
 El esquema JSON que se envía a la API no se define estáticamente, sino que se infiere dinámicamente a partir de la estructura de los datos de entrada mediante el método \texttt{create\_response\_schema}. Este método recorre recursivamente el JSON de entrada, determina el tipo de cada campo (\texttt{string}, \texttt{integer}, \texttt{boolean}, \texttt{array}, \texttt{object}) y construye un esquema compatible con JSON Schema que replica la estructura observada. Adicionalmente, el método inyecta automáticamente el campo \texttt{ibdd\_representation} de tipo \texttt{string} si este no está presente en los datos de entrada, asegurando que el esquema resultante siempre incluya el campo de salida requerido para la traducción.
 
-Para entradas de tipo arreglo---el caso habitual, donde se procesa un conjunto de escenarios---el esquema resultante envuelve los elementos en un objeto con un campo \texttt{items} de tipo arreglo. Esta envoltura responde a un requisito técnico de la API de OpenAI, que exige que el esquema raíz sea de tipo objeto. El servicio de traducción deshace esta envoltura al recibir la respuesta, extrayendo de manera transparente el arreglo de escenarios traducidos.
+Para entradas de tipo arreglo (el caso habitual, donde se procesa un conjunto de escenarios), el esquema resultante envuelve los elementos en un objeto con un campo \texttt{items} de tipo arreglo. Esta envoltura responde a un requisito técnico de la API de OpenAI, que exige que el esquema raíz sea de tipo objeto. El servicio de traducción deshace esta envoltura al recibir la respuesta, extrayendo de manera transparente el arreglo de escenarios traducidos.
 
 La inferencia dinámica permite que el sistema se adapte a variaciones en la estructura del \textit{dataset} de entrada sin requerir modificaciones en el código. Si se agregan campos al JSON de entrada (por ejemplo, notas o metadatos adicionales), el esquema inferido los incorporará automáticamente y el modelo los preservará en la salida.
 
 \subsection{Procesamiento de Escenarios}
 
-El servicio procesa los escenarios de manera individual: cada escenario BDD se envía como una solicitud independiente a la API y su traducción se persiste de manera incremental en el archivo de salida. Esta estrategia de procesamiento individual---en contraposición al envío de todos los escenarios en una única solicitud---responde a dos consideraciones.
+El servicio procesa los escenarios de manera individual: cada escenario BDD se envía como una solicitud independiente a la API y su traducción se persiste de manera incremental en el archivo de salida. Esta estrategia de procesamiento individual, en contraposición al envío de todos los escenarios en una única solicitud, responde a dos consideraciones.
 
 La primera es la reducción del costo de las llamadas a la API. El envío del dataset completo en una única solicitud implicaría un prompt de entrada de gran tamaño, ya que cada escenario adicional incrementa el número de tokens de contexto. Dado que la API de OpenAI factura por cantidad de tokens procesados, tanto de entrada como de salida, y que el costo por token de salida es superior al de entrada, el procesamiento individual minimiza el contexto por solicitud y reduce el costo total. Además, las solicitudes con contextos extensos presentan mayor probabilidad de respuestas truncadas o degradadas en calidad cuando el modelo debe mantener coherencia a lo largo de una salida muy extensa.
 
@@ -140,7 +140,7 @@ Antes del análisis, cada texto IBDD se somete a un preprocesamiento que normali
 
 La validación opera en modo por lotes: el sistema procesa secuencialmente todos los escenarios de un archivo JSON, registrando para cada uno si el análisis fue exitoso o, en caso de fallo, el mensaje de error del analizador. Los resultados se persisten en un archivo JSON que asocia cada escenario con su estado de validación (\texttt{valid: true/false}), el dominio, el título y, cuando corresponde, el mensaje de error y la representación parseada del escenario. Este informe estructurado sirve como insumo para las etapas posteriores del pipeline.
 
-El módulo incluye además un analizador de respaldo (\textit{fallback parser}) basado en expresiones regulares que se activa cuando el analizador Earley no logra procesar un texto IBDD. Este analizador alternativo extrae los componentes principales del escenario---variables de la cláusula Given, gates de la cláusula When y postcondición de la cláusula Then---mediante patrones de coincidencia, produciendo una representación parcial pero útil para el diagnóstico de errores.
+El módulo incluye además un analizador de respaldo (\textit{fallback parser}) basado en expresiones regulares que se activa cuando el analizador Earley no logra procesar un texto IBDD. Este analizador alternativo extrae los componentes principales del escenario (variables de la cláusula Given, gates de la cláusula When y postcondición de la cláusula Then) mediante patrones de coincidencia, produciendo una representación parcial pero útil para el diagnóstico de errores.
 
 \section{Módulo de Corrección Iterativa}
 \label{sec:modulo-correccion}
@@ -161,7 +161,7 @@ Para cada caso fallido, el explicador construye un prompt de análisis que prese
 
 \subsection{Reintento con Contexto de Error}
 
-El reintento de traducción utiliza un prompt especializado que extiende el prompt de traducción inicial con información del error. El prompt de reintento contiene las mismas cinco secciones del prompt original---contexto, gramática, ejemplos, reglas y formato---pero incorpora al inicio una sección adicional de análisis de error, precedida por un encabezado que indica al modelo que se encuentra en modo de corrección. Esta sección se inyecta dinámicamente mediante un \textit{placeholder} \texttt{\{error\_analysis\}} que el sistema reemplaza con el diagnóstico formateado del caso específico.
+El reintento de traducción utiliza un prompt especializado que extiende el prompt de traducción inicial con información del error. El prompt de reintento contiene las mismas cinco secciones del prompt original (contexto, gramática, ejemplos, reglas y formato), pero incorpora al inicio una sección adicional de análisis de error, precedida por un encabezado que indica al modelo que se encuentra en modo de corrección. Esta sección se inyecta dinámicamente mediante un \textit{placeholder} \texttt{\{error\_analysis\}} que el sistema reemplaza con el diagnóstico formateado del caso específico.
 
 El formato del diagnóstico inyectado incluye el escenario BDD original, la traducción previa que falló, el error del parser, el análisis completo del explicador (tipo, ubicación, explicación y sugerencia de corrección) y las recomendaciones adicionales. De este modo, el modelo de traducción recibe el contexto completo del fallo y puede aplicar la corrección de manera informada. El prompt de reintento añade además una lista de verificación final que instruye al modelo a confirmar, antes de emitir la respuesta, que la corrección aborda el error específico identificado, que todos los corchetes están correctamente ubicados, que la sintaxis de gates es válida y que la traducción mantiene la correspondencia semántica con el escenario BDD original.
 
@@ -173,6 +173,6 @@ Las traducciones corregidas se integran al conjunto de resultados mediante una e
 
 Tras la fusión, el pipeline ejecuta una re-validación sintáctica sobre el archivo de traducciones actualizado, aplicando el mismo analizador Earley utilizado en la validación inicial. Esta re-validación cumple dos funciones: confirmar que las correcciones resolvieron efectivamente los errores de parsing, e identificar casos donde el reintento no logró producir una traducción conforme. Los resultados de la re-validación se persisten en el mismo archivo de validación, actualizando el estado de cada caso.
 
-Las etapas de análisis de errores y reintento se clasifican como no críticas dentro del pipeline: si alguna de ellas falla---por ejemplo, por un error de la API o un agotamiento de la cuota---el pipeline continúa con las traducciones originales y emite una advertencia. Esta decisión se fundamenta en que es preferible contar con traducciones parcialmente correctas (las exitosas de la primera pasada) que interrumpir todo el proceso por un fallo en la corrección de los casos problemáticos.
+Las etapas de análisis de errores y reintento se clasifican como no críticas dentro del pipeline: si alguna de ellas falla (por ejemplo, por un error de la API o un agotamiento de la cuota), el pipeline continúa con las traducciones originales y emite una advertencia. Esta decisión se fundamenta en que es preferible contar con traducciones parcialmente correctas (las exitosas de la primera pasada) que interrumpir todo el proceso por un fallo en la corrección de los casos problemáticos.
 
 % La validación semántica se identifica como trabajo futuro en el Capítulo de Conclusiones.
