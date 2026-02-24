@@ -31,6 +31,7 @@ class LLMClient:
         base_url: Optional[str] = None,
         temperature: float = 0.7,
         max_retries: int = 5,
+        request_timeout_s: int = 120,
     ) -> None:
         self.provider = (provider or os.environ.get("LLM_PROVIDER", "openai")).lower()
         self.model = model or os.environ.get("LLM_MODEL", "gpt-4o")
@@ -38,6 +39,7 @@ class LLMClient:
         self.base_url = base_url or os.environ.get("LLM_BASE_URL")
         self.temperature = temperature
         self.max_retries = max_retries
+        self.request_timeout_s = request_timeout_s
         self._thread_local = threading.local()
 
     def _get_llm(self):
@@ -63,6 +65,7 @@ class LLMClient:
                 api_key=self.api_key,
                 base_url=self.base_url,
                 temperature=self.temperature,
+                request_timeout=self.request_timeout_s,
             )
 
         if self.provider == "ollama":
