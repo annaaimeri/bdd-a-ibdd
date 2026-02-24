@@ -18,8 +18,6 @@ except ModuleNotFoundError:
 
 
 class TranslationService:
-    # TODO: Consider adaptive parallelism (dynamic workers based on observed
-    # API errors/rate limits) to optimize throughput without losing cases.
     def __init__(
         self,
         api_key: str = None,
@@ -346,6 +344,17 @@ class TranslationService:
             ordered_cases = [translated_map[cid] for cid in case_order if cid in translated_map]
             self.save_response(ordered_cases, output_file_path)
 
+        def build_failed_case(case: Dict[str, Any], reason: str) -> Dict[str, Any]:
+            failed_case = dict(case)
+            failed_case['ibdd_representation'] = ''
+            failed_case['_metrics'] = {
+                'translation_time': 0.0,
+                'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+                'translation_failed': True,
+                'failure_reason': reason,
+            }
+            return failed_case
+
         if workers == 1:
             # Sequential mode
             for case in tqdm(json_data, desc="Translating", unit="case"):
@@ -361,21 +370,28 @@ class TranslationService:
                             total_time += translated_case['_metrics'].get('translation_time', 0)
                         save_incremental()
                     else:
+                        failed_case = build_failed_case(case, 'API returned None')
+                        translated_map[case_id] = failed_case
                         failed_cases.append({
                             'id': case_id,
                             'reason': 'API returned None'
                         })
+                        save_incremental()
                         print(f"\n⚠ Warning: Case {case_id} failed to translate", file=sys.stderr)
 
                 except Exception as e:
+                    failed_case = build_failed_case(case, str(e))
+                    translated_map[case_id] = failed_case
                     failed_cases.append({
                         'id': case_id,
                         'reason': str(e)
                     })
+                    save_incremental()
                     print(f"\n✗ Error translating case {case_id}: {e}", file=sys.stderr)
                     # Continue with next case instead of failing completely
         else:
             with ThreadPoolExecutor(max_workers=workers) as executor:
+                case_by_id = {case.get('id', 'unknown'): case for case in json_data}
                 future_to_case_id = {
                     executor.submit(self.translate_single_case, case, prompt_template): case.get('id', 'unknown')
                     for case in json_data
@@ -391,16 +407,24 @@ class TranslationService:
                                 total_time += translated_case['_metrics'].get('translation_time', 0)
                             save_incremental()
                         else:
+                            source_case = case_by_id.get(case_id, {'id': case_id})
+                            failed_case = build_failed_case(source_case, 'API returned None')
+                            translated_map[case_id] = failed_case
                             failed_cases.append({
                                 'id': case_id,
                                 'reason': 'API returned None'
                             })
+                            save_incremental()
                             print(f"\n⚠ Warning: Case {case_id} failed to translate", file=sys.stderr)
                     except Exception as e:
+                        source_case = case_by_id.get(case_id, {'id': case_id})
+                        failed_case = build_failed_case(source_case, str(e))
+                        translated_map[case_id] = failed_case
                         failed_cases.append({
                             'id': case_id,
                             'reason': str(e)
                         })
+                        save_incremental()
                         print(f"\n✗ Error translating case {case_id}: {e}", file=sys.stderr)
 
         # Final save (ordered)

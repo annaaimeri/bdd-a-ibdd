@@ -114,7 +114,7 @@ Aunque el trabajo de Karpurapu et al. aborda la dirección inversa a la de este 
 
 \subsection{Modelo Seleccionado}
 
-Sobre la base de los resultados experimentales y su consistencia con la literatura, se seleccionó la familia de modelos GPT-4o de OpenAI como motor de lenguaje para el sistema de traducción. El modelo demostró corrección sintáctica en todas las traducciones generadas, alta uniformidad de calidad entre ejecuciones y capacidad de explorar enfoques alternativos genuinos. Si bien se trata de un modelo propietario que requiere acceso mediante la API de OpenAI, cuyo uso se factura por cantidad de tokens procesados, esta limitación se considera aceptable en el contexto del presente trabajo.
+Sobre la base de los resultados experimentales y su consistencia con la literatura, se seleccionó la familia de modelos GPT-4o de OpenAI como motor de lenguaje para el sistema de traducción. El modelo demostró corrección sintáctica en todas las traducciones generadas, alta uniformidad de calidad entre ejecuciones y capacidad de explorar enfoques alternativos genuinos.
 % TODO: revisar si queremos especificar la versión exacta de GPT-4o utilizada para los experimentos.
 
 No obstante, una decisión de diseño fundamental del sistema es su independencia respecto del modelo y del proveedor de lenguaje utilizados. Si bien GPT-4o demostró el mejor desempeño en la evaluación comparativa, la arquitectura del sistema abstrae la comunicación con el LLM mediante una capa de abstracción que parametriza tanto el modelo como el proveedor como variables de configuración. Esta abstracción permite intercambiar el modelo subyacente, ya sea entre versiones de un mismo proveedor o entre proveedores distintos, sin modificar ningún otro componente del pipeline.
