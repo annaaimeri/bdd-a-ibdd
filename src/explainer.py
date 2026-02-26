@@ -123,16 +123,16 @@ class IBDDErrorExplainer:
             case_id, original_bdd, generated_ibdd, parse_error
         )
 
-        # Llamar a la API de OpenAI
+        # Llamar al proveedor LLM configurado
         response = self._call_openai_api(analysis_prompt)
 
         if response:
             return {
                 "case_id": case_id,
                 "success": True,
-                "original_bdd": original_bdd,  # Incluir escenario BDD completo
-                "previous_translation": generated_ibdd,  # Incluir traducción que falló
-                "parse_error": parse_error,  # Incluir error del parser
+                "original_bdd": original_bdd,  # Conservar escenario BDD completo
+                "previous_translation": generated_ibdd,  # Conservar la traducción fallida
+                "parse_error": parse_error,  # Conservar mensaje del parser
                 "explanation": response.get("explanation", ""),
                 "error_type": response.get("error_type", "unknown"),
                 "error_location": response.get("error_location", ""),
@@ -143,7 +143,7 @@ class IBDDErrorExplainer:
             return {
                 "case_id": case_id,
                 "success": False,
-                "original_bdd": original_bdd,  # Incluir incluso en caso de falla
+                "original_bdd": original_bdd,  # Conservar incluso si falla el análisis
                 "previous_translation": generated_ibdd,
                 "parse_error": parse_error,
                 "error": "No se pudo generar la explicación"
@@ -196,7 +196,7 @@ Responde en formato JSON."""
     def _call_openai_api(self, prompt: str) -> Optional[Dict[str, Any]]:
         """Llama al LLM para analizar el error"""
 
-        # Definir el schema de respuesta
+        # Definir esquema de respuesta estructurada
         response_schema = {
             "type": "object",
             "properties": {
@@ -221,7 +221,7 @@ Responde en formato JSON."""
             )
             return response
         except Exception as e:
-            print(f"Error calling LLM API: {e}", file=sys.stderr)
+            print(f"Error al llamar al LLM: {e}", file=sys.stderr)
             return None
 
     def explain_multiple_errors(self, failed_cases: list) -> list:
@@ -256,7 +256,7 @@ Responde en formato JSON."""
             error_explanation: Diccionario con la explicación del error (del método explain_error)
 
         Returns:
-            Texto formateado listo para insertar en el placeholder {error_analysis}
+            Texto formateado listo para insertar en el placeholder `{error_analysis}`
         """
         original_bdd = error_explanation.get('original_bdd', {})
 
@@ -306,14 +306,14 @@ def main():
     # Inicializar explainer
     explainer = IBDDErrorExplainer()
 
-    # Preparar BDD original
+    # Preparar escenario BDD original
     original_bdd = {
         'given': args.given,
         'when': args.when,
         'then': args.then
     }
 
-    # Explicar el error
+    # Ejecutar análisis del error
     result = explainer.explain_error(
         case_id=args.case_id,
         original_bdd=original_bdd,
@@ -321,7 +321,7 @@ def main():
         parse_error=args.error
     )
 
-    # Imprimir resultados
+    # Imprimir resultado
     print("\n" + "=" * 80)
     print("Resultado del Análisis de Error")
     print("=" * 80)

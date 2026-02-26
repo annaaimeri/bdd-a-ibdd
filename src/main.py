@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Main orchestration script for BDD to IBDD translation workflow.
-This script coordinates the complete pipeline:
-1. Translate BDD scenarios to IBDD via LLM
-2. Parse and validate IBDD syntax
-3. Iterative correction loop (explain errors → retry → re-validate)
-4. Final summary with metrics
+Script principal de orquestación del flujo BDD -> IBDD.
+
+Coordina el pipeline completo:
+1. Traducción de escenarios BDD a IBDD con LLM
+2. Análisis y validación sintáctica de IBDD
+3. Ciclo de corrección iterativa (explicación -> reintento -> revalidación)
+4. Resumen final con métricas
 """
 import argparse
 import json
@@ -22,7 +23,7 @@ from src.explainer import IBDDErrorExplainer
 
 
 class BDDToIBDDPipeline:
-    """Orchestrates the complete BDD to IBDD translation and validation pipeline"""
+    """Orquesta el pipeline completo de traducción y validación BDD -> IBDD."""
 
     def __init__(
         self,
@@ -33,14 +34,14 @@ class BDDToIBDDPipeline:
         workers: int = 1,
     ):
         """
-        Initialize the pipeline.
+        Inicializa el pipeline.
 
         Args:
-            api_key: API key (optional, defaults to OPENAI_API_KEY env variable)
-            provider: LLM provider (openai, ollama)
-            model: Model identifier
-            base_url: Optional base URL for the LLM provider
-            workers: Number of parallel workers for LLM API calls
+            api_key: Clave de API (opcional, usa OPENAI_API_KEY por defecto)
+            provider: Proveedor de LLM (openai, ollama)
+            model: Identificador del modelo
+            base_url: URL base opcional del proveedor
+            workers: Cantidad de workers paralelos para llamadas al LLM
         """
         self.translation_service = TranslationService(
             api_key,
@@ -59,10 +60,10 @@ class BDDToIBDDPipeline:
     @staticmethod
     def _detect_retry_prompt_path(prompt_path: str) -> str:
         """
-        Auto-detect the retry prompt path based on the main prompt language.
+        Detecta automáticamente el prompt de reintento según el idioma del prompt base.
 
-        If the main prompt contains '_ES' in its filename, the Spanish retry
-        prompt is used; otherwise the English one is used.
+        Si el nombre del archivo contiene `_ES`, usa el prompt de reintento en
+        español; en caso contrario usa el de inglés.
         """
         prompt_dir = os.path.dirname(prompt_path)
         prompt_name = os.path.basename(prompt_path).upper()
@@ -76,20 +77,20 @@ class BDDToIBDDPipeline:
         if os.path.exists(retry_path):
             return retry_path
 
-        # Fallback to English
+        # Respaldo en inglés si no existe el prompt específico
         fallback = os.path.join(prompt_dir, 'PROMPT_EN_RETRY.md')
         if os.path.exists(fallback):
             return fallback
 
         raise FileNotFoundError(
-            f"Retry prompt not found. Tried: {retry_path}, {fallback}"
+            f"No se encontró el prompt de reintento. Se intentó con: {retry_path}, {fallback}"
         )
 
     @staticmethod
     def _get_validation_summary(
             validation_output_path: str
     ) -> Dict[str, Any]:
-        """Load validation results and return a summary dict."""
+        """Carga los resultados de validación y devuelve un resumen."""
         with open(validation_output_path, 'r', encoding='utf-8') as f:
             results = json.load(f)
 
@@ -114,36 +115,35 @@ class BDDToIBDDPipeline:
         max_rounds: int = 3,
     ) -> Dict[str, Any]:
         """
-        Run the complete pipeline with iterative correction.
+        Ejecuta el pipeline completo con corrección iterativa.
 
         Pipeline:
-            1. Translate BDD → IBDD via LLM
-            2. Validate syntax (Lark parser)
-            3. Iterative correction loop (up to max_rounds):
-               explain errors → retry translation → re-validate
-            4. Final summary
+            1. Traducción BDD -> IBDD con LLM
+            2. Validación sintáctica (parser de Lark)
+            3. Ciclo de corrección iterativa (hasta `max_rounds`)
+            4. Resumen final
 
         Args:
-            dataset_path: Path to the input dataset JSON file
-            prompt_path: Path to the prompt template file (.md)
-            translation_output_path: Path where translated IBDD will be saved
-            validation_output_path: Path where validation results will be saved
-            explanations_output_path: Path where error explanations will be saved
-            max_rounds: Maximum number of correction rounds (0 = no retries)
+            dataset_path: Ruta al dataset JSON de entrada
+            prompt_path: Ruta al archivo de prompt (.md)
+            translation_output_path: Ruta de salida de traducciones IBDD
+            validation_output_path: Ruta de salida de validación sintáctica
+            explanations_output_path: Ruta de salida de explicaciones de error
+            max_rounds: Máximo de rondas de corrección (0 = sin reintentos)
 
         Returns:
-            Dict with pipeline results and per-round metrics
+            Diccionario con resultados del pipeline y métricas por ronda
         """
         pipeline_start = time.time()
         retry_prompt_path = self._detect_retry_prompt_path(prompt_path)
 
         print("=" * 80)
-        print("BDD to IBDD Translation Pipeline")
-        print(f"Max correction rounds: {max_rounds}")
+        print("Pipeline de Traducción BDD -> IBDD")
+        print(f"Máximo de rondas de corrección: {max_rounds}")
         print("=" * 80)
 
-        # ── Step 1: Translate BDD to IBDD ──────────────────────────────
-        print("\n[Step 1/4] Translating BDD scenarios to IBDD...")
+        # Paso 1: traducción BDD -> IBDD
+        print("\n[Paso 1/4] Traduciendo escenarios BDD a IBDD...")
         print("-" * 80)
         try:
             self.translation_service.translate(
@@ -152,31 +152,31 @@ class BDDToIBDDPipeline:
                 output_file_path=translation_output_path,
                 workers=self.translation_service.workers,
             )
-            print(f"✓ Translation completed: {translation_output_path}")
+            print(f"✓ Traducción completada: {translation_output_path}")
         except Exception as e:
-            print(f"✗ Translation failed: {e}", file=sys.stderr)
+            print(f"✗ Falló la traducción: {e}", file=sys.stderr)
             sys.exit(1)
 
-        # ── Step 2: Validate syntax ────────────────────────────────────
-        print("\n[Step 2/4] Parsing and validating IBDD syntax...")
+        # Paso 2: validación sintáctica
+        print("\n[Paso 2/4] Analizando y validando sintaxis IBDD...")
         print("-" * 80)
         try:
             validate_ibdd_cases(
                 json_file_path=translation_output_path,
                 output_destination=validation_output_path
             )
-            print(f"✓ Syntax validation completed: {validation_output_path}")
+            print(f"✓ Validación sintáctica completada: {validation_output_path}")
         except Exception as e:
-            print(f"✗ Validation failed: {e}", file=sys.stderr)
+            print(f"✗ Falló la validación: {e}", file=sys.stderr)
             sys.exit(1)
 
-        # Record initial validation results
+        # Registrar resultados iniciales de validación
         initial_summary = self._get_validation_summary(validation_output_path)
         print(f"\n   Initial result: {initial_summary['passed']}/{initial_summary['total']} "
               f"passed ({initial_summary['passed']/initial_summary['total']*100:.1f}%)")
 
-        # ── Step 3: Iterative correction loop ──────────────────────────
-        print("\n[Step 3/4] Iterative correction loop...")
+        # Paso 3: ciclo de corrección iterativa
+        print("\n[Paso 3/4] Ciclo de corrección iterativa...")
         print("-" * 80)
 
         round_metrics: List[Dict[str, Any]] = []
@@ -185,33 +185,33 @@ class BDDToIBDDPipeline:
         for round_num in range(1, max_rounds + 1):
             round_start = time.time()
 
-            # Collect failed cases
+            # Recolectar casos fallidos
             failed_cases = self._collect_failed_cases(
                 translation_output_path,
                 validation_output_path
             )
 
             if not failed_cases:
-                print(f"\n✓ All cases passed — no correction needed"
+                print(f"\n✓ Todos los casos pasaron; no se requiere corrección"
                       + (f" (converged at round {round_num - 1})" if round_num > 1 else ""))
                 break
 
             print(f"\n── Round {round_num}/{max_rounds}: "
                   f"{len(failed_cases)} case(s) still failing ──")
 
-            # Explain errors
+            # Explicar errores
             try:
                 explanations = self.error_explainer.explain_multiple_errors(failed_cases)
                 all_explanations.extend(explanations)
             except Exception as e:
-                print(f"⚠ Error explanation failed: {e}", file=sys.stderr)
+                print(f"⚠ Falló la explicación de errores: {e}", file=sys.stderr)
                 round_metrics.append({
                     'round': round_num,
                     'error': str(e),
                 })
                 break
 
-            # Retry translations with error feedback
+            # Reintentar traducciones con retroalimentación del error
             corrected_ids = []
             try:
                 corrected = self.translation_service.retry_failed_translations(
@@ -223,22 +223,22 @@ class BDDToIBDDPipeline:
                 if corrected:
                     corrected_ids = [c['id'] for c in corrected]
 
-                    # Merge corrected translations
+                    # Fusionar correcciones sin sobrescribir casos correctos
                     updated = self._merge_translations(
                         translation_output_path, corrected
                     )
                     with open(translation_output_path, 'w', encoding='utf-8') as f:
                         json.dump(updated, indent=2, ensure_ascii=False, fp=f)
 
-                    # Re-validate
+                    # Revalidar después de aplicar correcciones
                     validate_ibdd_cases(
                         json_file_path=translation_output_path,
                         output_destination=validation_output_path
                     )
             except Exception as e:
-                print(f"⚠ Retry failed: {e}", file=sys.stderr)
+                print(f"⚠ Falló el reintento: {e}", file=sys.stderr)
 
-            # Gather post-round summary
+            # Consolidar resumen de la ronda
             post_summary = self._get_validation_summary(validation_output_path)
             round_time = time.time() - round_start
 
@@ -253,45 +253,45 @@ class BDDToIBDDPipeline:
                 'round_time': round(round_time, 2),
             })
 
-            print(f"   Round {round_num} result: {post_summary['passed']}/{post_summary['total']} "
+            print(f"   Resultado ronda {round_num}: {post_summary['passed']}/{post_summary['total']} "
                   f"passed ({post_summary['passed']/post_summary['total']*100:.1f}%) "
                   f"[{round_time:.1f}s]")
 
             if post_summary['failed'] == 0:
-                print(f"\n✓ All cases passed — converged at round {round_num}")
+                print(f"\n✓ Todos los casos pasaron; convergió en la ronda {round_num}")
                 break
         else:
             if max_rounds > 0:
-                print(f"\n⚠ Max correction rounds ({max_rounds}) reached")
+                print(f"\n⚠ Se alcanzó el máximo de rondas de corrección ({max_rounds})")
 
-        # Save all error explanations
+        # Guardar explicaciones de error acumuladas
         if all_explanations:
             with open(explanations_output_path, 'w', encoding='utf-8') as f:
                 json.dump(all_explanations, indent=2, ensure_ascii=False, fp=f)
 
-        # ── Step 4: Final Summary ──────────────────────────────────────
+        # Paso 4: resumen final
         pipeline_time = time.time() - pipeline_start
         final_summary = self._get_validation_summary(validation_output_path)
 
-        print("\n[Step 4/4] Final Summary")
+        print("\n[Paso 4/4] Resumen final")
         print("=" * 80)
 
-        print(f"Translation output:   {translation_output_path}")
-        print(f"Syntax validation:    {validation_output_path}")
+        print(f"Salida de traducción: {translation_output_path}")
+        print(f"Validación sintáctica:{' '}{validation_output_path}")
         if all_explanations:
-            print(f"Error explanations:   {explanations_output_path}")
+            print(f"Explicaciones de error: {explanations_output_path}")
 
-        print(f"\nSyntax Validation: {final_summary['passed']}/{final_summary['total']} "
+        print(f"\nValidación sintáctica: {final_summary['passed']}/{final_summary['total']} "
               f"passed ({final_summary['passed']/final_summary['total']*100:.1f}%)")
         if final_summary['failed_case_ids']:
-            print(f"Still failing: {final_summary['failed_case_ids']}")
+            print(f"Casos aún fallando: {final_summary['failed_case_ids']}")
 
-        print(f"Correction rounds used: {len(round_metrics)}/{max_rounds}")
-        print(f"Total pipeline time: {pipeline_time:.1f}s")
+        print(f"Rondas de corrección usadas: {len(round_metrics)}/{max_rounds}")
+        print(f"Tiempo total del pipeline: {pipeline_time:.1f}s")
         print("=" * 80)
         print()
 
-        # Build and save pipeline metrics
+        # Construir y guardar métricas del pipeline
         pipeline_metrics = {
             'model': self.translation_service.model,
             'provider': self.translation_service.provider,
@@ -312,7 +312,7 @@ class BDDToIBDDPipeline:
         metrics_path = translation_output_path.replace('.json', '_metrics.json')
         with open(metrics_path, 'w', encoding='utf-8') as f:
             json.dump(pipeline_metrics, indent=2, ensure_ascii=False, fp=f)
-        print(f"Pipeline metrics saved: {metrics_path}")
+        print(f"Métricas del pipeline guardadas: {metrics_path}")
 
         return pipeline_metrics
 
@@ -322,32 +322,32 @@ class BDDToIBDDPipeline:
         corrected_translations: list
     ) -> list:
         """
-        Merge corrected translations with original successful translations.
+        Fusiona traducciones corregidas con las traducciones originales exitosas.
 
         Args:
-            original_translations_path: Path to the original translation output file
-            corrected_translations: List of corrected translations from retry
+            original_translations_path: Ruta al archivo de traducciones original
+            corrected_translations: Lista de traducciones corregidas
 
         Returns:
-            Updated list of translations with corrections applied
+            Lista actualizada con las correcciones aplicadas
         """
-        # Load original translations
+        # Cargar traducciones originales
         with open(original_translations_path, 'r', encoding='utf-8') as f:
             original_translations = json.load(f)
 
-        # Create a map of case_id to corrected translation
+        # Indexar correcciones por `case_id` para reemplazo directo
         corrected_map = {case['id']: case for case in corrected_translations}
 
-        # Update original translations with corrections
+        # Reemplazar solo los casos corregidos y preservar el resto
         updated_translations = []
         for original in original_translations:
             case_id = original['id']
             if case_id in corrected_map:
-                # Use corrected version
+                # Usar versión corregida
                 updated_translations.append(corrected_map[case_id])
-                print(f"  → Case {case_id}: Using corrected translation")
+                print(f"  → Caso {case_id}: usando traducción corregida")
             else:
-                # Keep original
+                # Mantener versión original
                 updated_translations.append(original)
 
         return updated_translations
@@ -358,27 +358,27 @@ class BDDToIBDDPipeline:
         validation_output_path: str
     ) -> list:
         """
-        Collect all cases that failed parsing for error explanation.
+        Recolecta los casos que fallaron el parsing para enviarlos al explicador.
 
         Args:
-            translation_output_path: Path to the translation output file
-            validation_output_path: Path to the validation results file
+            translation_output_path: Ruta al archivo de traducciones
+            validation_output_path: Ruta al archivo de validación
 
         Returns:
-            List of failed cases with all necessary information for explanation
+            Lista de casos fallidos con la información necesaria para explicar el error
         """
-        # Load translation results (original BDD + generated IBDD)
+        # Cargar traducciones (BDD original + IBDD generado)
         with open(translation_output_path, 'r', encoding='utf-8') as f:
             translations = json.load(f)
 
-        # Load validation results (parsing success/failure + errors)
+        # Cargar resultados de validación (éxito/fallo + error)
         with open(validation_output_path, 'r', encoding='utf-8') as f:
             validations = json.load(f)
 
-        # Create a mapping of case ID to translation data
+        # Crear un mapa por ID para cruzar traducciones y validaciones
         translation_map = {case['id']: case for case in translations}
 
-        # Collect failed cases
+        # Recolectar casos fallidos con el contexto necesario
         failed_cases = []
         for validation in validations:
             if not validation.get('valid', True):
@@ -394,29 +394,29 @@ class BDDToIBDDPipeline:
                             'then': translation.get('then', '')
                         },
                         'generated_ibdd': translation.get('ibdd_representation', ''),
-                        'parse_error': validation.get('error', 'Unknown error')
+                        'parse_error': validation.get('error', 'Error desconocido')
                     })
 
         return failed_cases
 
 
 def main():
-    """Main entry point for the pipeline"""
+    """Punto de entrada principal del pipeline."""
     parser = argparse.ArgumentParser(
-        description='Complete BDD to IBDD translation and validation pipeline',
+        description='Pipeline completo de traducción y validación BDD -> IBDD',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  # Run with default paths
+Ejemplos:
+  # Ejecutar con rutas por defecto
   python src/main.py data/Dataset.json docs/PROMPT_EN.md
 
-  # Run with Spanish prompt (retry prompt auto-detected)
+  # Ejecutar con prompt en español (retry detectado automáticamente)
   python src/main.py data/Dataset.json docs/PROMPT_ES.md
 
-  # Run with more correction rounds
+  # Ejecutar con más rondas de corrección
   python src/main.py data/Dataset.json docs/PROMPT_EN.md --max-rounds 5
 
-  # Run with a specific model via Ollama
+  # Ejecutar con un modelo específico vía Ollama
   python src/main.py data/Dataset.json docs/PROMPT_EN.md \\
     --provider ollama -m llama3.3:70b
         """
@@ -424,71 +424,71 @@ Examples:
 
     parser.add_argument(
         'dataset',
-        help='Path to the input dataset JSON file'
+        help='Ruta al archivo JSON del dataset de entrada'
     )
     parser.add_argument(
         'prompt',
-        help='Path to the prompt template file (.md)'
+        help='Ruta al archivo de prompt (.md)'
     )
     parser.add_argument(
         '-t', '--translation-output',
         default='data/output.json',
-        help='Path for translation output (default: data/output.json)'
+        help='Ruta de salida de traducciones (default: data/output.json)'
     )
     parser.add_argument(
         '-v', '--validation-output',
         default='data/parsed_ibdd_results.json',
-        help='Path for validation output (default: data/parsed_ibdd_results.json)'
+        help='Ruta de salida de validación (default: data/parsed_ibdd_results.json)'
     )
     parser.add_argument(
         '-k', '--api-key',
-        help='API key (optional, can use OPENAI_API_KEY env variable)'
+        help='Clave API (opcional, puede usar OPENAI_API_KEY)'
     )
     parser.add_argument(
         '-m', '--model',
-        help='Model to use (e.g., gpt-4o, llama3.3:70b)'
+        help='Modelo a usar (ej.: gpt-4o, llama3.3:70b)'
     )
     parser.add_argument(
         '--provider',
         default=None,
-        help='LLM provider: openai or ollama (default: openai)'
+        help='Proveedor LLM: openai u ollama (default: openai)'
     )
     parser.add_argument(
         '--base-url',
         default=None,
-        help='Optional base URL for LLM provider'
+        help='URL base opcional del proveedor LLM'
     )
     parser.add_argument(
         '--max-rounds',
         type=int,
         default=3,
-        help='Maximum number of correction rounds (default: 3, 0 = no retries)'
+        help='Máximo de rondas de corrección (default: 3, 0 = sin reintentos)'
     )
     parser.add_argument(
         '--workers',
         type=int,
         default=1,
-        help='Parallel workers for LLM API calls (default: 1)'
+        help='Workers paralelos para llamadas al LLM (default: 1)'
     )
-    # TODO: Add a CLI flag for translation temperature to make performance
-    # and quality comparisons reproducible across runs.
+    # TODO: agregar un flag CLI para temperatura de traducción y así
+    # facilitar comparaciones reproducibles de rendimiento y calidad.
 
     args = parser.parse_args()
 
-    # Validate input files exist
+    # Validar que existan los archivos de entrada
     if not os.path.exists(args.dataset):
-        print(f"Error: Dataset file not found: {args.dataset}", file=sys.stderr)
+        print(f"Error: no se encontró el dataset: {args.dataset}", file=sys.stderr)
         sys.exit(1)
 
     if not os.path.exists(args.prompt):
-        print(f"Error: Prompt file not found: {args.prompt}", file=sys.stderr)
+        print(f"Error: no se encontró el prompt: {args.prompt}", file=sys.stderr)
         sys.exit(1)
 
-    # Create output directories if needed
+    # Crear directorios de salida si no existen
     os.makedirs(os.path.dirname(args.translation_output) or '.', exist_ok=True)
     os.makedirs(os.path.dirname(args.validation_output) or '.', exist_ok=True)
 
-    # Initialize and run pipeline
+    # Inicializar el pipeline
     pipeline = BDDToIBDDPipeline(
         api_key=args.api_key,
         provider=args.provider,
@@ -497,13 +497,13 @@ Examples:
         workers=args.workers,
     )
 
-    # Display configuration
-    print(f"Provider: {pipeline.translation_service.provider}")
-    print(f"Model:    {pipeline.translation_service.model}")
+    # Mostrar configuración efectiva
+    print(f"Proveedor: {pipeline.translation_service.provider}")
+    print(f"Modelo:    {pipeline.translation_service.model}")
     print(f"Workers:  {pipeline.translation_service.workers}")
     print()
 
-    # Run the pipeline
+    # Ejecutar el pipeline
     pipeline.run(
         dataset_path=args.dataset,
         prompt_path=args.prompt,

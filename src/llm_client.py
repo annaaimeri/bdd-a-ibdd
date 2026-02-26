@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-LLM client abstraction using LangChain.
+Abstracción de cliente LLM basada en LangChain.
 
-- OpenAI: uses json_schema structured outputs when supported.
-- Local (Ollama): best-effort JSON output with optional schema validation.
+- OpenAI: usa `json_schema` con salidas estructuradas cuando está disponible.
+- Local (Ollama): salida JSON en mejor esfuerzo con validación opcional de esquema.
 """
 import json
 import os
@@ -17,7 +17,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 try:
     from jsonschema import validate as jsonschema_validate
     from jsonschema import ValidationError as JsonSchemaValidationError
-except Exception:  # pragma: no cover - optional dependency
+except Exception:  # pragma: no cover - dependencia opcional
     jsonschema_validate = None
     JsonSchemaValidationError = Exception
 
@@ -43,7 +43,7 @@ class LLMClient:
         self._thread_local = threading.local()
 
     def _get_llm(self):
-        """Create one LLM client per thread to avoid concurrency issues."""
+        """Crea un cliente LLM por hilo para evitar problemas de concurrencia."""
         llm = getattr(self._thread_local, "llm", None)
         if llm is None:
             llm = self._build_llm()
@@ -56,8 +56,8 @@ class LLMClient:
 
             if not self.api_key:
                 raise ValueError(
-                    "OpenAI API key is required for provider=openai. "
-                    "Set OPENAI_API_KEY or pass api_key."
+                    "Se requiere clave de OpenAI para provider=openai. "
+                    "Definí OPENAI_API_KEY o pasá api_key."
                 )
 
             return ChatOpenAI(
@@ -78,7 +78,7 @@ class LLMClient:
                 format="json",
             )
 
-        raise ValueError(f"Unsupported LLM provider: {self.provider}")
+        raise ValueError(f"Proveedor LLM no soportado: {self.provider}")
 
     def generate_json(
         self,
@@ -113,7 +113,7 @@ class LLMClient:
                     else:
                         return None
 
-        # Best-effort JSON for local models (validate if jsonschema is available)
+        # JSON en mejor esfuerzo para modelos locales (validar si `jsonschema` está disponible)
         schema_hint = (
             "Return ONLY valid JSON that matches this JSON Schema. "
             "Do not include markdown or explanations. "

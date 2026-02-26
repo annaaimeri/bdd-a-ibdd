@@ -567,10 +567,10 @@ class IBDDParser:
     @staticmethod
     def _preprocess_text(text: str) -> str:
         """Preprocesamiento de texto IBDD"""
-        # 1. Convertir \n escapados a newlines reales
+        # 1. Convertir `\n` escapados a saltos de línea reales
         text = text.replace('\\n', '\n')
 
-        # 2. Procesar línea por línea SIN destruir la estructura
+        # 2. Procesar línea por línea sin destruir la estructura
         lines = []
         for line in text.split('\n'):
             line = line.strip()
@@ -579,7 +579,7 @@ class IBDDParser:
                 line = re.sub(r' +', ' ', line)
                 lines.append(line)
 
-        # 3. Retornar con newlines preservados
+        # 3. Retornar con saltos de línea preservados
         return '\n'.join(lines)
 
     def validate(self, text: str) -> bool:
@@ -642,7 +642,7 @@ def parse_ibdd(text: str) -> IBDDScenario:
     try:
         return parser.parse_text(text)
     except Exception:
-        print(f"Using fallback parser...")
+        print("Usando parser alternativo...")
         return parser.parse_ibdd_fallback(text)
 
 
@@ -655,30 +655,30 @@ def validate_ibdd_cases(json_file_path: str, output_destination: Optional[str] =
         output_destination: Ruta al archivo de salida (opcional)
     """
     try:
-        print(f"Loading JSON file: {json_file_path}")
+        print(f"Cargando archivo JSON: {json_file_path}")
         with open(json_file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        print(f"Initializing IBDD parser...")
+        print("Inicializando parser IBDD...")
         parser = IBDDParser(debug=False)
         results = []
 
-        print(f"Validating {len(data)} IBDD cases...\n")
+        print(f"Validando {len(data)} casos IBDD...\n")
 
         for i, case in enumerate(data, 1):
             case_id = case.get('id', i)
             domain = case.get('domain', 'unknown')
-            title = case.get('title', f'Case {case_id}')
+            title = case.get('title', f'Caso {case_id}')
             ibdd_text = case.get('ibdd_representation', '')
 
             if not ibdd_text:
-                print(f"\033[91m✗\033[0m Case {case_id}: {title} - No IBDD representation found")
+                print(f"\033[91m✗\033[0m Caso {case_id}: {title} - No se encontró representación IBDD")
                 results.append({
                     'id': case_id,
                     'domain': domain,
                     'title': title,
                     'valid': False,
-                    'error': 'No IBDD representation'
+                    'error': 'No se encontró representación IBDD'
                 })
                 time.sleep(0.3)
                 continue
@@ -690,13 +690,13 @@ def validate_ibdd_cases(json_file_path: str, output_destination: Optional[str] =
                 valid = True
                 error = None
                 parsed_result = str(scenario)
-                print(f"✓ Case {case_id}: {title} - Valid")
+                print(f"✓ Caso {case_id}: {title} - Válido")
 
             except Exception as e:
                 valid = False
                 error_message = str(e)
                 parsed_result = None
-                print(f"\033[91m✗ Case {case_id}: {title} - Invalid\033[0m")
+                print(f"\033[91m✗ Caso {case_id}: {title} - Inválido\033[0m")
                 print(f"  Error: {error_message}")
 
                 results.append({
@@ -723,28 +723,28 @@ def validate_ibdd_cases(json_file_path: str, output_destination: Optional[str] =
 
         valid_count = sum(1 for r in results if r['valid'])
         if len(results) > 0:
-            print(f"\nSummary: {valid_count} of {len(results)} valid cases ({valid_count / len(results) * 100:.1f}%)")
+            print(f"\nResumen: {valid_count} de {len(results)} casos válidos ({valid_count / len(results) * 100:.1f}%)")
 
         if output_destination:
-            print(f"\nSaving results to: {output_destination}")
+            print(f"\nGuardando resultados en: {output_destination}")
             with open(output_destination, 'w', encoding='utf-8') as f:
                 json.dump(results, f, indent=2, ensure_ascii=False)
-            print(f"Results saved successfully")
+            print("Resultados guardados correctamente")
 
             # csv_file = output_file.replace('.json', '.csv')
-            # print(f"Saving CSV to: {csv_file}")
+            # print(f"Guardando CSV en: {csv_file}")
             # df = pd.DataFrame(results)
             # df.to_csv(csv_file, index=False)
-            # print(f"CSV saved successfully")
+            # print("CSV guardado correctamente")
 
     except Exception as e:
-        print(f"\033[91mError processing file: {e}\033[0m")
+        print(f"\033[91mError al procesar el archivo: {e}\033[0m")
         sys.exit(1)
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python ibdd_parser.py <json_file> [output_file]")
+        print("Uso: python ibdd_parser.py <json_file> [output_file]")
         sys.exit(1)
 
     json_file = sys.argv[1]

@@ -20,21 +20,21 @@ except ModuleNotFoundError:
 class TranslationService:
     def __init__(
         self,
-        api_key: str = None,
-        provider: str = None,
-        model: str = None,
-        base_url: str = None,
-        workers: int = None,
+        api_key: Optional[str] = None,
+        provider: Optional[str] = None,
+        model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        workers: Optional[int] = None,
     ):
         """
-        Initialize the translation service.
+        Inicializa el servicio de traducción.
 
         Args:
-            api_key: API key (optional, defaults to OPENAI_API_KEY env variable)
-            provider: LLM provider (openai, ollama)
-            model: Model identifier
-            base_url: Optional base URL for the LLM provider
-            workers: Number of parallel workers for API calls
+            api_key: Clave API (opcional, usa OPENAI_API_KEY por defecto)
+            provider: Proveedor LLM (openai, ollama)
+            model: Identificador del modelo
+            base_url: URL base opcional del proveedor
+            workers: Cantidad de workers paralelos
         """
         load_dotenv()
 
@@ -64,59 +64,59 @@ class TranslationService:
     @staticmethod
     def read_json_file(json_file_path: str) -> Union[Dict[str, Any], List[Any]]:
         """
-        Read and parse JSON file.
+        Lee y parsea un archivo JSON.
 
         Args:
-            json_file_path: Path to the JSON file
+            json_file_path: Ruta al archivo JSON
 
         Returns:
-            Parsed JSON data
+            Datos JSON parseados
         """
         try:
-            print(f"Reading JSON file: {json_file_path}")
+            print(f"Leyendo archivo JSON: {json_file_path}")
             with open(json_file_path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
             if isinstance(data, list):
-                print(f"Successfully loaded JSON array with {len(data)} items")
+                print(f"JSON cargado correctamente (arreglo con {len(data)} elementos)")
             else:
-                print(f"Successfully loaded JSON with {len(data)} keys")
+                print(f"JSON cargado correctamente (objeto con {len(data)} claves)")
             return data
         except Exception as e:
-            print(f"Error reading JSON file: {e}", file=sys.stderr)
+            print(f"Error al leer el archivo JSON: {e}", file=sys.stderr)
             sys.exit(1)
 
     @staticmethod
     def read_prompt_file(prompt_file_path: str) -> str:
         """
-        Read prompt template from file.
+        Lee el prompt desde archivo.
 
         Args:
-            prompt_file_path: Path to the prompt file
+            prompt_file_path: Ruta al archivo de prompt
 
         Returns:
-            Prompt template as string
+            Contenido del prompt
         """
         try:
-            print(f"Reading prompt template: {prompt_file_path}")
+            print(f"Leyendo prompt: {prompt_file_path}")
             with open(prompt_file_path, 'r', encoding='utf-8') as file:
                 return file.read()
         except Exception as e:
-            print(f"Error reading prompt file: {e}", file=sys.stderr)
+            print(f"Error al leer el prompt: {e}", file=sys.stderr)
             sys.exit(1)
 
     @staticmethod
     def prepare_prompt(json_data: Union[Dict[str, Any], List[Any]], prompt_template: str) -> str:
         """
-        Prepare the prompt by combining the template with JSON data.
+        Prepara el prompt combinando la plantilla con los datos JSON.
 
         Args:
-            json_data: Parsed JSON data
-            prompt_template: The prompt template
+            json_data: Datos JSON parseados
+            prompt_template: Plantilla del prompt
 
         Returns:
-            Final prompt to send to the API
+            Prompt final a enviar al proveedor
         """
-        print("Preparing prompt with JSON data...")
+        print("Preparando prompt con datos JSON...")
         json_str = json.dumps(json_data, indent=2, ensure_ascii=False)
         final_prompt = f"{prompt_template}\n\nJSON Data:\n{json_str}"
         return final_prompt
@@ -124,13 +124,13 @@ class TranslationService:
     @staticmethod
     def create_response_schema(json_data: Union[Dict[str, Any], List[Any]]) -> Dict[str, Any]:
         """
-        Create a JSON schema based on the input JSON structure.
+        Crea un esquema JSON a partir de la estructura del JSON de entrada.
 
         Args:
-            json_data: The input JSON data
+            json_data: JSON de entrada
 
         Returns:
-            JSON schema for structured output (always wrapped in object)
+            JSON Schema para salida estructurada (siempre envuelto en objeto)
         """
 
         def infer_type(val):
@@ -169,7 +169,7 @@ class TranslationService:
         if isinstance(json_data, list):
             if json_data:
                 item_schema = infer_type(json_data[0])
-                # Add ibdd_representation field to the schema if not present
+                # Asegura que el campo de salida exista en el esquema
                 if item_schema.get("type") == "object":
                     if "ibdd_representation" not in item_schema.get("properties", {}):
                         item_schema["properties"]["ibdd_representation"] = {"type": "string"}
@@ -209,20 +209,20 @@ class TranslationService:
     def call_llm_api(self, prompt: str, json_data: Union[Dict[str, Any], List[Any]]) -> Optional[
         Union[Dict[str, Any], List[Any]]]:
         """
-        Call the LLM with the prepared prompt and structured output.
+        Invoca al LLM con el prompt preparado y salida estructurada.
 
         Args:
-            prompt: The prompt to send
-            json_data: Original JSON data for schema inference
+            prompt: Prompt a enviar
+            json_data: JSON original para inferencia del esquema
 
         Returns:
-            API response as dict/list or None on failure
+            Respuesta del proveedor como dict/list o `None` en caso de fallo
         """
         schema = self.create_response_schema(json_data)
         is_array_input = isinstance(json_data, list)
 
-        print(f"Calling LLM provider: {self.provider} | model: {self.model}")
-        print("Using Structured Outputs with JSON Schema when supported")
+        print(f"Llamando al proveedor LLM: {self.provider} | modelo: {self.model}")
+        print("Usando Structured Outputs con JSON Schema cuando esté disponible")
 
         response = self.llm_client.generate_json(
             system_prompt=(
@@ -247,28 +247,28 @@ class TranslationService:
         prompt_template: str
     ) -> Optional[Dict[str, Any]]:
         """
-        Translate a single BDD case to IBDD.
+        Traduce un caso BDD individual a IBDD.
 
         Args:
-            case: Single case dict with id, given, when, then
-            prompt_template: The prompt template to use
+            case: Caso individual con `id`, `given`, `when`, `then`
+            prompt_template: Plantilla de prompt a utilizar
 
         Returns:
-            Translated case with metrics, or None on failure
+            Caso traducido con métricas, o `None` si falla
         """
         start_time = time.time()
 
-        # Prepare prompt for this single case
+        # Preparar prompt para este caso individual
         final_prompt = self.prepare_prompt([case], prompt_template)
 
-        # Call API
+        # Invocar al proveedor
         response = self.call_llm_api(final_prompt, [case])
 
         elapsed_time = time.time() - start_time
 
         if response and isinstance(response, list) and len(response) > 0:
             translated_case = response[0]
-            # Add metrics to the response
+            # Registrar métricas del caso para análisis posterior
             translated_case['_metrics'] = {
                 'translation_time': round(elapsed_time, 2),
                 'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
@@ -280,19 +280,19 @@ class TranslationService:
     @staticmethod
     def save_response(response: Union[Dict[str, Any], List[Any]], output_file_path: str) -> None:
         """
-        Save the API response to a file.
+        Guarda la respuesta en archivo.
 
         Args:
-            response: The response dict/list from the API
-            output_file_path: Path where to save the response
+            response: Respuesta del proveedor
+            output_file_path: Ruta de salida
         """
         try:
-            print(f"Saving translation to: {output_file_path}")
+            print(f"Guardando traducción en: {output_file_path}")
             with open(output_file_path, 'w', encoding='utf-8') as file:
                 json.dump(response, file, indent=2, ensure_ascii=False)
-            print(f"Translation saved successfully")
+            print("Traducción guardada correctamente")
         except Exception as e:
-            print(f"Error saving response: {e}", file=sys.stderr)
+            print(f"Error al guardar la respuesta: {e}", file=sys.stderr)
 
     def translate(
         self,
@@ -302,37 +302,37 @@ class TranslationService:
         workers: Optional[int] = None,
     ) -> None:
         """
-        Complete translation workflow from JSON to output via LLM.
-        Processes cases individually with incremental saving and progress tracking.
+        Flujo completo de traducción desde JSON hacia salida mediante LLM.
+        Procesa casos de forma individual con guardado incremental y seguimiento.
 
         Args:
-            json_file_path: Path to the JSON file
-            prompt_file_path: Path to the prompt template file
-            output_file_path: Path where to save the translation
-            workers: Number of parallel workers (defaults to self.workers)
+            json_file_path: Ruta al archivo JSON
+            prompt_file_path: Ruta al prompt
+            output_file_path: Ruta de salida de traducciones
+            workers: Número de workers (usa `self.workers` por defecto)
         """
         print("=" * 80)
-        print("Starting individual case translation process...")
+        print("Iniciando traducción individual de casos...")
         print("=" * 80)
         translation_start = time.time()
 
-        # Load data
+        # Cargar insumos
         json_data = self.read_json_file(json_file_path)
         prompt_template = self.read_prompt_file(prompt_file_path)
 
-        # Ensure json_data is a list
+        # El dataset debe ser un arreglo de casos
         if not isinstance(json_data, list):
-            print("Error: Dataset must be a JSON array of cases", file=sys.stderr)
+            print("Error: el dataset debe ser un arreglo JSON de casos", file=sys.stderr)
             sys.exit(1)
 
         total_cases = len(json_data)
         workers = max(1, int(workers if workers is not None else self.workers))
-        print(f"\nProcessing {total_cases} cases individually...")
-        print(f"Parallel workers: {workers}")
-        print(f"Output will be saved incrementally to: {output_file_path}")
+        print(f"\nProcesando {total_cases} casos de forma individual...")
+        print(f"Workers paralelos: {workers}")
+        print(f"La salida se guardará incrementalmente en: {output_file_path}")
         print("-" * 80)
 
-        # Track results and metrics
+        # Estructuras para resultados y métricas
         translated_cases = []
         failed_cases = []
         total_time = 0
@@ -356,7 +356,7 @@ class TranslationService:
             return failed_case
 
         if workers == 1:
-            # Sequential mode
+            # Modo secuencial
             for case in tqdm(json_data, desc="Translating", unit="case"):
                 case_id = case.get('id', 'unknown')
 
@@ -370,14 +370,14 @@ class TranslationService:
                             total_time += translated_case['_metrics'].get('translation_time', 0)
                         save_incremental()
                     else:
-                        failed_case = build_failed_case(case, 'API returned None')
+                        failed_case = build_failed_case(case, 'La API devolvió None')
                         translated_map[case_id] = failed_case
                         failed_cases.append({
                             'id': case_id,
-                            'reason': 'API returned None'
+                            'reason': 'La API devolvió None'
                         })
                         save_incremental()
-                        print(f"\n⚠ Warning: Case {case_id} failed to translate", file=sys.stderr)
+                        print(f"\n⚠ Advertencia: el caso {case_id} no pudo traducirse", file=sys.stderr)
 
                 except Exception as e:
                     failed_case = build_failed_case(case, str(e))
@@ -387,8 +387,8 @@ class TranslationService:
                         'reason': str(e)
                     })
                     save_incremental()
-                    print(f"\n✗ Error translating case {case_id}: {e}", file=sys.stderr)
-                    # Continue with next case instead of failing completely
+                    print(f"\n✗ Error al traducir el caso {case_id}: {e}", file=sys.stderr)
+                    # Continuar con el siguiente caso evita abortar todo el lote
         else:
             with ThreadPoolExecutor(max_workers=workers) as executor:
                 case_by_id = {case.get('id', 'unknown'): case for case in json_data}
@@ -408,14 +408,14 @@ class TranslationService:
                             save_incremental()
                         else:
                             source_case = case_by_id.get(case_id, {'id': case_id})
-                            failed_case = build_failed_case(source_case, 'API returned None')
+                            failed_case = build_failed_case(source_case, 'La API devolvió None')
                             translated_map[case_id] = failed_case
                             failed_cases.append({
                                 'id': case_id,
-                                'reason': 'API returned None'
+                                'reason': 'La API devolvió None'
                             })
                             save_incremental()
-                            print(f"\n⚠ Warning: Case {case_id} failed to translate", file=sys.stderr)
+                            print(f"\n⚠ Advertencia: el caso {case_id} no pudo traducirse", file=sys.stderr)
                     except Exception as e:
                         source_case = case_by_id.get(case_id, {'id': case_id})
                         failed_case = build_failed_case(source_case, str(e))
@@ -425,33 +425,33 @@ class TranslationService:
                             'reason': str(e)
                         })
                         save_incremental()
-                        print(f"\n✗ Error translating case {case_id}: {e}", file=sys.stderr)
+                        print(f"\n✗ Error al traducir el caso {case_id}: {e}", file=sys.stderr)
 
-        # Final save (ordered)
+        # Guardado final en el orden original del dataset
         save_incremental()
 
-        # Print summary
+        # Resumen final de la etapa
         print("\n" + "=" * 80)
-        print("Translation Summary")
+        print("Resumen de traducción")
         print("=" * 80)
-        print(f"Total cases:        {total_cases}")
-        print(f"Successfully translated: {len(translated_cases)}")
-        print(f"Failed:            {len(failed_cases)}")
-        print(f"Success rate:      {len(translated_cases)/total_cases*100:.1f}%")
-        print(f"Wall-clock time:   {time.time() - translation_start:.1f}s")
-        print(f"Accumulated model time: {total_time:.1f}s")
-        print(f"Average per case:  {total_time/len(translated_cases):.1f}s" if translated_cases else "N/A")
-        print(f"Output saved to:   {output_file_path}")
+        print(f"Casos totales:          {total_cases}")
+        print(f"Traducidos correctamente: {len(translated_cases)}")
+        print(f"Fallidos:               {len(failed_cases)}")
+        print(f"Tasa de éxito:          {len(translated_cases)/total_cases*100:.1f}%")
+        print(f"Tiempo total (wall):    {time.time() - translation_start:.1f}s")
+        print(f"Tiempo acumulado del modelo: {total_time:.1f}s")
+        print(f"Promedio por caso:      {total_time/len(translated_cases):.1f}s" if translated_cases else "N/A")
+        print(f"Salida guardada en:     {output_file_path}")
 
         if failed_cases:
-            print("\nFailed cases:")
+            print("\nCasos fallidos:")
             for failed in failed_cases:
-                print(f"  - Case {failed['id']}: {failed['reason']}")
+                print(f"  - Caso {failed['id']}: {failed['reason']}")
 
         print("=" * 80)
 
         if not translated_cases:
-            print("\n✗ No cases were successfully translated", file=sys.stderr)
+            print("\n✗ No se pudo traducir ningún caso", file=sys.stderr)
             sys.exit(1)
 
     def retry_failed_translations(
@@ -461,26 +461,26 @@ class TranslationService:
         workers: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Retry translation for cases that failed parsing, using error analysis.
-        Processes each failed case individually.
+        Reintenta la traducción de casos que fallaron el parsing usando análisis de error.
+        Procesa cada caso de forma individual.
 
         Args:
-            error_explanations: List of error explanation dicts (from IBDDErrorExplainer)
-            retry_prompt_path: Path to the retry prompt template
-            workers: Number of parallel workers (defaults to self.workers)
+            error_explanations: Lista de explicaciones de error
+            retry_prompt_path: Ruta al prompt de reintento
+            workers: Número de workers (usa `self.workers` por defecto)
 
         Returns:
-            List of corrected translations (same format as original translation output)
+            Lista de traducciones corregidas (mismo formato que la salida original)
         """
         from src.explainer import IBDDErrorExplainer
 
-        print(f"\n[Retry] Attempting to correct {len(error_explanations)} failed translation(s)...")
+        print(f"\n[Retry] Intentando corregir {len(error_explanations)} traducción(es) fallida(s)...")
         print("-" * 80)
 
-        # Read retry prompt template
+        # Leer plantilla del prompt de reintento
         retry_prompt_template = self.read_prompt_file(retry_prompt_path)
 
-        # Track results
+        # Estructuras de resultados
         corrected_cases = []
         retry_failed_cases = []
 
@@ -489,7 +489,7 @@ class TranslationService:
         def process_retry_case(error_exp: Dict[str, Any]):
             case_id = error_exp.get('case_id', 'unknown')
             if not error_exp.get('success', False):
-                return case_id, None, 'error explanation failed'
+                return case_id, None, 'falló la explicación del error'
 
             original_bdd = error_exp.get('original_bdd', {})
             case_data = {
@@ -504,10 +504,10 @@ class TranslationService:
             corrected_case = self.translate_single_case(case_data, case_retry_prompt)
             if corrected_case:
                 return case_id, corrected_case, None
-            return case_id, None, 'API returned None'
+            return case_id, None, 'La API devolvió None'
 
         if workers == 1:
-            # Sequential mode
+            # Modo secuencial
             for error_exp in tqdm(error_explanations, desc="Retrying", unit="case"):
                 case_id = error_exp.get('case_id', 'unknown')
                 try:
@@ -515,10 +515,10 @@ class TranslationService:
                     if corrected_case:
                         corrected_cases.append(corrected_case)
                     else:
-                        print(f"\n⚠ Warning: Retry failed for case {case_id}: {reason}")
+                        print(f"\n⚠ Advertencia: falló el reintento para el caso {case_id}: {reason}")
                         retry_failed_cases.append(case_id)
                 except Exception as e:
-                    print(f"\n✗ Error retrying case {case_id}: {e}", file=sys.stderr)
+                    print(f"\n✗ Error al reintentar el caso {case_id}: {e}", file=sys.stderr)
                     retry_failed_cases.append(case_id)
         else:
             with ThreadPoolExecutor(max_workers=workers) as executor:
@@ -533,36 +533,36 @@ class TranslationService:
                         if corrected_case:
                             corrected_cases.append(corrected_case)
                         else:
-                            print(f"\n⚠ Warning: Retry failed for case {case_id}: {reason}")
+                            print(f"\n⚠ Advertencia: falló el reintento para el caso {case_id}: {reason}")
                             retry_failed_cases.append(case_id)
                     except Exception as e:
-                        print(f"\n✗ Error retrying case {case_id}: {e}", file=sys.stderr)
+                        print(f"\n✗ Error al reintentar el caso {case_id}: {e}", file=sys.stderr)
                         retry_failed_cases.append(case_id)
 
-        # Print summary
+        # Resumen de reintentos
         print("\n" + "-" * 80)
-        print(f"Retry Summary:")
-        print(f"  Attempted:  {len(error_explanations)}")
-        print(f"  Corrected:  {len(corrected_cases)}")
-        print(f"  Still failed: {len(retry_failed_cases)}")
+        print("Resumen de reintentos:")
+        print(f"  Intentados:   {len(error_explanations)}")
+        print(f"  Corregidos:   {len(corrected_cases)}")
+        print(f"  Aún fallidos: {len(retry_failed_cases)}")
         if retry_failed_cases:
-            print(f"  Failed IDs: {retry_failed_cases}")
+            print(f"  IDs fallidos: {retry_failed_cases}")
         print("-" * 80)
 
         return corrected_cases
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Translate JSON content using LLM with Structured Outputs')
-    parser.add_argument('json_file', help='Path to the JSON file')
-    parser.add_argument('prompt_file', help='Path to the prompt template file (.md)')
-    parser.add_argument('-o', '--output', help='Path to the output file (default: translation_output.json)')
-    parser.add_argument('-k', '--api-key', help='API key (optional, can use OPENAI_API_KEY env variable)')
-    parser.add_argument('-m', '--model', help='Model to use (e.g., gpt-4o, llama3.3:70b)')
-    parser.add_argument('-r', '--max-retries', type=int, help='Maximum number of API retries (default: 5)')
-    parser.add_argument('-w', '--workers', type=int, default=1, help='Parallel workers for API calls (default: 1)')
-    parser.add_argument('--provider', default=None, help='LLM provider: openai or ollama (default: openai)')
-    parser.add_argument('--base-url', default=None, help='Optional base URL for LLM provider')
+    parser = argparse.ArgumentParser(description='Traduce contenido JSON usando LLM con Structured Outputs')
+    parser.add_argument('json_file', help='Ruta al archivo JSON')
+    parser.add_argument('prompt_file', help='Ruta al archivo de prompt (.md)')
+    parser.add_argument('-o', '--output', help='Ruta del archivo de salida (default: translation_output.json)')
+    parser.add_argument('-k', '--api-key', help='Clave API (opcional, puede usar OPENAI_API_KEY)')
+    parser.add_argument('-m', '--model', help='Modelo a usar (ej.: gpt-4o, llama3.3:70b)')
+    parser.add_argument('-r', '--max-retries', type=int, help='Máximo de reintentos de API (default: 5)')
+    parser.add_argument('-w', '--workers', type=int, default=1, help='Workers paralelos para API (default: 1)')
+    parser.add_argument('--provider', default=None, help='Proveedor LLM: openai u ollama (default: openai)')
+    parser.add_argument('--base-url', default=None, help='URL base opcional del proveedor LLM')
 
     args = parser.parse_args()
 
@@ -577,6 +577,7 @@ def main():
     )
     if args.max_retries:
         service.max_retries = args.max_retries
+        service.llm_client.max_retries = args.max_retries
 
     service.translate(args.json_file, args.prompt_file, output_file, workers=args.workers)
 
