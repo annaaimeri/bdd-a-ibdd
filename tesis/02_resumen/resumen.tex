@@ -1,3 +1,8 @@
 \chapter*{Resumen}
 
+Esta tesis aborda la automatización de la traducción de escenarios BDD en lenguaje natural hacia representaciones IBDD, etapa inicial del pipeline BDD-a-MBT. Se propone un enfoque híbrido que combina generación con un modelo de lenguaje, validación sintáctica determinística mediante gramática formal IBDD (Lark/Earley) y un ciclo iterativo de corrección guiado por diagnóstico de errores.
+
+La evaluación se realizó con un protocolo reproducible sobre el conjunto de prueba de 90 escenarios (\textit{test}), con partición fija \textit{dev/test} (30/90), cuatro configuraciones lingüísticas (EN--EN, ES--EN, EN--ES, ES--ES), $N=5$ corridas por configuración y \texttt{max-rounds=3}. Los resultados muestran validez sintáctica final alta en todas las configuraciones (84.22\,\% a 91.11\,\%), con variabilidad acotada entre corridas. El ciclo de corrección aporta mejoras en todos los casos (ganancias entre 11.78 y 40.22 puntos porcentuales) y recupera una proporción relevante de traducciones inicialmente fallidas (53.03\,\% a 73.99\,\%).
+
+El análisis indica que el idioma del prompt se asocia con mayor fuerza a la calidad inicial que el idioma del dataset, y que las diferencias finales se reducen tras la corrección iterativa. También se identifican casos no convergentes al límite de tres rondas, con errores recurrentes en expresiones y listas, lo que delimita líneas concretas de mejora. En conjunto, los resultados sostienen la viabilidad del enfoque para producir traducciones IBDD sintácticamente válidas en condiciones experimentales controladas.
 

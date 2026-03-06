@@ -63,15 +63,12 @@ Este trabajo propone un enfoque híbrido que combina las capacidades de comprens
 
 La arquitectura del sistema se organiza en torno a dos componentes principales. El primero es un módulo de traducción basado en LLM que utiliza modelos de lenguaje pre-entrenados para interpretar escenarios Gherkin y generar candidatos de traducción IBDD, aprovechando la capacidad de los LLMs para capturar patrones semánticos complejos y realizar inferencias sobre información implícita. El segundo componente es un módulo de validación sintáctica para verificar las traducciones generadas contra la gramática formal IBDD, garantizando corrección estructural.
 
-El flujo del sistema opera de la siguiente manera: un escenario Gherkin es procesado por el LLM, que genera tres candidatos de traducción IBDD; estos candidatos son luego validados sintácticamente mediante Lark. Si la validación falla, se inicia un ciclo de corrección iterativa hasta obtener una representación IBDD válida.
+El flujo del sistema combina una etapa de traducción de escenarios BDD en formato Gherkin asistida por LLM con una etapa de validación sintáctica mediante el analizador Lark. Cuando una traducción no supera la validación, se activa un ciclo de corrección iterativa orientado a mejorar la conformidad con la gramática IBDD.
 
 La elección de LLMs se fundamenta en su demostrada capacidad para tareas de traducción entre lenguajes formales y naturales, como se evidencia en trabajos recientes sobre generación de código desde especificaciones~\cite{jiang2024codellm} y traducción de requisitos a modelos formales~\cite{soeken2012nlp}. Sin embargo, los LLMs por sí solos no garantizan corrección sintáctica ni consistencia formal, de ahí la necesidad del componente de validación.
 
-\section{Estructura del Documento}
-
-% TODO: Describir la organización del resto del documento,
-% indicando brevemente el contenido de cada capítulo.
-
 \section{Contribuciones}
 
-% TODO: Resumir las contribuciones y el trabajo efectivamente realizado.
+Esta tesis contribuye con el diseño e implementación de un pipeline automatizado para la traducción BDD$\rightarrow$IBDD que integra generación con LLM, validación sintáctica determinística y corrección iterativa de traducciones fallidas. También formaliza una estrategia de validación operativa basada en la gramática IBDD y parser Earley (Lark), con reportes estructurados de error reutilizables en el ciclo de reintento.
+
+En el plano experimental, se construye y documenta un protocolo reproducible con partición fija del conjunto de datos en desarrollo y prueba, múltiples corridas por configuración y métricas agregadas para controlar la estocasticidad del modelo. Sobre esa base, se realiza una evaluación cuantitativa en cuatro configuraciones lingüísticas de entrada/salida sobre el conjunto de prueba, permitiendo analizar validez inicial y final, ganancia por corrección y desempeño del proceso de corrección. Finalmente, el trabajo delimita el alcance actual del enfoque, analizando calidad sintáctica y señalando la fidelidad semántica como eje de extensión futura.

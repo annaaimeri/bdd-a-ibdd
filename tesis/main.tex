@@ -6,6 +6,7 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, decorations.pathreplacing}
 \usepackage{microtype}
+\usepackage{float}
 \usepackage{listings}
 \lstset{
   basicstyle=\ttfamily\small,
@@ -20,51 +21,44 @@
     style=numeric,
 ]{biblatex}
 \addbibresource{referencias.bib}
+\setcounter{biburlnumpenalty}{9000}
+\setcounter{biburlucpenalty}{9000}
+\setcounter{biburllcpenalty}{9000}
 
-% Monoespaciada más pequeña para que no desentone con el cuerpo a 12pt
 \let\Oldtexttt\texttt
 \renewcommand{\texttt}[1]{{\ttfamily\small #1}}
 
 \carrera{computacion}
-\title{De Lenguaje Natural a BDD: Traducción Automática con PLN.}
+\title{De Lenguaje Natural a BDD:\\[0.2cm] Traducción Automática con~PLN}
 \author{Anna Paula Aimeri Vicentin}
-\date{MES, 2026}
+\date{Marzo, 2026}
 \supervisors{Laura Brandán Briones}
 
 \begin{document}
 
-% Título
-
+\hypersetup{pageanchor=false}
 \maketitle
-
-% Agradecimientos
+\clearpage
+\hypersetup{pageanchor=true}
 
 \input{01_agradecimientos/agradecimientos}
-
-% Resumen y Abstract
 
 \input{02_resumen/resumen}
 \input{02_resumen/abstract}
 
 \clearpage
 
-% Índice
-
 \tableofcontents
 
 \clearpage
-
-% Capítulos
 
 \input{03_intro/intro}
 \input{04_marco_teorico/marco_teorico}
 \input{05_enfoque/enfoque}
 \input{06_implementacion/implementacion}
 \input{07_evaluacion/evaluacion}
-\input{08_discusion/discusion}
+% \input{08_discusion/discusion} % Integrado en 07_evaluacion/evaluacion.tex
 \input{09_conclusiones/conclusiones}
-
-% Bibliografía
 
 \printbibliography
 

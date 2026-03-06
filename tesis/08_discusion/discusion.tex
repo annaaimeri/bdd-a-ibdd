@@ -1,16 +1,31 @@
 \chapter{Discusión}
 
-% TODO: Párrafo introductorio.
-
 \section{Interpretación de Resultados}
 
-% TODO: Discusión en profundidad de los hallazgos.
-% Comparación con trabajos previos.
+Los resultados sobre el conjunto \textit{test} (90 casos) muestran que el enfoque híbrido propuesto es efectivo para producir traducciones IBDD sintácticamente válidas en las cuatro configuraciones experimentales. En términos agregados, la validez final se ubicó entre 84.22\,\% y 91.11\,\% (Tabla~\ref{tab:resultados-calidad-test90}), lo que indica que la combinación de generación con LLM y validación formal permite sostener un nivel alto de conformidad con la gramática objetivo.
+
+Un hallazgo central es la diferencia entre desempeño inicial y final. Las configuraciones con prompt en español parten de una validez inicial sustancialmente menor, pero recuperan gran parte de esa brecha tras aplicar corrección iterativa. En consecuencia, el mecanismo de reintento no actúa como un ajuste marginal, sino como un componente estructural del pipeline para estabilizar la calidad final entre configuraciones con condiciones lingüísticas distintas.
+
+La interpretación de RQ2 sugiere que el idioma del prompt está más asociado con la calidad inicial que el idioma del dataset. No obstante, dado el tamaño muestral por configuración ($N=5$), esta evidencia debe leerse como patrón empírico consistente dentro del protocolo adoptado y no como una afirmación causal general sobre cualquier modelo, prompt o dominio.
+
+Desde la perspectiva operativa, todas las configuraciones consumen en promedio el máximo de rondas permitido (\texttt{max-rounds=3}), lo que indica que el sistema mejora de manera sistemática, pero no converge tempranamente en el régimen actual. Este comportamiento es coherente con la existencia de un subconjunto de casos persistentemente difíciles, donde el diagnóstico y reintento corrigen parte de los errores, aunque no eliminan completamente la falla sintáctica residual.
+
+En relación con trabajos previos, los resultados acompañan la literatura que reporta mejor desempeño de modelos GPT en tareas de generación estructurada para contextos BDD, especialmente cuando se utiliza prompting con ejemplos. Al mismo tiempo, este trabajo extiende ese marco al incorporar validación formal determinística y corrección iterativa en un pipeline end-to-end BDD$\rightarrow$IBDD, aspecto menos desarrollado en estudios centrados únicamente en calidad textual de salida.
 
 \section{Limitaciones}
 
-% TODO: Limitaciones del enfoque y de la implementación actual.
+La principal limitación del estudio es que la evaluación cuantitativa se concentra en validez sintáctica. Una traducción aceptada por la gramática IBDD puede contener desalineaciones semánticas respecto del escenario BDD original, por lo que la métrica SVR no agota la noción de calidad de traducción.
 
-\section{Amenazas a la Validez}
+Una segunda limitación es el tamaño del muestreo estocástico por configuración ($N=5$). Este diseño permite estimar media, dispersión e intervalos de confianza, pero restringe el poder para comparaciones inferenciales más finas entre configuraciones cercanas.
 
-% TODO: Amenazas a la validez interna, externa y de constructo.
+También debe considerarse la dependencia del prompt y del conjunto de reglas de traducción utilizados. Parte del desempeño observado refleja decisiones de diseño del prompt y del mecanismo de corrección, por lo que cambios en estas piezas pueden modificar los resultados sin alterar la arquitectura general.
+
+Finalmente, la evaluación se realizó con un único modelo seleccionado y un conjunto acotado de dominios dentro del dataset construido. Aunque esto es adecuado para la pregunta de investigación de esta tesis, no garantiza transferencia automática a otros modelos, proveedores o colecciones de escenarios con distribuciones lingüísticas distintas.
+
+\section{Consideraciones de Validez}
+
+Para la validez interna, se mitigaron riesgos mediante partición fija dev/test, repetición de corridas por configuración y uso de un validador sintáctico determinístico. Aun así, persisten posibles fuentes de variación asociadas a la naturaleza estocástica del modelo y a cambios no controlados en el entorno del proveedor.
+
+Para la validez de constructo, la métrica principal (SVR) representa de forma directa la conformidad gramatical, pero no captura fidelidad semántica. Por lo tanto, las conclusiones deben entenderse estrictamente en términos de corrección sintáctica de la traducción.
+
+Para la validez externa, los hallazgos se sustentan en un dataset de 120 escenarios con evaluación final sobre 90 casos de test y cuatro configuraciones lingüísticas. Este alcance ofrece evidencia relevante para el contexto estudiado, pero su generalización a otros dominios, tamaños de dataset o configuraciones de prompting requiere validación adicional.

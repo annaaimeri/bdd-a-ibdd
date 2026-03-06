@@ -1,6 +1,5 @@
 \chapter{Evaluación}
-
-Este capítulo presenta la evaluación del sistema de traducción BDD$\rightarrow$IBDD. Se formulan las preguntas de investigación que guían los experimentos, se describe el diseño experimental adoptado para abordarlas, se definen las métricas utilizadas y se presentan y analizan los resultados obtenidos.
+\label{chap:evaluacion}
 
 \section{Preguntas de Investigación}
 
@@ -44,23 +43,32 @@ ES--ES & Español & Español \\
 
 La configuración EN--EN constituye la línea base, ya que tanto el prompt como el dataset fueron diseñados originalmente en inglés. Las configuraciones ES--EN y EN--ES aíslan el efecto del idioma del prompt y del dataset respectivamente, mientras que ES--ES evalúa el sistema operando íntegramente en español. Este diseño permite separar el efecto del idioma del prompt del efecto del idioma del dataset, y detectar si la coincidencia entre ambos idiomas incide en los resultados.
 
+\subsection{Partición del dataset (desarrollo y prueba)}
+
+Para evitar sesgos por ajuste sobre el mismo conjunto utilizado en la evaluación final, se adopta una partición fija del dataset de 120 escenarios en dos subconjuntos:
+
+\begin{itemize}
+  \item \textbf{Desarrollo (dev):} 30 escenarios.
+  \item \textbf{Prueba (test):} 90 escenarios.
+\end{itemize}
+
+La partición se definió de forma consistente con el historial de construcción del dataset: el subconjunto \textit{dev} coincide con la versión inicial de 30 escenarios que fue utilizada durante las etapas tempranas de ajuste y depuración, mientras que los 90 escenarios restantes conforman el conjunto \textit{test} reservado para la evaluación final. En términos de archivos, esto se materializa en \texttt{Dataset\_dev\_30.json} y \texttt{Dataset\_test\_90.json}, así como sus equivalentes en español.
+
+Una vez fijada la configuración del sistema sobre el conjunto \textit{dev}, las corridas reportadas en la Sección~\ref{sec:resultados} se realizarán exclusivamente sobre el conjunto \textit{test}.
+
 \subsection{Repeticiones y manejo de la estocasticidad}
 
-Los LLMs son modelos estocásticos: ante la misma entrada y con temperatura mayor a cero, pueden producir salidas distintas en cada ejecución. Una única corrida del pipeline no permite distinguir si un resultado refleja el comportamiento típico del sistema o una fluctuación aleatoria. Para obtener estimaciones confiables de las métricas, cada configuración se ejecuta $N$ veces de forma independiente.
+Los LLMs son modelos estocásticos: ante la misma entrada y con temperatura mayor a cero, pueden producir salidas distintas en cada ejecución. Una única corrida del pipeline no permite distinguir si un resultado refleja el comportamiento típico del sistema o una fluctuación aleatoria. Para obtener estimaciones confiables de las métricas, cada configuración se ejecuta $N$ veces de forma independiente sobre el conjunto \textit{test}.
 
-% TODO: Definir N (cantidad de repeticiones). Se recomienda N=30
-% para poder aplicar el Teorema Central del Límite y obtener
-% intervalos de confianza robustos. Si el presupuesto de API
-% es limitado, N=10 es un mínimo razonable.
+En la implementación experimental de este trabajo, $N$ se parametriza desde línea de comandos y se registra automáticamente junto con los resultados agregados. Para la evaluación final se adopta inicialmente $N=5$ corridas por configuración. Esta cantidad se considera un compromiso razonable entre obtener una estimación con variabilidad observable (evitando un número demasiado bajo de corridas, estadísticamente poco representativo) y mantener la ejecución dentro de los límites de tiempo y del alcance de este trabajo.
 
 A partir de las $N$ ejecuciones de cada configuración se calcula la media y la desviación estándar de cada métrica, y se construyen intervalos de confianza al 95\,\% mediante la distribución $t$ de Student.
-% TODO: Para comparar pares de configuraciones (por ejemplo, EN--EN vs ES--EN) se utiliza el test de Wilcoxon de rangos con signo, que no requiere el supuesto de normalidad y es apropiado para muestras pareadas de tamaño moderado.
 
 \subsection{Ciclo de corrección}
 
 En todas las configuraciones, el pipeline se ejecuta con un número máximo de rondas de corrección configurable mediante el parámetro \texttt{-{}-max-rounds}. En cada ronda, los casos que fallaron la validación sintáctica son procesados por el agente de análisis de errores y retraducidos con retroalimentación del diagnóstico. El ciclo se detiene cuando todos los casos superan la validación o cuando se alcanza el límite de rondas.
 
-% TODO: Definir el valor de max-rounds utilizado en los experimentos.
+El valor de \texttt{-{}-max-rounds} también se parametriza y queda registrado en los metadatos de cada ejecución para garantizar trazabilidad y reproducibilidad.
 
 Este diseño permite evaluar la convergencia del ciclo de corrección: para cada ejecución se registra cuántos casos se corrigen en cada ronda, lo que permite construir una curva de convergencia promediada sobre las $N$ repeticiones.
 
@@ -73,8 +81,10 @@ Cada ejecución del pipeline sigue el protocolo descrito a continuación:
   \item El sistema traduce cada escenario BDD de forma individual, registrando el tiempo de traducción por caso.
   \item Se valida sintácticamente cada traducción mediante el parser Earley.
   \item Se ejecuta el ciclo de corrección iterativo hasta convergencia o agotamiento del límite de rondas.
-  \item Se persisten las traducciones finales, los resultados de validación y las métricas del pipeline en archivos JSON.
+  \item Se guardan las traducciones finales, los resultados de validación y las métricas del pipeline en archivos JSON.
 \end{enumerate}
+
+Previo a estas corridas de evaluación final sobre \textit{test}, se realizan corridas de desarrollo sobre \textit{dev} con el único objetivo de depuración y ajuste del enfoque. Dichas corridas no se incluyen en el reporte cuantitativo final.
 
 El pipeline registra automáticamente las métricas de cada ejecución en un archivo \texttt{*\_metrics.json} que incluye: el modelo y proveedor utilizados, los resultados de validación iniciales y finales, el detalle por ronda de corrección (casos fallidos, casos corregidos, tiempo) y el tiempo total del pipeline.
 
@@ -82,11 +92,13 @@ El pipeline registra automáticamente las métricas de cada ejecución en un arc
 
 El dataset utilizado en los experimentos es el descrito en la Sección~\ref{sec:dataset}. Para la evaluación se emplean dos versiones del dataset: la versión original en inglés y su traducción al español, lo que permite ejecutar las cuatro configuraciones del diseño factorial.
 
-La Tabla~\ref{tab:dataset-composicion} resume la composición del dataset utilizado.
+El archivo consolidado contiene 120 escenarios (\texttt{Dataset.json} y su versión en español). Sin embargo, para el reporte de evaluación final se utiliza exclusivamente el subconjunto \textit{test} de 90 escenarios (y su contraparte en español), mientras que el subconjunto \textit{dev} de 30 escenarios queda reservado para ajuste y depuración.
+
+La Tabla~\ref{tab:dataset-composicion} resume la composición del dataset consolidado (120 escenarios) a partir del cual se deriva la partición \textit{dev/test}.
 
 \begin{table}[htbp]
 \centering
-\caption{Composición del dataset de evaluación}
+\caption{Composición del dataset consolidado (previo a la partición dev/test)}
 \label{tab:dataset-composicion}
 \begin{tabular}{lcccc}
 \hline
@@ -107,7 +119,7 @@ Cada escenario está clasificado por dominio de aplicación y por nivel de compl
 
 \section{Métricas}
 
-La evaluación utiliza métricas que capturan aspectos complementarios del desempeño del sistema. Se distinguen tres categorías: métricas de validez sintáctica, métricas del ciclo de corrección y métricas operativas.
+La evaluación utiliza métricas que capturan aspectos complementarios del desempeño del sistema. Se distinguen tres categorías: métricas de validez sintáctica, métricas del ciclo de corrección y métricas operativas. El criterio compartido entre estas categorías es que todas pueden calcularse a partir de la salida del parser y los metadatos registrados por el pipeline, sin requerir anotación humana ni traducciones de referencia. Esto garantiza objetividad y reproducibilidad de los resultados, a costa de no capturar la dimensión semántica de las traducciones.
 
 \subsection{Validez sintáctica}
 
@@ -121,6 +133,8 @@ La métrica principal es la \textit{tasa de validez sintáctica} (SVR, \textit{S
 Se distinguen dos variantes de esta métrica. $\text{SVR}_\text{inicial}$ mide la tasa de validez tras la primera traducción, sin correcciones. $\text{SVR}_\text{final}$ mide la tasa de validez tras completar el ciclo de corrección iterativo. La diferencia $\text{SVR}_\text{final} - \text{SVR}_\text{inicial}$ cuantifica la ganancia atribuible al mecanismo de corrección.
 
 Para cada configuración, se reportan la media y la desviación estándar de ambas variantes sobre las $N$ ejecuciones independientes.
+
+La elección de SVR como métrica principal se apoya en tres razones. En primer lugar, el resultado del parser Earley es determinístico ante una traducción dada: no interviene ningún juicio subjetivo en la medición, lo que garantiza reproducibilidad independientemente del evaluador. En segundo lugar, es directamente relevante para el objetivo del sistema, cuya función es producir traducciones conformes a la gramática IBDD. En tercer lugar, no requiere un corpus de traducciones de referencia anotadas manualmente, lo que resulta relevante dado que no existe un repositorio público de escenarios BDD con traducciones IBDD validadas.
 
 \subsection{Ciclo de corrección}
 
@@ -138,6 +152,8 @@ Para evaluar la efectividad del ciclo de corrección (RQ3) se definen las siguie
   \item[Correcciones por ronda:] cantidad de casos corregidos en cada ronda individual. Permite construir una curva de convergencia que muestra si la mayoría de las correcciones ocurren en las primeras rondas o si se distribuyen de forma uniforme.
 \end{description}
 
+La inclusión de estas tres métricas responde a la necesidad de evaluar el ciclo de corrección de manera cuantitativa y complementaria: RR sintetiza el beneficio neto del mecanismo, las rondas hasta convergencia caracterizan su velocidad, y la curva de correcciones por ronda revela si las mejoras se concentran en las primeras iteraciones o requieren múltiples rondas. Sin este conjunto de métricas no sería posible determinar si el ciclo aporta un beneficio real o si los escenarios que fallan en la primera traducción continúan fallando independientemente del número de intentos.
+
 \subsection{Estabilidad por caso}
 
 Para identificar escenarios que presentan dificultad persistente para el sistema, se analiza la estabilidad de los resultados a nivel de caso individual. Para cada escenario $i$ se calcula la proporción de ejecuciones (sobre las $N$ repeticiones) en las que su traducción resultó sintácticamente válida tras el ciclo completo:
@@ -147,16 +163,130 @@ Para identificar escenarios que presentan dificultad persistente para el sistema
 \label{eq:estabilidad}
 \end{equation}
 
-Un caso con estabilidad igual a 1 se traduce correctamente en todas las ejecuciones; un caso con estabilidad cercana a 0 resiste sistemáticamente la traducción. Esta métrica permite identificar patrones en los escenarios que resultan problemáticos para el LLM, como estructuras sintácticas inusuales o niveles de complejidad que exceden la capacidad del modelo.
+Un caso con estabilidad igual a 1 se traduce correctamente en todas las ejecuciones; un caso con estabilidad cercana a 0 resiste sistemáticamente la traducción. Esta métrica permite identificar patrones en los escenarios que resultan problemáticos para el LLM, como estructuras sintácticas inusuales o niveles de complejidad que exceden la capacidad del modelo. La estabilidad complementa la visión agregada de SVR con un análisis a nivel de caso individual, necesario para distinguir fallos aleatorios, que se resuelven en ejecuciones posteriores, de fallos sistemáticos, que persisten independientemente de la estocasticidad del modelo.
 
 \subsection{Métricas operativas}
 
-Se registra el tiempo de traducción por caso y el tiempo total del pipeline por ejecución. Si bien estas métricas no inciden directamente en la calidad de la traducción, permiten evaluar la viabilidad práctica del sistema y el costo computacional del ciclo de corrección iterativo.
+Se registra el tiempo de traducción por caso y el tiempo total del pipeline por ejecución. Si bien estas métricas no inciden directamente en la calidad de la traducción, permiten evaluar la viabilidad práctica del sistema y cuantificar la sobrecarga computacional introducida por el ciclo de corrección iterativo. En particular, la comparación del tiempo promedio por ronda permite estimar si el costo de cada iteración adicional se justifica por la ganancia en SVR que produce.
 
 \section{Resultados}
+\label{sec:resultados}
 
-% TODO: Presentación de resultados con tablas y figuras.
+Esta sección reporta los resultados finales obtenidos sobre el conjunto \textit{test} de 90 escenarios, con $N=5$ corridas por configuración y \texttt{max-rounds=3}. En consistencia con la Sección~\ref{sec:seleccion-modelo}, en todos los casos se utilizó el proveedor/modelo \texttt{openai/gpt-4o}.
+
+Las Tablas~\ref{tab:resultados-calidad-test90} y~\ref{tab:resultados-operativos-test90} presentan las métricas comparables entre configuraciones, reportadas como media y desvío estándar sobre las cinco corridas.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Métricas de calidad por configuración en \textit{test} (90 casos), $N=5$}
+\label{tab:resultados-calidad-test90}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Config.} & $\mathbf{SVR_{ini}}$ (\%) & $\mathbf{SVR_{fin}}$ (\%) & \textbf{Ganancia} (pp) & \textbf{Recovery} (\%) \\
+\hline
+EN--EN & 78.00 $\pm$ 4.40 & 89.78 $\pm$ 2.65 & 11.78 $\pm$ 3.57 & 53.03 $\pm$ 11.13 \\
+ES--EN & 45.78 $\pm$ 2.41 & 86.00 $\pm$ 2.56 & 40.22 $\pm$ 4.87 & 73.99 $\pm$ 5.64 \\
+EN--ES & 75.11 $\pm$ 3.90 & 91.11 $\pm$ 1.11 & 16.00 $\pm$ 3.65 & 63.67 $\pm$ 6.70 \\
+ES--ES & 46.00 $\pm$ 2.02 & 84.22 $\pm$ 2.41 & 38.22 $\pm$ 4.20 & 70.64 $\pm$ 5.39 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Métricas operativas por configuración en \textit{test} (90 casos), $N=5$}
+\label{tab:resultados-operativos-test90}
+\begin{tabular}{lcc}
+\hline
+\textbf{Config.} & \textbf{Rondas} & \textbf{Tiempo total (s)} \\
+\hline
+EN--EN & 3.00 & 877.84 $\pm$ 129.38 \\
+ES--EN & 3.00 & 1240.36 $\pm$ 52.52 \\
+EN--ES & 3.00 & 1017.89 $\pm$ 168.57 \\
+ES--ES & 3.00 & 1295.41 $\pm$ 117.56 \\
+\hline
+\end{tabular}
+\end{table}
+
+Para facilitar la lectura de la incertidumbre con $N=5$, la Tabla~\ref{tab:resultados-ic95-test90} resume el semiancho del intervalo de confianza al 95\,\% de las métricas de calidad.
+
+\begin{table}[H]
+\centering
+\caption{Semiancho del IC95 por configuración en \textit{test} (90 casos), $N=5$}
+\label{tab:resultados-ic95-test90}
+\begin{tabular}{lcccc}
+\hline
+\textbf{Config.} & $\mathbf{SVR_{ini}}$ & $\mathbf{SVR_{fin}}$ & \textbf{Ganancia} & \textbf{Recovery} \\
+\hline
+EN--EN & $\pm$5.47 & $\pm$3.29 & $\pm$4.43 & $\pm$13.82 \\
+ES--EN & $\pm$2.99 & $\pm$3.18 & $\pm$6.04 & $\pm$7.00 \\
+EN--ES & $\pm$4.84 & $\pm$1.38 & $\pm$4.53 & $\pm$8.32 \\
+ES--ES & $\pm$2.51 & $\pm$2.99 & $\pm$5.22 & $\pm$6.69 \\
+\hline
+\end{tabular}
+\end{table}
+
+En términos de calidad final, las configuraciones con prompt en inglés (EN--EN y EN--ES) combinan valores altos de $\text{SVR}_{fin}$ con menor cantidad de fallos residuales por corrida. En particular, EN--ES alcanza el mayor promedio final (91.11\,\%) y también el menor volumen de instancias inválidas al cierre del ciclo (40 sobre 450 casos evaluados en total para esa configuración). En contraste, las configuraciones con prompt en español muestran mayor dependencia del ciclo de corrección: parten con $\text{SVR}_{ini}$ más bajo y cierran con mayor cantidad de fallos residuales (63 en ES--EN y 71 en ES--ES sobre 450).
+
+Desde la perspectiva operativa, el tiempo total medio presenta diferencias consistentes entre configuraciones: EN--EN es la más rápida (877.84\,s), seguida por EN--ES (1017.89\,s), mientras que ES--EN y ES--ES exhiben tiempos superiores (1240.36\,s y 1295.41\,s, respectivamente). Dado que la media de rondas utilizadas es 3.00 en los cuatro casos, esta diferencia temporal es coherente con la mayor carga de correcciones en las configuraciones que parten con menor validez inicial.
+
+\subsection{Casos no convergentes tras tres rondas}
+
+El análisis de los archivos de validación finales (\texttt{*\_validation.json}) permite identificar los casos que permanecen inválidos al agotar \texttt{max-rounds=3}. Sobre 20 ejecuciones totales (4 configuraciones $\times$ 5 corridas), se registran 220 instancias inválidas finales. No obstante, la no convergencia persistente es acotada: solo dos casos fallan en las cinco corridas de una misma configuración, el caso 68 en ES--EN y el caso 47 en ES--ES.
+
+En estos casos persistentes, los mensajes de error se concentran en patrones sintácticos recurrentes: uso no esperado de corchetes en expresiones (\texttt{No terminal matches '['}), separación inválida de argumentos/listas (\texttt{No terminal matches ','}) y expresiones incompletas al final de la entrada (\texttt{Unexpected end-of-input}). En el conjunto completo de errores residuales, estos patrones aparecen con alta frecuencia (48, 33 y 34 ocurrencias, respectivamente), junto con fallos de sintaxis de gates (\texttt{?}/\texttt{!}, 12 ocurrencias).
+
+Estos resultados muestran que, aunque el ciclo iterativo corrige una fracción importante de fallos iniciales, persiste un subconjunto de escenarios con estructuras que el sistema no estabiliza dentro de tres rondas. Esta evidencia delimita el principal frente de mejora del enfoque actual: robustecer la generación y/o las reglas de corrección para construcciones con listas, indexación y expresiones compuestas en guardas.
 
 \section{Análisis}
 
-% TODO: Interpretación de los resultados. Respuestas a las RQs.
+El análisis se realiza exclusivamente sobre métricas agregadas de validación y error obtenidas en \textit{test} (90 casos).
+
+\subsection{RQ1: validez sintáctica de las traducciones}
+
+En las cuatro configuraciones, la validez sintáctica final media supera el 84\,\%: EN--ES alcanza 91.11\,\%, EN--EN 89.78\,\%, ES--EN 86.00\,\% y ES--ES 84.22\,\%. Bajo el protocolo definido ($N=5$, \texttt{max-rounds=3}), estos valores ubican la conformidad sintáctica final del sistema en el rango 84.22--91.11\,\% sobre el conjunto \textit{test}.
+
+La dispersión de $\text{SVR}_{fin}$ es baja (DE entre 1.11 y 2.65 puntos), lo que sugiere un comportamiento relativamente estable entre corridas para la métrica principal. En términos de robustez, las configuraciones con prompt en inglés (EN--EN y EN--ES) muestran mejores resultados finales y baja variabilidad entre corridas.
+
+\subsection{RQ2: efecto del idioma de prompt y dataset}
+
+Los resultados muestran una diferencia clara en $\text{SVR}_{ini}$ según el idioma del prompt: las configuraciones con prompt en inglés (EN--EN, EN--ES) parten de niveles iniciales altos (78.00\,\% y 75.11\,\%), mientras que las configuraciones con prompt en español (ES--EN, ES--ES) parten de niveles iniciales significativamente menores (45.78\,\% y 46.00\,\%).
+
+Tras el ciclo de corrección, la brecha se reduce en $\text{SVR}_{fin}$: las cuatro configuraciones quedan en el rango 84.22--91.11\,\%. Por lo tanto, en este experimento el idioma del prompt se asocia fuertemente con la calidad inicial, pero su efecto sobre la calidad final es menor una vez aplicado el mecanismo iterativo. El idioma del dataset también incide, aunque con efecto más moderado que el observado para el prompt en la etapa inicial.
+
+\subsection{RQ3: efectividad del ciclo de corrección iterativo}
+
+La ganancia media en puntos porcentuales confirma que el ciclo de corrección aporta mejoras en todas las configuraciones: +11.78 (EN--EN), +40.22 (ES--EN), +16.00 (EN--ES) y +38.22 (ES--ES). Asimismo, la tasa de recuperación de casos inicialmente fallidos es positiva en todas las configuraciones, con valores entre 53.03\,\% y 73.99\,\%.
+
+No obstante, la métrica \texttt{rounds\_used.mean} es 3.00 en todas las configuraciones, lo que indica que en promedio se utiliza el máximo de rondas permitido. Esto sugiere que el ciclo mejora de forma sustantiva la validez, pero no alcanza convergencia temprana bajo el límite actual de iteraciones.
+
+\subsection{Interpretación de resultados}
+
+Los resultados sobre el conjunto \textit{test} (90 casos) muestran que el enfoque híbrido propuesto es efectivo para producir traducciones IBDD sintácticamente válidas en las cuatro configuraciones experimentales. En términos agregados, la validez final se ubicó entre 84.22\,\% y 91.11\,\% (Tabla~\ref{tab:resultados-calidad-test90}), lo que indica que la combinación de generación con LLM y validación formal permite sostener un nivel alto de conformidad con la gramática objetivo.
+
+Un hallazgo central es la diferencia entre desempeño inicial y final. Las configuraciones con prompt en español parten de una validez inicial sustancialmente menor, pero recuperan gran parte de esa brecha tras aplicar corrección iterativa. En consecuencia, el mecanismo de reintento no actúa como un ajuste marginal, sino como un componente estructural del pipeline para estabilizar la calidad final entre configuraciones con condiciones lingüísticas distintas.
+
+La interpretación de RQ2 sugiere que el idioma del prompt está más asociado con la calidad inicial que el idioma del dataset. No obstante, dado el tamaño muestral por configuración ($N=5$), esta evidencia debe leerse como patrón empírico consistente dentro del protocolo adoptado y no como una afirmación causal general sobre cualquier modelo, prompt o dominio.
+
+Desde la perspectiva operativa, todas las configuraciones consumen en promedio el máximo de rondas permitido (\texttt{max-rounds=3}), lo que indica que el sistema mejora de manera sistemática, pero no converge tempranamente en el régimen actual. Este comportamiento es coherente con la existencia de un subconjunto de casos persistentemente difíciles, donde el diagnóstico y reintento corrigen parte de los errores, aunque no eliminan completamente la falla sintáctica residual.
+
+En relación con trabajos previos, los resultados acompañan la literatura que reporta mejor desempeño de modelos GPT en tareas de generación estructurada para contextos BDD, especialmente cuando se utiliza prompting con ejemplos. Al mismo tiempo, este trabajo extiende ese marco al incorporar validación formal determinística y corrección iterativa en un pipeline end-to-end BDD$\rightarrow$IBDD, aspecto menos desarrollado en estudios centrados únicamente en calidad textual de salida.
+
+\subsection{Limitaciones}
+
+La principal limitación del estudio es que la evaluación cuantitativa se concentra en validez sintáctica. Una traducción aceptada por la gramática IBDD puede contener desalineaciones semánticas respecto del escenario BDD original, por lo que la métrica SVR no agota la noción de calidad de traducción.
+
+Una segunda limitación es el tamaño del muestreo estocástico por configuración ($N=5$). Este diseño permite estimar media, dispersión e intervalos de confianza, pero restringe el poder para comparaciones inferenciales más finas entre configuraciones cercanas.
+
+También debe considerarse la dependencia del prompt y del conjunto de reglas de traducción utilizados. Parte del desempeño observado refleja decisiones de diseño del prompt y del mecanismo de corrección, por lo que cambios en estas piezas pueden modificar los resultados sin alterar la arquitectura general.
+
+Finalmente, la evaluación se realizó con un único modelo seleccionado y un conjunto acotado de dominios dentro del dataset construido. Aunque esto es adecuado para la pregunta de investigación de esta tesis, no garantiza transferencia automática a otros modelos, proveedores o colecciones de escenarios con distribuciones lingüísticas distintas.
+
+\subsection{Consideraciones de validez}
+
+Para la validez interna, se mitigaron riesgos mediante partición fija dev/test, repetición de corridas por configuración y uso de un validador sintáctico determinístico. Aun así, persisten posibles fuentes de variación asociadas a la naturaleza estocástica del modelo y a cambios no controlados en el entorno del proveedor.
+
+Para la validez de constructo, la métrica principal (SVR) representa de forma directa la conformidad gramatical, pero no captura fidelidad semántica. Por lo tanto, las conclusiones deben entenderse estrictamente en términos de corrección sintáctica de la traducción.
+
+Para la validez externa, los hallazgos se sustentan en un dataset de 120 escenarios con evaluación final sobre 90 casos de test y cuatro configuraciones lingüísticas. Este alcance ofrece evidencia relevante para el contexto estudiado, pero su generalización a otros dominios, tamaños de dataset o configuraciones de prompting requiere validación adicional.
