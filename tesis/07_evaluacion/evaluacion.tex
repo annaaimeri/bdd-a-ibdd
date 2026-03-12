@@ -94,28 +94,11 @@ El dataset utilizado en los experimentos es el descrito en la Sección~\ref{sec:
 
 El archivo consolidado contiene 120 escenarios (\texttt{Dataset.json} y su versión en español). Sin embargo, para el reporte de evaluación final se utiliza exclusivamente el subconjunto \textit{test} de 90 escenarios (y su contraparte en español), mientras que el subconjunto \textit{dev} de 30 escenarios queda reservado para ajuste y depuración.
 
-La Tabla~\ref{tab:dataset-composicion} resume la composición del dataset consolidado (120 escenarios) a partir del cual se deriva la partición \textit{dev/test}.
+La composición detallada del dataset consolidado se presenta en la Tabla~\ref{tab:dataset-enfoque} (Sección~\ref{sec:dataset}). En síntesis, el conjunto incluye 120 escenarios distribuidos en cinco dominios y tres niveles de complejidad (41 simples, 40 medios y 39 complejos), base sobre la cual se define la partición fija \textit{dev/test}.
 
-\begin{table}[htbp]
-\centering
-\caption{Composición del dataset consolidado (previo a la partición dev/test)}
-\label{tab:dataset-composicion}
-\begin{tabular}{lcccc}
-\hline
-\textbf{Dominio} & \textbf{Simple} & \textbf{Medio} & \textbf{Complejo} & \textbf{Total} \\
-\hline
-Impresora       & 8  & 8  & 8  & 24 \\
-Calculadora     & 12 & 8  & 4  & 24 \\
-Comercio electrónico & 7  & 8  & 9  & 24 \\
-Banco           & 7  & 8  & 9  & 24 \\
-Biblioteca      & 7  & 8  & 9  & 24 \\
-\hline
-\textbf{Total}  & 41 & 40 & 39 & 120 \\
-\hline
-\end{tabular}
-\end{table}
+Cada escenario está clasificado por dominio de aplicación y por nivel de complejidad. La complejidad se determina en función de la cantidad de entidades del dominio involucradas, la cantidad de pasos en las cláusulas Given, When y Then, la presencia de conjunciones (And) y la cantidad de variables e interacciones que el escenario implica. Los escenarios simples involucran una o dos interacciones con pocas variables, los de complejidad media presentan múltiples pasos con variables locales y globales, y los complejos combinan guardas condicionales, múltiples gates y asignaciones compuestas.
 
-Cada escenario está clasificado por dominio de aplicación y por nivel de complejidad. La complejidad se determina en función de la cantidad de pasos en las cláusulas Given, When y Then, la presencia de conjunciones (And) y la cantidad de variables e interacciones que el escenario implica. Los escenarios simples involucran una o dos interacciones con pocas variables, los de complejidad media presentan múltiples pasos con variables locales y globales, y los complejos combinan guardas condicionales, múltiples gates y asignaciones compuestas.
+En coherencia con el protocolo metodológico descrito en la Sección~\ref{sec:dataset}, los escenarios sintéticos del dataset fueron generados con \textit{Claude Sonnet 4}, mientras que la traducción y corrección evaluadas en este capítulo se ejecutan con GPT-4o. Esta separación busca evitar que la evaluación favorezca artificialmente a un único estilo de generación.
 
 \section{Métricas}
 
@@ -230,6 +213,8 @@ ES--ES & $\pm$2.51 & $\pm$2.99 & $\pm$5.22 & $\pm$6.69 \\
 En términos de calidad final, las configuraciones con prompt en inglés (EN--EN y EN--ES) combinan valores altos de $\text{SVR}_{fin}$ con menor cantidad de fallos residuales por corrida. En particular, EN--ES alcanza el mayor promedio final (91.11\,\%) y también el menor volumen de instancias inválidas al cierre del ciclo (40 sobre 450 casos evaluados en total para esa configuración). En contraste, las configuraciones con prompt en español muestran mayor dependencia del ciclo de corrección: parten con $\text{SVR}_{ini}$ más bajo y cierran con mayor cantidad de fallos residuales (63 en ES--EN y 71 en ES--ES sobre 450).
 
 Desde la perspectiva operativa, el tiempo total medio presenta diferencias consistentes entre configuraciones: EN--EN es la más rápida (877.84\,s), seguida por EN--ES (1017.89\,s), mientras que ES--EN y ES--ES exhiben tiempos superiores (1240.36\,s y 1295.41\,s, respectivamente). Dado que la media de rondas utilizadas es 3.00 en los cuatro casos, esta diferencia temporal es coherente con la mayor carga de correcciones en las configuraciones que parten con menor validez inicial.
+
+Al descomponer los tiempos de traducción por nivel de complejidad en el conjunto completo de corridas (20 ejecuciones, 1800 traducciones), se observa que los casos etiquetados como complejos son, en promedio, los más costosos de procesar (7.58\,s por caso). Este resultado es consistente con la definición de complejidad adoptada en el dataset: escenarios con más entidades, interacciones y condiciones requieren mayor elaboración por parte del modelo para producir la salida IBDD.
 
 \subsection{Casos no convergentes tras tres rondas}
 

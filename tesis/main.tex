@@ -21,15 +21,16 @@
     style=numeric,
 ]{biblatex}
 \addbibresource{referencias.bib}
-\setcounter{biburlnumpenalty}{9000}
-\setcounter{biburlucpenalty}{9000}
-\setcounter{biburllcpenalty}{9000}
+\setcounter{biburlnumpenalty}{100}
+\setcounter{biburlucpenalty}{100}
+\setcounter{biburllcpenalty}{100}
+\AtBeginBibliography{\sloppy}
 
 \let\Oldtexttt\texttt
 \renewcommand{\texttt}[1]{{\ttfamily\small #1}}
 
 \carrera{computacion}
-\title{De Lenguaje Natural a BDD:\\[0.2cm] Traducción Automática con~PLN}
+\title{De Lenguaje Natural a IBDD:\\[0.2cm] Traducción Automática con~PLN}
 \author{Anna Paula Aimeri Vicentin}
 \date{Marzo, 2026}
 \supervisors{Laura Brandán Briones}

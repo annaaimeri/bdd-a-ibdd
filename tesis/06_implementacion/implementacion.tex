@@ -27,7 +27,7 @@ El pipeline completo se implementa en Python. Los datos fluyen secuencialmente d
 
 \section{Definición de la Gramática IBDD}
 
-La gramática IBDD se especifica en formato EBNF compatible con Lark y constituye el componente central del módulo de validación. Su diseño captura la estructura formal del lenguaje IBDD definido por Zameni et al.~\cite{zameni2024ibdd}, adaptada para manejar las variaciones de formato que genera el LLM.
+La gramática IBDD se especifica en formato EBNF compatible con Lark y constituye el componente central del módulo de validación. Esta es la gramática operacional adoptada por el sistema: toma como base la estructura general del lenguaje IBDD presentada en el Capítulo de Marco Teórico y la adapta para manejar las variaciones de formato que genera el LLM durante la traducción.
 
 \subsection{Estructura de la Gramática}
 
@@ -130,7 +130,7 @@ La segunda consideración es la resiliencia ante interrupciones: dado que cada t
 
 El módulo implementa un mecanismo de reintentos con \textit{exponential backoff} para manejar errores transitorios de la API, particularmente los errores de límite de tasa (código HTTP 429). Ante un error, el sistema espera un intervalo que se duplica en cada reintento ($t_i = t_{\text{base}} \cdot 2^{i-1} + \epsilon$, donde $\epsilon$ es una perturbación aleatoria uniforme), hasta un máximo de cinco intentos. Este mecanismo permite procesar conjuntos de datos extensos sin interrupciones por limitaciones temporales de la API.
 
-La temperatura del modelo se configura en $0.7$, un valor que balancea la diversidad de las traducciones con la consistencia sintáctica. Valores más bajos producirían traducciones más determinísticas pero potencialmente repetitivas ante escenarios similares; valores más altos introducirían mayor variabilidad con riesgo de desviaciones sintácticas. El modelo utilizado es configurable mediante parámetros de línea de comandos, lo que permite evaluar diferentes versiones del modelo sin modificar el código fuente.
+La temperatura del modelo se configura en $0.7$, seleccionada como valor intermedio tras pruebas preliminares en desarrollo y en línea con la literatura que reporta que la temperatura afecta el compromiso entre variabilidad y consistencia de salida~\cite{holtzman2020degeneration, renze2024temperature}. En este trabajo, este valor se adopta para mantener diversidad suficiente entre corridas sin perder estabilidad sintáctica. El modelo utilizado es configurable mediante parámetros de línea de comandos, lo que permite evaluar diferentes versiones del modelo sin modificar el código fuente.
 
 \section{Módulo de Validación Sintáctica}
 \label{sec:modulo-validacion}
@@ -154,7 +154,7 @@ Al finalizar la validación sintáctica, el orquestador del pipeline cruza los r
 
 \subsection{Análisis de Errores}
 
-El análisis de errores se implementa en la clase \texttt{IBDDErrorExplainer}, un agente especializado que utiliza el LLM para interpretar los mensajes de error del parser y producir diagnósticos estructurados. A diferencia del módulo de traducción, que opera con una temperatura de $0.7$, el explicador se configura con una temperatura de $0.3$. Este valor más bajo favorece respuestas determinísticas y analíticas, apropiadas para una tarea de diagnóstico donde la creatividad no es deseable.
+El análisis de errores se implementa en la clase \texttt{IBDDErrorExplainer}, un agente especializado que utiliza el LLM para interpretar los mensajes de error del parser y producir diagnósticos estructurados. A diferencia del módulo de traducción, que opera con una temperatura de $0.7$, el explicador se configura con una temperatura de $0.3$. Este valor más bajo prioriza respuestas más estables y con mayor \textit{grounding}\footnote{En este trabajo, \textit{grounding} refiere al grado de anclaje de la salida en la información explícita del contexto de entrada (escenario BDD, traducción fallida y mensaje del parser), minimizando inferencias no sustentadas por esos datos.}, lo cual es apropiado para una tarea de diagnóstico donde la creatividad no es deseable~\cite{renze2024temperature}.
 
 El agente explicador opera con un prompt de sistema que incluye la gramática IBDD de referencia y un catálogo de patrones de error frecuentes: corchetes faltantes en guardas o condiciones, sintaxis de gate incorrecta (confusión entre \texttt{?} y \texttt{!}), asignaciones ausentes, expresiones mal formadas, saltos de línea incorrectos y postcondiciones faltantes. Este catálogo permite que el modelo enfoque su análisis en las categorías de error más probables.
 
