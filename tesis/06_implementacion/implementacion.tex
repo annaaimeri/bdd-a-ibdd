@@ -3,37 +3,47 @@
 \section{Arquitectura del Sistema}
 \label{sec:arquitectura}
 
-El sistema implementa un pipeline de cuatro etapas orquestado por la clase
+El sistema implementa el pipeline de cuatro etapas orquestado por la clase
 \texttt{BDDToIBDDPipeline}, definida en el módulo principal. Cada etapa consume la salida de la anterior y guarda sus resultados en archivos JSON intermedios, lo que permite ejecutar las etapas de manera independiente durante el desarrollo y la depuración.
 
 \begin{enumerate}
-  \item \textbf{Traducción} (Sección~\ref{sec:modulo-traduccion}).
+  \item \textbf{Traducción}.
     Recibe el archivo \texttt{Dataset.json} con los escenarios BDD en formato Gherkin y produce traducciones IBDD mediante un LLM, utilizando salidas estructuradas para garantizar conformidad con el esquema JSON esperado. Las traducciones se guardan incrementalmente en
     \texttt{output.json}.
     En la etapa experimental, este mismo mecanismo se aplica también a subconjuntos derivados del dataset consolidado (por ejemplo, particiones de desarrollo y prueba), manteniendo el mismo formato de entrada.
+    Esta etapa se describe en la Sección~\ref{sec:modulo-traduccion}.
 
-  \item \textbf{Validación sintáctica} (Sección~\ref{sec:modulo-validacion}).
+  \item \textbf{Validación sintáctica}.
     Cada traducción se analiza contra la gramática formal IBDD utilizando el analizador Earley de Lark. Los escenarios que no superan la validación se identifican con información detallada del error, incluyendo la posición y el tipo de violación sintáctica. Los resultados se almacenan en
     \texttt{parsed\_ibdd\_results.json}.
+    Esta etapa se describe en la Sección~\ref{sec:modulo-validacion}.
 
-  \item \textbf{Análisis de errores} (Sección~\ref{sec:modulo-correccion}).
+  \item \textbf{Análisis de errores}.
     Los escenarios que fallaron en la validación sintáctica son procesados por un agente especializado, el \textit{explainer}, que diagnostica la causa del error y genera una explicación estructurada con sugerencias de corrección.
+    Esta etapa se describe en la Sección~\ref{sec:modulo-correccion}.
 
-  \item \textbf{Reintento con correcciones} (Sección~\ref{sec:modulo-correccion}).
+  \item \textbf{Reintento con correcciones}.
     Las explicaciones de error se inyectan en un prompt de reintento que solicita al LLM una nueva traducción informada por el diagnóstico previo. Las traducciones corregidas reemplazan únicamente los casos fallidos mediante una estrategia de fusión no destructiva, y el ciclo de validación se repite sobre los casos retraducidos.
+    Esta etapa se describe en la Sección~\ref{sec:modulo-correccion}.
 \end{enumerate}
 
-El pipeline completo se implementa en Python. Los datos fluyen secuencialmente desde \texttt{Dataset.json} (o desde particiones derivadas con la misma estructura) hasta los archivos de resultados finales, y todas las etapas operan sobre archivos JSON como formato de intercambio.
+Como se indicó al comienzo de esta sección, los datos fluyen secuencialmente desde \texttt{Dataset.json} (o desde particiones derivadas con la misma estructura) hasta los archivos de resultados finales, y todas las etapas operan sobre archivos JSON como formato de intercambio.
 
 \section{Definición de la Gramática IBDD}
+\label{sec:gramatica-implementacion}
 
-La gramática IBDD se especifica en formato EBNF compatible con Lark y constituye el componente central del módulo de validación. Esta es la gramática operacional adoptada por el sistema: toma como base la estructura general del lenguaje IBDD presentada en el Capítulo de Marco Teórico y la adapta para manejar las variaciones de formato que genera el LLM durante la traducción.
+La gramática IBDD se especifica en formato EBNF compatible con Lark y constituye el componente central del módulo de validación. Esta es la gramática operacional adoptada por el sistema: toma como base la estructura general del lenguaje IBDD presentada en la Sección~\ref{sec:ibdd} y la adapta para manejar las variaciones de formato que genera el LLM durante la traducción.
 
 \subsection{Estructura de la Gramática}
 
 La gramática define un escenario IBDD como la secuencia de tres cláusulas obligatorias: Given, When y Then. El Listado~\ref{lst:grammar-structure} presenta las reglas estructurales principales.
-
-\begin{lstlisting}[caption={Reglas estructurales de la gramática IBDD en Lark.},label={lst:grammar-structure}]
+\begin{samepage}
+\begin{center}
+\begin{minipage}{0.95\textwidth}
+\captionsetup{type=lstlisting}
+\caption{Reglas estructurales de la gramática IBDD en Lark}
+\label{lst:grammar-structure}
+\begin{lstlisting}
 scenario: given when then
 
 given: "GIVEN" [vars] guard
@@ -49,13 +59,16 @@ var_list: var (COMMA var)*
 
 guard: LBRACKET expr RBRACKET
 \end{lstlisting}
+\end{minipage}
+\end{center}
+\end{samepage}
 
 La cláusula \texttt{given} acepta opcionalmente una lista de variables locales seguida de una guarda entre corchetes. La cláusula \texttt{when} requiere al menos un switch, mientras que \texttt{then} acepta cero o más switches seguidos de una guarda final que representa la postcondición. Cada switch se compone de una interacción (un gate con dirección~\texttt{?} para entrada o~\texttt{!} para salida, y opcionalmente una lista de variables de interacción) seguida de una secuencia flexible de guardas, expresiones y asignaciones.
 
 La regla \texttt{switch} merece atención particular. Su definición emplea una alternancia con repetición:
 
 \begin{center}
-\texttt{switch: interaction (guard | expr | assignment)*}
+\texttt{switch: interaction (guard | expr | assignment)\textsuperscript{*}}
 \end{center}
 
 \noindent Esta formulación permite acomodar las diversas formas en que el LLM estructura los switches. En la gramática teórica de IBDD, un switch sigue estrictamente el patrón \textit{interacción -- condición -- asignación}; sin embargo, las traducciones generadas por el modelo pueden omitir la condición, presentar la asignación antes de la guarda, o incluir expresiones sin envolver en corchetes. Esta flexibilidad sintáctica es una decisión de diseño deliberada que prioriza la capacidad de analizar traducciones imperfectas sobre el rechazo estricto de variaciones menores.
@@ -63,8 +76,13 @@ La regla \texttt{switch} merece atención particular. Su definición emplea una 
 \subsection{Jerarquía de Expresiones}
 
 Las expresiones de la gramática se organizan en una jerarquía de precedencia que refleja las convenciones matemáticas estándar. El Listado~\ref{lst:grammar-expr} muestra esta jerarquía.
-
-\begin{lstlisting}[caption={Jerarquía de expresiones en la gramática IBDD.},label={lst:grammar-expr}]
+\begin{samepage}
+\begin{center}
+\begin{minipage}{0.95\textwidth}
+\captionsetup{type=lstlisting}
+\caption{Jerarquía de expresiones en la gramática IBDD}
+\label{lst:grammar-expr}
+\begin{lstlisting}
 expr: or_expr
 or_expr: and_expr ((OR | OR_SYMBOL) and_expr)*
 and_expr: not_expr ((AND | AND_SYMBOL) not_expr)*
@@ -77,6 +95,9 @@ atom: literal | var | func_call
      | prop_access | neg_number
      | LPAR expr RPAR
 \end{lstlisting}
+\end{minipage}
+\end{center}
+\end{samepage}
 
 La disyunción tiene la menor precedencia, seguida por la conjunción, la negación, las comparaciones, las operaciones aritméticas de suma y resta, las de multiplicación, división y módulo, y finalmente la exponenciación. Los átomos constituyen las unidades indivisibles de las expresiones e incluyen literales booleanos (\texttt{true}, \texttt{false}) y numéricos, variables, llamadas a funciones (como \texttt{is\_in\_list(CJ, SJL)}), accesos a propiedades (\texttt{CJ.type}) y expresiones parentizadas.
 
@@ -88,7 +109,7 @@ Durante las iteraciones de desarrollo y las pruebas preliminares se observó, ad
 
 \subsection{Transformación del Árbol Sintáctico}
 
-El análisis sintáctico produce un árbol de derivación que se transforma en objetos del dominio mediante la clase \texttt{IBDDTransformer}, implementada como un transformador de Lark. La transformación mapea cada nodo del árbol a una de cinco clases de datos: \texttt{IBDDScenario} representa el escenario completo con variables locales, precondición, switches de When y Then, y postcondición; \texttt{IBDDSwitch} encapsula una interacción con su condición y asignaciones; \texttt{IBDDInteraction} modela un gate con sus variables; \texttt{IBDDAssignment} representa una asignación de valor a variable o propiedad; e \texttt{IBDDExpression} captura expresiones tipadas con sus subexpresiones en una estructura recursiva. Esta representación intermedia facilita la inspección programática de las traducciones y la generación de reportes de validación estructurados.
+El análisis sintáctico produce un árbol de derivación que se transforma en objetos del dominio mediante la clase \texttt{IBDDTransformer}, implementada como un transformador de Lark en el archivo \texttt{src/parser.py}, donde también se definen las clases de datos \texttt{IBDDScenario}, \texttt{IBDDSwitch}, \texttt{IBDDInteraction}, \texttt{IBDDAssignment} e \texttt{IBDDExpression}. La transformación mapea cada nodo del árbol a una de estas cinco clases: \texttt{IBDDScenario} representa el escenario completo con variables locales, precondición, switches de When y Then, y postcondición; \texttt{IBDDSwitch} encapsula una interacción con su condición y asignaciones; \texttt{IBDDInteraction} modela un gate con sus variables; \texttt{IBDDAssignment} representa una asignación de valor a variable o propiedad; e \texttt{IBDDExpression} captura expresiones tipadas con sus subexpresiones en una estructura recursiva. Esta representación intermedia facilita la inspección de las traducciones y la generación de reportes de validación estructurados.
 
 \section{Módulo de Traducción}
 \label{sec:modulo-traduccion}
@@ -110,7 +131,7 @@ El sistema utiliza la funcionalidad de \textit{Structured Outputs} de OpenAI~\ci
 
 El uso de Structured Outputs en este sistema presenta dos ventajas concretas. La primera es la eliminación de errores de formato: sin esta restricción, el modelo podría devolver JSON malformado, incluir campos adicionales no solicitados, o envolver la respuesta en bloques de código Markdown, lo cual requeriría lógica de post-procesamiento frágil y propensa a errores. La segunda ventaja es la garantía de presencia del campo \texttt{ibdd\_representation}, que es donde el modelo deposita la traducción IBDD para cada escenario. Al declarar este campo como obligatorio en el esquema, se asegura que toda respuesta válida contenga la traducción solicitada.
 
-Structured Outputs garantiza la corrección estructural del JSON pero no la corrección sintáctica del contenido IBDD. El campo \texttt{ibdd\_representation} contiene una cadena de texto cuyo contenido, la traducción IBDD, requiere validación adicional mediante el analizador sintáctico descrito en la sección anterior. Esta distinción entre validación de formato (a cargo de Structured Outputs) y validación de contenido (a cargo del parser Earley) es fundamental en la arquitectura del sistema.
+Structured Outputs garantiza la corrección estructural del JSON pero no la corrección sintáctica del contenido IBDD. El campo \texttt{ibdd\_representation} contiene una cadena de texto cuyo contenido, la traducción IBDD, requiere validación adicional mediante el analizador sintáctico descrito en la Sección~\ref{sec:gramatica-implementacion}. Esta distinción entre validación de formato (a cargo de Structured Outputs) y validación de contenido (a cargo del parser Earley) es fundamental en la arquitectura del sistema.
 
 \subsection{Inferencia Dinámica del Esquema}
 
@@ -139,7 +160,7 @@ El módulo de validación instancia la clase \texttt{IBDDParser}, que encapsula 
 
 Antes del análisis, cada texto IBDD se somete a un preprocesamiento que normaliza los caracteres de escape (\verb|\n| a saltos de línea reales), elimina líneas vacías y colapsa espacios múltiples dentro de cada línea. Este preprocesamiento es necesario porque las traducciones generadas por el LLM representan los saltos de línea como secuencias de escape dentro de cadenas JSON, y el analizador Earley requiere el texto con saltos de línea reales para aplicar las reglas de la gramática que dependen de la separación de cláusulas.
 
-La validación opera en modo por lotes: el sistema procesa secuencialmente todos los escenarios de un archivo JSON, registrando para cada uno si el análisis fue exitoso o, en caso de fallo, el mensaje de error del analizador. Los resultados se registran en un archivo JSON que asocia cada escenario con su estado de validación (\texttt{valid: true/false}), el dominio, el título y, cuando corresponde, el mensaje de error y la representación parseada del escenario. Este informe estructurado sirve como insumo para las etapas posteriores del pipeline.
+La validación opera en modo por lotes: el sistema procesa secuencialmente todos los escenarios de un archivo JSON, registrando para cada uno si el análisis fue exitoso o, en caso de fallo, el mensaje de error del analizador. Los resultados se registran en un archivo JSON que asocia cada escenario con su estado de validación (\texttt{valid: true/false}), el dominio, el título y, cuando corresponde, el mensaje de error y la representación parseada del escenario. Este informe estructurado sirve como insumo para las etapas posteriores.
 
 El módulo incluye además un analizador de respaldo (\textit{fallback parser}) basado en expresiones regulares que se activa cuando el analizador Earley no logra procesar un texto IBDD. Este analizador alternativo extrae los componentes principales del escenario (variables de la cláusula Given, gates de la cláusula When y postcondición de la cláusula Then) mediante patrones de coincidencia, produciendo una representación parcial pero útil para el diagnóstico de errores.
 
@@ -154,7 +175,7 @@ Al finalizar la validación sintáctica, el orquestador del pipeline cruza los r
 
 \subsection{Análisis de Errores}
 
-El análisis de errores se implementa en la clase \texttt{IBDDErrorExplainer}, un agente especializado que utiliza el LLM para interpretar los mensajes de error del parser y producir diagnósticos estructurados. A diferencia del módulo de traducción, que opera con una temperatura de $0.7$, el explicador se configura con una temperatura de $0.3$. Este valor más bajo prioriza respuestas más estables y con mayor \textit{grounding}\footnote{En este trabajo, \textit{grounding} refiere al grado de anclaje de la salida en la información explícita del contexto de entrada (escenario BDD, traducción fallida y mensaje del parser), minimizando inferencias no sustentadas por esos datos.}, lo cual es apropiado para una tarea de diagnóstico donde la creatividad no es deseable~\cite{renze2024temperature}.
+El análisis de errores se implementa en la clase \texttt{IBDDErrorExplainer}, definida en \texttt{src/explainer.py}, un agente especializado que utiliza el LLM para interpretar los mensajes de error del parser y producir diagnósticos estructurados. A diferencia del módulo de traducción, que opera con una temperatura de $0.7$, el explicador se configura con una temperatura de $0.3$. Este valor más bajo prioriza respuestas más estables y con mayor \textit{grounding}\footnote{En este trabajo, \textit{grounding} refiere al grado de anclaje de la salida en la información explícita del contexto de entrada (escenario BDD, traducción fallida y mensaje del parser), minimizando inferencias no sustentadas por esos datos.}, lo cual es apropiado para una tarea de diagnóstico donde la creatividad no es deseable~\cite{renze2024temperature}.
 
 El agente explicador opera con un prompt de sistema que incluye la gramática IBDD de referencia y un catálogo de patrones de error frecuentes: corchetes faltantes en guardas o condiciones, sintaxis de gate incorrecta (confusión entre \texttt{?} y \texttt{!}), asignaciones ausentes, expresiones mal formadas, saltos de línea incorrectos y postcondiciones faltantes. Este catálogo permite que el modelo enfoque su análisis en las categorías de error más probables.
 

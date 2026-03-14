@@ -20,7 +20,7 @@ Una segunda limitación es el tamaño del muestreo estocástico por configuraci�
 
 También debe considerarse la dependencia del prompt y del conjunto de reglas de traducción utilizados. Parte del desempeño observado refleja decisiones de diseño del prompt y del mecanismo de corrección, por lo que cambios en estas piezas pueden modificar los resultados sin alterar la arquitectura general.
 
-Finalmente, la evaluación se realizó con un único modelo seleccionado y un conjunto acotado de dominios dentro del dataset construido. Aunque esto es adecuado para la pregunta de investigación de esta tesis, no garantiza transferencia automática a otros modelos, proveedores o colecciones de escenarios con distribuciones lingüísticas distintas.
+Finalmente, la evaluación se realizó con un único modelo seleccionado y un conjunto acotado de dominios dentro del dataset construido. Aunque esto es adecuado para la pregunta de investigación de este trabajo, no garantiza transferencia automática a otros modelos, proveedores o colecciones de escenarios con distribuciones lingüísticas distintas.
 
 \section{Consideraciones de Validez}
 
@@ -28,4 +28,4 @@ Para la validez interna, se mitigaron riesgos mediante partición fija dev/test,
 
 Para la validez de constructo, la métrica principal (SVR) representa de forma directa la conformidad gramatical, pero no captura fidelidad semántica. Por lo tanto, las conclusiones deben entenderse estrictamente en términos de corrección sintáctica de la traducción.
 
-Para la validez externa, los hallazgos se sustentan en un dataset de 120 escenarios con evaluación final sobre 90 casos de test y cuatro configuraciones lingüísticas. Este alcance ofrece evidencia relevante para el contexto estudiado, pero su generalización a otros dominios, tamaños de dataset o configuraciones de prompting requiere validación adicional.
+Para la validez externa, los hallazgos se sustentan en un dataset de 120 escenarios con evaluación final sobre 90 casos de test y cuatro configuraciones lingüísticas. Este alcance ofrece evidencia relevante para el contexto estudiado, pero su generalización a otros dominios, tamaños de dataset o configuraciones de prompting requeriría validación adicional.

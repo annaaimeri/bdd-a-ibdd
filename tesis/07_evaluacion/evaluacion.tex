@@ -19,7 +19,8 @@ La evaluación se organiza en torno a tres preguntas de investigación:
   El pipeline incluye un mecanismo de corrección que analiza los errores sintácticos de las traducciones fallidas y reintenta la traducción con retroalimentación del diagnóstico. Esta pregunta evalúa cuántas de las traducciones inicialmente fallidas se corrigen mediante este ciclo, cuántas iteraciones son necesarias para converger y si existen casos que resisten la corrección de forma persistente.
 \end{description}
 
-\section{Diseño Experimental}
+\section{Experimentos}
+\label{sec:experimentos}
 
 \subsection{Configuraciones}
 
@@ -57,6 +58,7 @@ La partición se definió de forma consistente con el historial de construcción
 Una vez fijada la configuración del sistema sobre el conjunto \textit{dev}, las corridas reportadas en la Sección~\ref{sec:resultados} se realizarán exclusivamente sobre el conjunto \textit{test}.
 
 \subsection{Repeticiones y manejo de la estocasticidad}
+\label{sec:repeticiones-estocasticidad}
 
 Los LLMs son modelos estocásticos: ante la misma entrada y con temperatura mayor a cero, pueden producir salidas distintas en cada ejecución. Una única corrida del pipeline no permite distinguir si un resultado refleja el comportamiento típico del sistema o una fluctuación aleatoria. Para obtener estimaciones confiables de las métricas, cada configuración se ejecuta $N$ veces de forma independiente sobre el conjunto \textit{test}.
 
@@ -65,6 +67,7 @@ En la implementación experimental de este trabajo, $N$ se parametriza desde lí
 A partir de las $N$ ejecuciones de cada configuración se calcula la media y la desviación estándar de cada métrica, y se construyen intervalos de confianza al 95\,\% mediante la distribución $t$ de Student.
 
 \subsection{Ciclo de corrección}
+\label{sec:ciclo-correccion-exp}
 
 En todas las configuraciones, el pipeline se ejecuta con un número máximo de rondas de corrección configurable mediante el parámetro \texttt{-{}-max-rounds}. En cada ronda, los casos que fallaron la validación sintáctica son procesados por el agente de análisis de errores y retraducidos con retroalimentación del diagnóstico. El ciclo se detiene cuando todos los casos superan la validación o cuando se alcanza el límite de rondas.
 
@@ -84,19 +87,19 @@ Cada ejecución del pipeline sigue el protocolo descrito a continuación:
   \item Se guardan las traducciones finales, los resultados de validación y las métricas del pipeline en archivos JSON.
 \end{enumerate}
 
-Previo a estas corridas de evaluación final sobre \textit{test}, se realizan corridas de desarrollo sobre \textit{dev} con el único objetivo de depuración y ajuste del enfoque. Dichas corridas no se incluyen en el reporte cuantitativo final.
+Previo a estas corridas de evaluación final sobre \textit{test}, se realizan corridas de desarrollo sobre \textit{dev} con el único objetivo de depuración y ajuste del enfoque. Dichas corridas no se incluyen en el reporte cuantitativo final para evitar que decisiones de ajuste informadas por esos resultados contaminen la evaluación reportada sobre el conjunto de prueba.
 
 El pipeline registra automáticamente las métricas de cada ejecución en un archivo \texttt{*\_metrics.json} que incluye: el modelo y proveedor utilizados, los resultados de validación iniciales y finales, el detalle por ronda de corrección (casos fallidos, casos corregidos, tiempo) y el tiempo total del pipeline.
 
 \section{Dataset}
 
-El dataset utilizado en los experimentos es el descrito en la Sección~\ref{sec:dataset}. Para la evaluación se emplean dos versiones del dataset: la versión original en inglés y su traducción al español, lo que permite ejecutar las cuatro configuraciones del diseño factorial.
+Para la evaluación se emplean dos versiones del dataset construido en la Sección~\ref{sec:dataset}: la versión original en inglés y su traducción al español, lo que permite ejecutar las cuatro configuraciones del diseño factorial.
 
 El archivo consolidado contiene 120 escenarios (\texttt{Dataset.json} y su versión en español). Sin embargo, para el reporte de evaluación final se utiliza exclusivamente el subconjunto \textit{test} de 90 escenarios (y su contraparte en español), mientras que el subconjunto \textit{dev} de 30 escenarios queda reservado para ajuste y depuración.
 
 La composición detallada del dataset consolidado se presenta en la Tabla~\ref{tab:dataset-enfoque} (Sección~\ref{sec:dataset}). En síntesis, el conjunto incluye 120 escenarios distribuidos en cinco dominios y tres niveles de complejidad (41 simples, 40 medios y 39 complejos), base sobre la cual se define la partición fija \textit{dev/test}.
 
-Cada escenario está clasificado por dominio de aplicación y por nivel de complejidad. La complejidad se determina en función de la cantidad de entidades del dominio involucradas, la cantidad de pasos en las cláusulas Given, When y Then, la presencia de conjunciones (And) y la cantidad de variables e interacciones que el escenario implica. Los escenarios simples involucran una o dos interacciones con pocas variables, los de complejidad media presentan múltiples pasos con variables locales y globales, y los complejos combinan guardas condicionales, múltiples gates y asignaciones compuestas.
+Como se mencionó previamente en la Sección~\ref{sec:dataset}, cada escenario está clasificado por dominio de aplicación y por nivel de complejidad. La complejidad se determina en función de la cantidad de entidades del dominio involucradas, la cantidad de pasos en las cláusulas Given, When y Then, la presencia de conjunciones (And) y la cantidad de variables e interacciones que el escenario implica. Los escenarios simples involucran una o dos interacciones con pocas variables, los de complejidad media presentan múltiples pasos con variables locales y globales, y los complejos combinan guardas condicionales, múltiples gates y asignaciones compuestas.
 
 En coherencia con el protocolo metodológico descrito en la Sección~\ref{sec:dataset}, los escenarios sintéticos del dataset fueron generados con \textit{Claude Sonnet 4}, mientras que la traducción y corrección evaluadas en este capítulo se ejecutan con GPT-4o. Esta separación busca evitar que la evaluación favorezca artificialmente a un único estilo de generación.
 
@@ -106,14 +109,14 @@ La evaluación utiliza métricas que capturan aspectos complementarios del desem
 
 \subsection{Validez sintáctica}
 
-La métrica principal es la \textit{tasa de validez sintáctica} (SVR, \textit{Syntactic Validity Rate}), definida como la proporción de escenarios cuya traducción IBDD es aceptada por el parser Earley:
+La métrica principal es la \textit{tasa de validez sintáctica} (SVR, \textit{Syntactic Validity Rate}), definida como la proporción de escenarios cuya traducción IBDD es aceptada por el parser Earley descrito en la Sección~\ref{sec:modulo-validacion}:
 
 \begin{equation}
 \text{SVR} = \frac{\text{número de traducciones sintácticamente válidas}}{\text{número total de escenarios}}
 \label{eq:svr}
 \end{equation}
 
-Se distinguen dos variantes de esta métrica. $\text{SVR}_\text{inicial}$ mide la tasa de validez tras la primera traducción, sin correcciones. $\text{SVR}_\text{final}$ mide la tasa de validez tras completar el ciclo de corrección iterativo. La diferencia $\text{SVR}_\text{final} - \text{SVR}_\text{inicial}$ cuantifica la ganancia atribuible al mecanismo de corrección.
+Se distinguen dos variantes de esta métrica. $\text{SVR}_\text{inicial}$ mide la tasa de validez tras la primera traducción, sin correcciones. $\text{SVR}_\text{final}$ mide la tasa de validez tras completar el ciclo de corrección iterativo. La diferencia \mbox{$\text{SVR}_\text{final} - \text{SVR}_\text{inicial}$} cuantifica la ganancia atribuible al mecanismo de corrección.
 
 Para cada configuración, se reportan la media y la desviación estándar de ambas variantes sobre las $N$ ejecuciones independientes.
 
@@ -155,7 +158,7 @@ Se registra el tiempo de traducción por caso y el tiempo total del pipeline por
 \section{Resultados}
 \label{sec:resultados}
 
-Esta sección reporta los resultados finales obtenidos sobre el conjunto \textit{test} de 90 escenarios, con $N=5$ corridas por configuración y \texttt{max-rounds=3}. En consistencia con la Sección~\ref{sec:seleccion-modelo}, en todos los casos se utilizó el proveedor/modelo \texttt{openai/gpt-4o}.
+Esta sección reporta los resultados finales obtenidos sobre el conjunto \textit{test} de 90 escenarios, con $N=5$ corridas por configuración y \texttt{max-rounds=3}, siguiendo el protocolo definido en la Sección~\ref{sec:experimentos}. En consistencia con la Sección~\ref{sec:seleccion-modelo}, en todos los casos se utilizó el proveedor/modelo \texttt{openai/gpt-4o}.
 
 Las Tablas~\ref{tab:resultados-calidad-test90} y~\ref{tab:resultados-operativos-test90} presentan las métricas comparables entre configuraciones, reportadas como media y desvío estándar sobre las cinco corridas.
 
@@ -266,7 +269,7 @@ Una segunda limitación es el tamaño del muestreo estocástico por configuraci�
 
 También debe considerarse la dependencia del prompt y del conjunto de reglas de traducción utilizados. Parte del desempeño observado refleja decisiones de diseño del prompt y del mecanismo de corrección, por lo que cambios en estas piezas pueden modificar los resultados sin alterar la arquitectura general.
 
-Finalmente, la evaluación se realizó con un único modelo seleccionado y un conjunto acotado de dominios dentro del dataset construido. Aunque esto es adecuado para la pregunta de investigación de esta tesis, no garantiza transferencia automática a otros modelos, proveedores o colecciones de escenarios con distribuciones lingüísticas distintas.
+Finalmente, la evaluación se realizó con un único modelo seleccionado y un conjunto acotado de dominios dentro del dataset construido. Aunque esto es adecuado para la pregunta de investigación de este trabajo, no garantiza transferencia automática a otros modelos, proveedores o colecciones de escenarios con distribuciones lingüísticas distintas.
 
 \subsection{Consideraciones de validez}
 
@@ -274,4 +277,4 @@ Para la validez interna, se mitigaron riesgos mediante partición fija dev/test,
 
 Para la validez de constructo, la métrica principal (SVR) representa de forma directa la conformidad gramatical, pero no captura fidelidad semántica. Por lo tanto, las conclusiones deben entenderse estrictamente en términos de corrección sintáctica de la traducción.
 
-Para la validez externa, los hallazgos se sustentan en un dataset de 120 escenarios con evaluación final sobre 90 casos de test y cuatro configuraciones lingüísticas. Este alcance ofrece evidencia relevante para el contexto estudiado, pero su generalización a otros dominios, tamaños de dataset o configuraciones de prompting requiere validación adicional.
+Para la validez externa, los hallazgos se sustentan en un dataset de 120 escenarios con evaluación final sobre 90 casos de test y cuatro configuraciones lingüísticas. Este alcance ofrece evidencia relevante para el contexto estudiado, pero su generalización a otros dominios, tamaños de dataset o configuraciones de prompting requeriría validación adicional.

@@ -2,19 +2,34 @@
 
 \usepackage{famafCover}
 \usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{2227}{\ensuremath{\wedge}}
+\DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}
 \usepackage{amsmath}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning, decorations.pathreplacing}
 \usepackage{microtype}
 \usepackage{float}
 \usepackage{listings}
+\usepackage{caption}
+\usepackage{fancyvrb}
+\setlength{\textfloatsep}{0.45cm}
+\setlength{\floatsep}{0.45cm}
+\setlength{\intextsep}{0.45cm}
+\setlength{\abovecaptionskip}{0.25cm}
+\setlength{\belowcaptionskip}{0.25cm}
 \lstset{
   basicstyle=\ttfamily\small,
   columns=fullflexible,
   breaklines=true,
   frame=single,
-  literate={∧}{$\wedge$}1 {→}{$\rightarrow$}1
+  aboveskip=0.35cm,
+  belowskip=0.35cm,
+  abovecaptionskip=0.25cm,
+  belowcaptionskip=0.25cm,
+  keepspaces=true,
+  literate={&&}{{$\;\wedge\;$}}2 {*}{{$^{*}$}}1 {→}{$\rightarrow$}1
 }
+\captionsetup[lstlisting]{labelsep=space,skip=8pt}
 \usepackage[spanish, es-tabla]{babel}
 \usepackage[
     backend=biber,
@@ -60,6 +75,10 @@
 \input{07_evaluacion/evaluacion}
 % \input{08_discusion/discusion} % Integrado en 07_evaluacion/evaluacion.tex
 \input{09_conclusiones/conclusiones}
+\appendix
+\setcounter{tocdepth}{0}
+\input{10_apendices/prompt}
+\setcounter{tocdepth}{2}
 
 \printbibliography
 

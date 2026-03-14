@@ -6,9 +6,11 @@ Uno de los desafíos que enfrenta el desarrollo de software moderno es cerrar la
 
 Por otro lado, las Pruebas Basadas en Modelos (MBT, \textit{Model-Based Testing}) ofrecen un enfoque riguroso y automatizado para generar casos de prueba a partir de modelos formales del sistema, como los Sistemas de Transición Simbólicos (STS, \textit{Symbolic Transition Systems}). Estos modelos formales permiten aplicar algoritmos de generación automática de tests de acuerdo con criterios de cobertura explícitos y detectar comportamientos inesperados.
 
-Sin embargo, existe una discontinuidad entre estos dos mundos. Los escenarios BDD, expresados en lenguaje natural, carecen de la precisión formal necesaria para alimentar directamente las herramientas de MBT. Investigaciones recientes han propuesto el Lenguaje Intermedio de BDD (IBDD) como puente entre ambos paradigmas~\cite{zameni2024ibdd}. IBDD mantiene la estructura Given-When-Then de BDD pero incorpora elementos formales de los STS, incluyendo variables globales y locales, guardas lógicas, gates de interacción y asignaciones explícitas de estado.
+Sin embargo, existe una brecha entre estos dos mundos. Los escenarios BDD, expresados en lenguaje natural, carecen de la precisión formal necesaria para alimentar directamente las herramientas de MBT. Investigaciones recientes han propuesto el Lenguaje Intermedio de BDD (IBDD) como puente entre ambos paradigmas~\cite{zameni2024ibdd}. IBDD mantiene la estructura Given-When-Then de BDD pero incorpora elementos formales de los STS, incluyendo variables globales y locales, guardas lógicas, gates de interacción y asignaciones explícitas de estado.
 
 Los trabajos de Zameni et al. han demostrado que, una vez que los escenarios están representados en IBDD, es posible transformarlos automáticamente en Sistemas de Transición BDD (BDDTS) y posteriormente en STS, desde donde se pueden generar casos de prueba completos y formalmente válidos~\cite{zameni2023bddts}. Sin embargo, un eslabón de esta cadena de automatización aún no ha sido abordado: la traducción inicial de escenarios Gherkin escritos por humanos a representaciones IBDD formalmente correctas. La Figura~\ref{fig:pipeline-overview} ilustra este pipeline y señala la etapa que aborda el presente trabajo.
+
+\vspace{0.5cm}
 
 \begin{figure}[htbp]
 \centering
@@ -53,11 +55,16 @@ Actualmente, esta traducción es un proceso enteramente manual que requiere expe
 
 \section{Problema}
 
-El problema central que aborda este trabajo es: \textit{¿cómo automatizar la traducción de escenarios BDD en formato Gherkin al lenguaje intermedio formal IBDD, de manera que se preserve razonablemente el comportamiento especificado y se generen representaciones formalmente válidas para alimentar herramientas de generación automática de casos de prueba?}
+El problema central que aborda este trabajo puede formularse así:
 
-Este problema presenta múltiples desafíos técnicos. En primer lugar, los escenarios Gherkin contienen imprecisiones inherentes al lenguaje natural que deben resolverse para producir especificaciones formales. A esto se suma que elementos cruciales de IBDD (variables globales, tipos de datos, funciones del dominio, gates del sistema) no están explícitos en el texto Gherkin y deben inferirse del contexto o del conocimiento del dominio. La correspondencia entre construcciones lingüísticas en Gherkin y elementos formales de IBDD tampoco es trivial; por ejemplo, la frase ``el usuario hace clic en agregar al carrito'' debe traducirse a un gate de entrada específico con variables de interacción apropiadas. Las traducciones generadas, a su vez, deben ser sintácticamente correctas según la gramática IBDD y semánticamente consistentes con la especificación BDD original. Finalmente, la diversidad de dominios que abarcan los escenarios BDD introduce vocabularios y patrones de interacción específicos que el sistema debe manejar.
+\begin{quote}
+\centering
+\textit{¿Cómo automatizar la traducción de escenarios BDD en formato Gherkin al lenguaje intermedio formal IBDD?}
+\end{quote}
 
-\section{Enfoque}
+Esto requiere preservar razonablemente el comportamiento especificado y generar representaciones formalmente válidas para alimentar herramientas de generación automática de casos de prueba. Este problema presenta múltiples desafíos técnicos. En primer lugar, los escenarios Gherkin contienen imprecisiones inherentes al lenguaje natural que deben resolverse para producir especificaciones formales. A esto se suma que elementos cruciales de IBDD (variables globales, tipos de datos, funciones del dominio, gates del sistema) no están explícitos en el texto Gherkin y deben inferirse del contexto o del conocimiento del dominio. La correspondencia entre construcciones lingüísticas en Gherkin y elementos formales de IBDD tampoco es trivial; por ejemplo, la frase ``el usuario hace clic en agregar al carrito'' debe traducirse a un gate de entrada específico con variables de interacción apropiadas. Las traducciones generadas, a su vez, deben ser sintácticamente correctas según la gramática IBDD y semánticamente consistentes con la especificación BDD original. Finalmente, la diversidad de dominios que abarcan los escenarios BDD introduce vocabularios y patrones de interacción específicos que el sistema debe manejar.
+
+\section{Enfoque propuesto}
 
 Este trabajo propone un enfoque híbrido que combina las capacidades de comprensión semántica de Modelos de Lenguaje Grandes (LLMs, \textit{Large Language Models}) con la estructura formal proporcionada por la gramática IBDD y técnicas de análisis sintáctico determinístico.
 
@@ -69,6 +76,6 @@ La elección de LLMs se fundamenta en su demostrada capacidad para tareas de tra
 
 \section{Contribuciones}
 
-Esta tesis contribuye con el diseño e implementación de un pipeline automatizado para la traducción BDD$\rightarrow$IBDD que integra generación con LLM, validación sintáctica determinística y corrección iterativa de traducciones fallidas. También formaliza una estrategia de validación operativa basada en la gramática IBDD y parser Earley (Lark), con reportes estructurados de error reutilizables en el ciclo de reintento.
+Este trabajo contribuye con el diseño e implementación de un pipeline automatizado para la traducción BDD$\rightarrow$IBDD que integra generación con LLM, validación sintáctica determinística y corrección iterativa de traducciones fallidas. También formaliza una estrategia de validación operativa basada en la gramática IBDD y parser Earley (Lark), con reportes estructurados de error reutilizables en el ciclo de reintento.
 
 En el plano experimental, se construye y documenta un protocolo reproducible con partición fija del conjunto de datos en desarrollo y prueba, múltiples corridas por configuración y métricas agregadas para controlar la estocasticidad del modelo. Sobre esa base, se realiza una evaluación cuantitativa en cuatro configuraciones lingüísticas de entrada/salida sobre el conjunto de prueba, permitiendo analizar validez inicial y final, ganancia por corrección y desempeño del proceso de corrección. Finalmente, el trabajo delimita el alcance actual del enfoque, analizando calidad sintáctica y señalando la fidelidad semántica como eje de extensión futura.

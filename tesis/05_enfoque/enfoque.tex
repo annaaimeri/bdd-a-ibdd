@@ -1,4 +1,4 @@
-\chapter{Enfoque y Metodología}
+\chapter{Metodología}
 
 La metodología combina decisiones de ingeniería y criterios experimentales. En el plano de ingeniería, se prioriza la modularidad (separación entre cliente LLM, traductor, validador y corrector) para facilitar reproducibilidad y evolución del sistema. En el plano experimental, se establece un protocolo con configuraciones lingüísticas controladas, partición fija del dataset y repetición de corridas para estimar desempeño medio y variabilidad.
 
@@ -55,22 +55,24 @@ Calidad de justificaciones & Alta  & Media & Baja  \\
 
 \subsubsection{GPT-4o}
 
-GPT-4o demostró el desempeño más consistente entre los tres modelos. Las tres opciones generadas respetan la gramática IBDD sin desviaciones sintácticas, y cada una explora un paradigma técnico distinto: atómico/granular, compuesto y concurrente con reservas. El siguiente fragmento ilustra la Opción~2 (enfoque compuesto):
+GPT-4o demostró el desempeño más consistente entre los tres modelos. Las tres opciones generadas respetan la gramática IBDD sin desviaciones sintácticas, y cada una explora un paradigma técnico distinto: atómico/granular, compuesto y concurrente con reservas. El siguiente fragmento ilustra una de las traducciones generadas, correspondiente al enfoque compuesto:
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}
-GIVEN PROD, USER [is_available(PROD, INV) ∧ is_logged_in(USER)]
+GIVEN PROD, USER [is_available(PROD, INV) && is_logged_in(USER)]
 WHEN
     ?addToCart.prod_qty, payload
-        payload.product = PROD ∧ payload.qty > 0
+        payload.product = PROD && payload.qty > 0
         (PROD, QTY) := (payload.product, payload.qty)
 THEN
     !persist.cart_and_inventory, result
-        result.cart_after = addItem(S_CART, PROD, QTY) ∧
+        result.cart_after = addItem(S_CART, PROD, QTY) &&
         result.inv_after = INV[PROD] - QTY
         CART := result.cart_after;
         INV := updateInventory(INV, PROD, QTY)
-    [is_in_cart(PROD, CART) ∧ INV[PROD] = INV_before(PROD) - QTY]
+    [is_in_cart(PROD, CART) && INV[PROD] = INV_before(PROD) - QTY]
 \end{lstlisting}
+\end{minipage}
 
 Esta traducción modela la interacción del usuario como un gate de entrada (\texttt{?addToCart}), define guardas que verifican la disponibilidad del producto y la validez de la cantidad, y establece asignaciones que reflejan las modificaciones al carrito y al inventario. El propio modelo identifica correctamente los compromisos de diseño entre las opciones, señalando por ejemplo que la tercera opción puede resultar sobredimensionada. En efecto, algunas opciones tienden a introducir niveles de complejidad que, si bien son técnicamente válidos, exceden lo requerido por el escenario, y las explicaciones que acompañan cada traducción resultan a veces verbosas.
 
@@ -78,12 +80,14 @@ Esta traducción modela la interacción del usuario como un gate de entrada (\te
 
 Claude exhibió creatividad conceptual en sus traducciones, con una progresión deliberada de simplicidad a complejidad entre las tres opciones, una documentación detallada de las variables utilizadas y guardas lógicas bien estructuradas. Sin embargo, la consistencia sintáctica fue inferior a la de GPT-4o. En particular, una de las opciones introduce notaciones como \texttt{BTN\_STATE := clicked} que no se ajustan a las convenciones de la gramática IBDD de referencia:
 
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}
-GIVEN P, U, Q [P.available = true ∧ U.logged_in = true]
+GIVEN P, U, Q [P.available = true && U.logged_in = true]
 WHEN ?click.add_to_cart_btn
-     U.logged_in = true ∧ P.available = true
+     U.logged_in = true && P.available = true
      BTN_STATE := clicked
 \end{lstlisting}
+\end{minipage}
 
 Si bien la traducción es conceptualmente correcta, estas desviaciones sintácticas requerirían corrección posterior para ser procesadas por el analizador IBDD.
 
@@ -91,16 +95,19 @@ Si bien la traducción es conceptualmente correcta, estas desviaciones sintácti
 
 Llama 3.3 presentó las mayores limitaciones. Si bien las traducciones son breves y no contienen errores conceptuales graves, las tres opciones presentan errores sintácticos consistentes, ninguna modela la actualización de inventario (perdiendo información del escenario original), las justificaciones de diseño carecen de sustento técnico, y se confunde la dirección de los gates de interacción. El siguiente fragmento ilustra estos problemas:
 
+\vspace{0.25cm}
+\noindent\begin{minipage}{\linewidth}
 \begin{lstlisting}
 GIVEN prod [true], user logged_in
 WHEN !select_prod, ?spec_quantity
      true
      prod := p
 THEN !add_to_cart.sc
-     sc.product = p ∧ sc.quantity = q
+     sc.product = p && sc.quantity = q
      SC := add(p, sc), Q := spec_quantity
-     [is_in_SC(p, sc) ∧ sc.product = p]
+     [is_in_SC(p, sc) && sc.product = p]
 \end{lstlisting}
+\end{minipage}
 
 En esta traducción, el gate \texttt{!select\_prod} (gate de salida) se utiliza para modelar una acción del usuario, cuando la semántica de IBDD establece que las acciones del usuario corresponden a gates de entrada (\texttt{?}). La combinación de un gate de salida con uno de entrada en la cláusula \texttt{WHEN} viola la estructura esperada del lenguaje.
 
@@ -114,40 +121,33 @@ Aunque el trabajo de Karpurapu et al. aborda la dirección inversa a la de este 
 
 Sobre la base de los resultados experimentales y su consistencia con la literatura, se seleccionó el modelo GPT-4o de OpenAI como motor de lenguaje del sistema de traducción. En la comparación realizada, este modelo mostró corrección sintáctica en las traducciones generadas para el escenario evaluado, buena uniformidad entre ejecuciones y capacidad de producir variantes de traducción técnicamente diferenciadas.
 
-No obstante, una decisión de diseño fundamental del sistema es evitar el acoplamiento a un modelo específico. Si bien GPT-4o obtuvo el mejor desempeño en la evaluación comparativa realizada y fue el modelo seleccionado para las corridas principales, la arquitectura del sistema abstrae la comunicación con el LLM mediante una capa que parametriza el modelo y el proveedor como variables de configuración. En la implementación actual, esta abstracción permite intercambiar modelos dentro de los proveedores soportados y mantener estable el resto del pipeline.
+No obstante, una decisión de diseño fundamental del sistema es evitar el acoplamiento a un modelo específico. Por ello, la arquitectura abstrae la comunicación con el LLM mediante una capa que parametriza el modelo y el proveedor como variables de configuración. En la implementación actual, esta abstracción permite intercambiar modelos dentro de los proveedores soportados y mantener estable el resto del pipeline.
 
-Esta decisión responde a tres consideraciones principales. La primera es la soberanía de datos: en contextos institucionales y académicos, el envío de información a servicios externos puede estar sujeto a restricciones de privacidad o políticas internas. La segunda es la reproducibilidad y continuidad: los modelos propietarios pueden cambiar por actualizaciones o discontinuidades de servicio. La tercera es la evolución del ecosistema: una arquitectura parametrizable por modelo reduce el esfuerzo de adopción de nuevas variantes y mantiene estable el resto del pipeline.
+Esta decisión responde a tres consideraciones principales. La primera es la soberanía de datos: en contextos institucionales y académicos, el envío de información a servicios externos puede estar sujeto a restricciones de privacidad o políticas internas. La segunda es la reproducibilidad y continuidad: los modelos propietarios pueden cambiar por actualizaciones o interrupciones del servicio. La tercera es la evolución del ecosistema: una arquitectura parametrizable por modelo reduce el esfuerzo de adopción de nuevas variantes y mantiene estable el resto del pipeline.
 
-En la práctica, el sistema soporta actualmente dos proveedores: OpenAI (utilizado en este trabajo para el modelo seleccionado GPT-4o) y Ollama (incorporado para habilitar la ejecución local de modelos de código abierto cuando se prioriza soberanía de datos).
-Incorporar un proveedor adicional implica implementar su adaptador correspondiente.
+En la práctica, la implementación actual soporta dos proveedores: OpenAI y Ollama. Esta decisión permite cubrir tanto el uso de servicios externos como la ejecución local de modelos de código abierto en contextos donde se prioriza la soberanía de datos. La incorporación de un proveedor adicional requiere implementar su adaptador correspondiente.
 
 \section{Selección de la Herramienta de Análisis Sintáctico}
 
 La validación sintáctica de las traducciones IBDD generadas por el LLM requiere una herramienta de análisis sintáctico (\textit{parsing}) capaz de verificar conformidad con la gramática formal IBDD. El analizador debe resolver ambigüedades sintácticas, proveer reportes de errores precisos, integrarse con Python (lenguaje de implementación del sistema), ofrecer confiabilidad para uso en investigación, y permitir la especificación declarativa de la gramática en un formato legible.
 
-\subsection{Lark: Características y Algoritmos}
-
 Lark~\cite{lark_docs} es una biblioteca de análisis sintáctico para Python que ha alcanzado amplia adopción tanto en la industria como en la academia. Implementa tres algoritmos principales de análisis. El algoritmo Earley logra rendimiento lineal en casos favorables y puede procesar gramáticas ambiguas, lo que lo hace adecuado para prototipado y lenguajes de estructura compleja; su principal limitación es un rendimiento aproximadamente diez veces inferior al de LALR en gramáticas no ambiguas~\cite{lark_parsing_comparison}. El algoritmo LALR ofrece el mejor rendimiento para gramáticas no ambiguas bien definidas, aunque su \textit{lexer} contextual puede presentar fallos en ciertos casos de ambigüedad~\cite{lark_issues}. El algoritmo CYK presenta limitaciones que incluyen un defecto reportado que causa bucles infinitos con gramáticas recursivas~\cite{lark_issues}, por lo que no resulta apropiado para uso fuera de contextos teóricos.
 
 Se consideraron otras bibliotecas de análisis sintáctico para Python antes de seleccionar Lark. PLY (\textit{Python Lex-Yacc}) implementa exclusivamente LALR(1) y no soporta gramáticas ambiguas, lo que lo descarta para la gramática IBDD que combina estructuras EBNF con expresiones de lógica de primer orden. ANTLR4, si bien es una herramienta robusta con soporte para múltiples lenguajes, genera analizadores LL(*) que tampoco manejan ambigüedades de forma nativa, y su arquitectura basada en Java introduce una dependencia externa significativa. Las bibliotecas basadas en \textit{Parsing Expression Grammars} (PEG), como pyparsing y TatSu, resuelven las ambigüedades mediante prioridad ordenada en lugar de explorar todas las derivaciones posibles, lo cual puede descartar silenciosamente interpretaciones válidas de la gramática IBDD. Lark, en cambio, ofrece el algoritmo Earley con soporte nativo para gramáticas ambiguas, especificación declarativa en EBNF y mensajes de error con posición exacta del fallo. Según análisis independientes~\cite{python_parsing_benchmarks}, Lark se posiciona favorablemente frente a estas alternativas en el balance entre flexibilidad, rendimiento y facilidad de uso.
-
-\subsection{Adopción Industrial y Académica}
 
 Lark está clasificado como \textit{Production/Stable} en PyPI, cuenta con más de 5\,500 estrellas en GitHub y mantiene desarrollo activo~\cite{lark_pypi}. Además, presenta adopción en sistemas de escala empresarial: Dailymotion procesa más de 100 millones de llamadas API GraphQL diarias utilizando Lark para el análisis de \textit{GraphQL Schema Definition Language}~\cite{dailymotion_graphql}; Vyper, el lenguaje de contratos inteligentes para Ethereum, emplea Lark para el análisis de su sintaxis~\cite{vyper_github}; y Poetry, el gestor de dependencias de Python, depende de Lark para procesar archivos de configuración~\cite{poetry_github}.
 
 En el ámbito académico, Hundvin~\cite{hundvin2022code} desarrolló en la Universidad de Bergen una tesis de maestría sobre generación de fragmentos de código a partir de especificaciones de gramática Lark, contribuyendo algoritmos para producir código sintácticamente correcto desde gramáticas formales. Este antecedente aporta evidencia de la pertinencia de Lark para investigación en análisis sintáctico y validación de lenguajes.
 
-\subsection{Manejo de Gramáticas Ambiguas}
+\subsection{Decisión: Lark con Earley}
 
 La gramática IBDD presenta zonas potenciales de ambigüedad derivadas de la flexibilidad introducida en la implementación. En particular, la regla del \textit{switch} acepta una secuencia flexible de guardas, expresiones y asignaciones tras la interacción, lo que obliga al analizador a decidir entre distintas derivaciones posibles para secuencias que mezclan condiciones, expresiones sueltas y actualizaciones de estado. Un analizador LALR requeriría desambiguar estas construcciones mediante transformaciones de la gramática que sacrificarían su legibilidad; el algoritmo Earley, en cambio, permite manejar esta flexibilidad de manera más directa.
 
 El analizador Earley de Lark puede almacenar eficientemente todas las derivaciones posibles ante una ambigüedad~\cite{lark_docs}. La biblioteca ofrece tres estrategias de resolución: el modo \texttt{resolve} (predeterminado) elige automáticamente la derivación más simple; el modo \texttt{explicit} retorna todas las derivaciones para selección manual; y el modo \texttt{forest} retorna el bosque de análisis completo. En el presente trabajo se utiliza el modo \texttt{resolve}, que resulta adecuado para las ambigüedades de la gramática IBDD ya que la derivación más simple coincide con la interpretación semánticamente correcta en todos los casos observados.
 
-\subsection{Decisión: Earley en Lark}
+Sobre esta base, se seleccionó Lark con el algoritmo Earley como herramienta de análisis sintáctico. Esta combinación ofrece la flexibilidad necesaria para manejar la estructura anidada y las potenciales ambigüedades de la gramática IBDD, facilita el ajuste y la extensión de la gramática durante el desarrollo, y cuenta con respaldo tanto industrial como académico. La gramática se especifica en formato EBNF, lo que favorece su lectura y mantenimiento, y el analizador provee información detallada sobre violaciones sintácticas que resulta útil para el ciclo de corrección iterativa.
 
-Se seleccionó Lark con el algoritmo Earley como herramienta de análisis sintáctico. El algoritmo Earley ofrece la flexibilidad necesaria para manejar la estructura anidada y las potenciales ambigüedades de la gramática IBDD, permite iteración ágil durante el desarrollo de dicha gramática, y cuenta con respaldo tanto industrial como académico. La gramática se especifica en formato EBNF, lo que facilita su lectura y mantenimiento, y el analizador provee información detallada sobre violaciones sintácticas que resulta útil para el ciclo de corrección iterativa.
-
-El compromiso de rendimiento respecto a LALR (aproximadamente un orden de magnitud más lento) se considera aceptable dado que el volumen de escenarios a procesar es moderado y la corrección es prioritaria sobre la velocidad en esta fase de investigación. Para un sistema de producción futuro, la migración a LALR sería recomendable una vez estabilizada la gramática IBDD.
+El compromiso de rendimiento respecto a LALR (aproximadamente un orden de magnitud más lento) se considera aceptable dado que el volumen de escenarios a procesar es moderado y la corrección es prioritaria sobre la velocidad en esta fase de investigación. En un sistema de producción futuro, si el rendimiento pasara a ser un requisito dominante, sería razonable migrar a un analizador LALR.
 
 \section{Diseño del Prompt de Traducción}
 \label{sec:prompt-design}
@@ -160,9 +160,11 @@ El prompt se organiza en cinco secciones. La primera establece el contexto gener
 
 La inclusión de la gramática formal directamente en el prompt responde a un requisito fundamental: el modelo debe conocer la sintaxis exacta del lenguaje objetivo para generar traducciones conformes. Sin esta especificación, las traducciones presentarían las desviaciones sintácticas observadas durante la evaluación comparativa de modelos, donde incluso GPT-4o introducía variaciones cuando el prompt no era suficientemente explícito respecto a las reglas de formato.
 
+El prompt completo utilizado en los experimentos puede encontrarse en el archivo \texttt{docs/PROMPT\_ES.md} del repositorio y se reproduce en el Apéndice~\ref{ap:prompt}.
+
 \subsection{Aprendizaje por Ejemplos}
 
-Se adoptó la técnica de \textit{few-shot prompting} con cuatro ejemplos canónicos que cubren los patrones más frecuentes de la traducción BDD$\rightarrow$IBDD. Los primeros tres ejemplos provienen del dominio de impresora industrial, extraído de los trabajos de Zameni et al.~\cite{zameni2024ibdd}, y el cuarto del dominio de comercio electrónico. Esta selección de dos dominios distintos busca que el modelo generalice los patrones de traducción en lugar de memorizar un formato específico de dominio.
+Se adoptó la técnica de \textit{few-shot prompting} con cuatro ejemplos canónicos que cubren los patrones más frecuentes de la traducción BDD$\rightarrow$IBDD. Estos cuatro ejemplos forman parte de la sección de ejemplos del prompt de traducción, que puede encontrarse en \texttt{docs/PROMPT\_ES.md}. Los primeros tres provienen del dominio de impresora industrial, extraído de los trabajos de Zameni et al.~\cite{zameni2024ibdd}, y el cuarto del dominio de comercio electrónico. Esta selección de dos dominios distintos busca que el modelo generalice los patrones de traducción en lugar de memorizar un formato específico de dominio.
 
 El primer ejemplo ilustra un escenario con una única variable local declarada en la cláusula Given, precondición trivial (\texttt{[true]}), un gate de entrada en When y un gate de salida en Then con postcondición de verificación. El segundo ejemplo presenta variables locales con guardas no triviales y dos switches secuenciales en When que modelan un proceso de dos etapas. El tercer ejemplo muestra un escenario sin variables locales donde la cláusula Given contiene únicamente una guarda sobre el estado global del sistema. El cuarto ejemplo introduce múltiples variables de interacción y asignaciones compuestas que actualizan más de un atributo del estado.
 
@@ -173,6 +175,19 @@ Cada ejemplo incluye el escenario Gherkin original en formato JSON, la traducci�
 El prompt especifica reglas explícitas para la traducción de cada cláusula Gherkin. Para la cláusula Given, el modelo debe identificar si el texto menciona entidades que constituyen variables locales (por ejemplo, ``a job file'' se traduce a la variable local \texttt{JF}) o si describe condiciones sobre el estado global del sistema, que se modelan como guardas sin declaración de variables. Múltiples condiciones se combinan mediante el operador de conjunción lógica y la guarda resultante se encierra entre corchetes.
 
 Para la cláusula When, las acciones del usuario se modelan como gates de entrada~(\texttt{?}) y las acciones del sistema como gates de salida~(\texttt{!}). Cuando el texto contiene múltiples acciones conectadas por ``AND'', cada acción se traduce como un switch independiente. En la forma canónica del lenguaje, cada switch incluye una condición entre corchetes y, opcionalmente, asignaciones que reflejan cambios de estado; en la implementación, la gramática admite además variantes más flexibles para tolerar salidas imperfectas del modelo durante la validación.
+
+Un caso representativo es el segundo ejemplo canónico del prompt, donde la cláusula When contiene dos acciones consecutivas y se traduce como dos switches secuenciales:
+
+\begin{quote}
+\begin{Verbatim}[fontsize=\small]
+WHEN !printstart.cj
+  cj.id = CJ.id ∧ cj.state = Printing
+  CJ.state := cj.state
+!printcomplete.cj
+  cj.id = CJ.id ∧ cj.state = Completed
+  CJ.state := cj.state, PJL := add(CJ, PJL)
+\end{Verbatim}
+\end{quote}
 
 Para la cláusula Then, las verificaciones del estado final se expresan como postcondiciones en la guarda final, mientras que las acciones explícitas del sistema se modelan como switches con gates de salida. Las convenciones de nomenclatura establecen que las variables locales se representan como abreviaturas en mayúscula (\texttt{CJ}, \texttt{JF}, \texttt{P}), las variables globales como nombres descriptivos en mayúscula (\texttt{SJL}, \texttt{PJL}), las variables de interacción en minúscula (\texttt{cj}, \texttt{jf}, \texttt{p}) y los gates como verbos descriptivos en minúscula (\texttt{submit}, \texttt{printstart}, \texttt{add\_to\_cart}).
 
@@ -188,11 +203,11 @@ El formato de entrada representa cada escenario BDD como un objeto JSON con camp
 \section{Construcción del Dataset}
 \label{sec:dataset}
 
-La evaluación del sistema de traducción requiere un conjunto de escenarios BDD que cubra diversidad de dominios, estructuras sintácticas y niveles de complejidad. Dado que no existe un corpus público de escenarios BDD anotados con traducciones IBDD de referencia, fue necesario construir un dataset específico para este trabajo.
+La evaluación del sistema de traducción requiere un conjunto de escenarios BDD que cubra diversidad de dominios, estructuras sintácticas y niveles de complejidad. Dado que no conseguimos un corpus público de escenarios BDD anotados con traducciones IBDD de referencia, fue necesario construir un dataset específico para este trabajo.
 
 El dataset resultante contiene 120 escenarios BDD distribuidos en cinco dominios de aplicación y tres niveles de complejidad. La Tabla~\ref{tab:dataset-enfoque} resume su composición.
 
-En términos de organización de archivos, esta colección consolidada se almacena como \texttt{Dataset.json}. Para la evaluación experimental (Capítulo~\ref{chap:evaluacion}) se adopta una partición fija derivada de este archivo: un subconjunto de desarrollo de 30 escenarios (correspondiente a la versión inicial del dataset utilizada durante la etapa de ajuste) y un subconjunto de prueba de 90 escenarios reservado para el reporte final de resultados.
+En términos de organización de archivos, esta colección consolidada se almacena como \texttt{data/Dataset.json}. Para la evaluación experimental (Capítulo~\ref{chap:evaluacion}) se adopta una partición fija derivada de este archivo: un subconjunto de desarrollo de 30 escenarios, disponible en \texttt{data/Dataset\_dev\_30.json}, y un subconjunto de prueba de 90 escenarios, disponible en \texttt{data/Dataset\_test\_90.json}. El repositorio incluye además las versiones en español \texttt{data/Dataset\_ES.json}, \texttt{data/Dataset\_ES\_dev\_30.json} y \texttt{data/Dataset\_ES\_test\_90.json}.
 
 \begin{table}[htbp]
 \centering
@@ -219,7 +234,7 @@ La etiqueta de complejidad de cada escenario se definió mediante criterios estr
 
 \subsection{Escenarios Canónicos de Referencia}
 
-El punto de partida para la construcción del dataset fueron los escenarios canónicos provenientes de dos dominios: el dominio de impresora industrial, extraído de los trabajos de Zameni et al.~\cite{zameni2024ibdd}, y el dominio de calculadora. Estos escenarios cuentan con traducciones IBDD verificadas manualmente y cubren los patrones fundamentales del lenguaje: declaración de variables locales con y sin guardas, switches con gates de entrada y salida, asignaciones simples y compuestas, y postcondiciones con funciones de verificación. Su inclusión en el dataset cumple una doble función: sirven como ejemplos de referencia dentro del prompt de traducción (Sección~\ref{sec:prompt-design}) y como casos de validación cuya traducción correcta es conocida de antemano.
+El punto de partida para la construcción del dataset fueron los escenarios canónicos provenientes de dos dominios: el dominio de impresora industrial, extraído de los trabajos de Zameni et al.~\cite{zameni2024ibdd}, y el dominio de calculadora. Estos escenarios cuentan con traducciones IBDD verificadas manualmente y cubren los patrones fundamentales del lenguaje: declaración de variables locales con y sin guardas, switches con gates de entrada y salida, asignaciones simples y compuestas, y postcondiciones con funciones de verificación. Su inclusión en el dataset cumple una doble función: sirven como ejemplos de referencia dentro del prompt de traducción y como casos de validación cuya traducción correcta es conocida de antemano.
 
 \subsection{Generación Sintética de Escenarios}
 
@@ -227,9 +242,9 @@ Los escenarios canónicos de referencia, si bien cubren los patrones fundamental
 
 El proceso de ampliación del dataset se organizó en dos etapas. En la primera, se expandieron los dominios existentes para equilibrar la distribución de complejidad: el dominio de calculadora, que contenía casi exclusivamente escenarios simples, se complementó con escenarios de complejidad media y alta; el dominio de impresora se completó con escenarios simples adicionales. En la segunda etapa, se incorporaron tres nuevos dominios de aplicación: comercio electrónico, banco y biblioteca. Estos dominios fueron seleccionados por representar sistemas de software con patrones de interacción diferenciados entre sí: gestión de inventario y pagos, operaciones financieras con autorizaciones y cálculos numéricos, y administración de recursos compartidos con reservas y políticas temporales.
 
-La generación se realizó mediante prompting al LLM, proveyendo los escenarios canónicos como ejemplos de referencia junto con instrucciones para producir nuevos escenarios en formato Gherkin. Para esta etapa se utilizó \textit{Claude Sonnet 4} de Anthropic, uno de los modelos analizados en la comparación inicial de la Sección~\ref{sec:seleccion-modelo}. Los escenarios generados se representaron como objetos JSON con la estructura estándar del sistema (campos \texttt{id}, \texttt{domain}, \texttt{title}, \texttt{given}, \texttt{when}, \texttt{then}, \texttt{complexity}). Se solicitó que los escenarios variaran en la cantidad de pasos, el tipo de interacciones y la presencia de precondiciones y postcondiciones compuestas, manteniendo la plausibilidad funcional de las situaciones descritas. Para cada dominio se generaron 24 escenarios con distribución aproximadamente uniforme entre los tres niveles de complejidad.
+La generación se realizó mediante prompting al LLM, proveyendo los escenarios canónicos como ejemplos de referencia junto con instrucciones para producir nuevos escenarios en formato Gherkin. Para esta etapa se utilizó \textit{Claude Sonnet 4} de Anthropic, uno de los modelos analizados en la comparación inicial de la Sección~\ref{sec:seleccion-modelo}. Los escenarios generados se representaron como objetos JSON con la estructura estándar del sistema (campos \texttt{id}, \texttt{domain}, \texttt{title}, \texttt{given}, \texttt{when}, \texttt{then}, \texttt{complexity}) y pueden encontrarse en \texttt{data/Dataset.json}, junto con sus particiones \texttt{data/Dataset\_dev\_30.json} y \texttt{data/Dataset\_test\_90.json}. Se solicitó que los escenarios variaran en la cantidad de pasos, el tipo de interacciones y la presencia de precondiciones y postcondiciones compuestas, manteniendo la plausibilidad funcional de las situaciones descritas. Para cada dominio se generaron 24 escenarios con distribución aproximadamente uniforme entre los tres niveles de complejidad.
 
-Se decidió utilizar un modelo distinto del empleado en la etapa principal de traducción y corrección (GPT-4o) para reducir el acoplamiento entre generación de datos y evaluación del sistema. Esta separación metodológica ayuda a mitigar sesgos por dependencia de estilo de un mismo modelo y disminuye el riesgo de sobreestimar el desempeño del traductor sobre casos sintéticos producidos con ese mismo estilo.
+Se decidió utilizar \textit{Claude Sonnet 4}, un modelo distinto del empleado en la etapa principal de traducción y corrección (GPT-4o), para reducir el acoplamiento entre generación de datos y evaluación del sistema. Esta separación metodológica ayuda a mitigar sesgos por dependencia de estilo de un mismo modelo y disminuye el riesgo de sobreestimar el desempeño del traductor sobre casos sintéticos producidos con ese mismo estilo.
 
 La utilización de un LLM como herramienta de generación sintética permite obtener escenarios con variaciones naturales en la redacción de las cláusulas Given, When y Then. Esta diversidad lingüística resulta relevante porque los escenarios BDD en entornos reales exhiben una variabilidad considerable en estilo y nivel de detalle según el autor, y el sistema de traducción debe ser capaz de manejar formulaciones heterogéneas de un mismo tipo de interacción. Como contrapartida, la generación sintética introduce el riesgo de producir escenarios que, si bien son gramaticalmente correctos en Gherkin, describen situaciones funcionalmente implausibles o ambiguas. Para mitigar este riesgo, cada escenario generado fue revisado manualmente, verificando su plausibilidad funcional, la coherencia entre las cláusulas Given, When y Then, y la ausencia de ambigüedades que pudieran afectar la traducción. Los escenarios que no cumplieron estos criterios fueron descartados o reformulados.
 
@@ -239,6 +254,6 @@ La literatura sobre BDD y los repositorios públicos de escenarios Gherkin está
 
 Sin embargo, una porción significativa de la comunidad de desarrollo de software opera en español, y las especificaciones de comportamiento en entornos hispanohablantes se redactan frecuentemente en este idioma. Un sistema de traducción BDD$\rightarrow$IBDD que solo funcione con escenarios en inglés tendría una aplicabilidad limitada en estos contextos. Por este motivo, se construyó una versión en español del dataset BDD, traduciendo los escenarios del dataset original y verificando que las traducciones preserven estructura e intención sin introducir ambigüedades.
 
-La inclusión de un dataset bilingüe permite evaluar el comportamiento del sistema ante escenarios en español. En la literatura relevada para esta tesis, no se encontraron reportes de evaluación BDD$\rightarrow$IBDD en idioma español. Asimismo, es razonable esperar mejor desempeño con escenarios en inglés, dado que los LLMs suelen entrenarse con mayor proporción de texto en ese idioma y que la gramática IBDD emplea palabras clave en inglés (\texttt{GIVEN}, \texttt{WHEN}, \texttt{THEN}). En este marco, la evaluación bilingüe permite cuantificar esa diferencia y estimar el nivel de desempeño del sistema sobre el dataset en español.
+La inclusión de un dataset bilingüe permite evaluar el comportamiento del sistema ante escenarios en español. En la literatura relevada para este trabajo, no se encontraron reportes de evaluación BDD$\rightarrow$IBDD en idioma español. Asimismo, es razonable esperar mejor desempeño con escenarios en inglés, dado que los LLMs suelen entrenarse con mayor proporción de texto en ese idioma y que la gramática IBDD emplea palabras clave en inglés (\texttt{GIVEN}, \texttt{WHEN}, \texttt{THEN}). En este marco, la evaluación bilingüe permite cuantificar esa diferencia y estimar el nivel de desempeño del sistema sobre el dataset en español.
 
 La versión en español del dataset contiene los mismos 120 escenarios traducidos, preservando la estructura, la intención y el nivel de complejidad de cada caso. La traducción fue realizada de forma asistida y verificada manualmente para evitar ambigüedades introducidas por el cambio de idioma.
