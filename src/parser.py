@@ -686,16 +686,14 @@ def validate_ibdd_cases(json_file_path: str, output_destination: Optional[str] =
             ibdd_text = ibdd_text.replace('\\n', '\n')
 
             try:
-                scenario = parser.parse_text(ibdd_text)
+                parser.parse_text(ibdd_text)
                 valid = True
                 error = None
-                parsed_result = str(scenario)
                 print(f"✓ Caso {case_id}: {title} - Válido")
 
             except Exception as e:
                 valid = False
                 error_message = str(e)
-                parsed_result = None
                 print(f"\033[91m✗ Caso {case_id}: {title} - Inválido\033[0m")
                 print(f"  Error: {error_message}")
 
@@ -704,8 +702,7 @@ def validate_ibdd_cases(json_file_path: str, output_destination: Optional[str] =
                     'domain': domain,
                     'title': title,
                     'valid': valid,
-                    'error': error_message,
-                    'parsed_result': parsed_result
+                    'error': error_message
                 })
                 time.sleep(0.3)
                 continue
@@ -715,8 +712,7 @@ def validate_ibdd_cases(json_file_path: str, output_destination: Optional[str] =
                 'domain': domain,
                 'title': title,
                 'valid': valid,
-                'error': error,
-                'parsed_result': parsed_result
+                'error': error
             })
 
             time.sleep(0.3)
