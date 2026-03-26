@@ -5,7 +5,7 @@
     "title": "Submit job to printer",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN JF [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN JF, ,, SM, ,, CJ, ,, JT [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 2,
@@ -61,7 +61,7 @@
     "title": "Hard copy output after printing",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN CJ, ,, PO [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 9,
@@ -69,7 +69,7 @@
     "title": "Add two numbers",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 10,
@@ -77,7 +77,7 @@
     "title": "Subtract two numbers",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN A, ,, B, ,, R [[]\nWHEN 2 switches\nTHEN [[]"
   },
   {
     "id": 11,
@@ -85,7 +85,7 @@
     "title": "Multiply two numbers",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 12,
@@ -93,7 +93,7 @@
     "title": "Divide two numbers",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN A, ,, B, ,, R [[]\nWHEN 2 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 13,
@@ -109,7 +109,7 @@
     "title": "Calculate percentage",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN  [[]\nWHEN 2 switches\nTHEN [[]"
   },
   {
     "id": 15,
@@ -117,7 +117,7 @@
     "title": "Square a number",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN N, ,, RES [[]\nWHEN 2 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 16,
@@ -125,7 +125,7 @@
     "title": "Calculate square root",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN  [[]\nWHEN 2 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 17,
@@ -133,7 +133,7 @@
     "title": "Chain operations add and multiply",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 3 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN RES [[]\nWHEN 2 switches\nTHEN [[]"
   },
   {
     "id": 18,
@@ -149,7 +149,7 @@
     "title": "Clear and add",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 3 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN  [[]\nWHEN 3 switches\nTHEN [[]"
   },
   {
     "id": 20,
@@ -157,7 +157,7 @@
     "title": "Add negative numbers",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN A, ,, B, ,, OP [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 21,
@@ -165,7 +165,7 @@
     "title": "Subtract with negative result",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
+    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN [[]"
   },
   {
     "id": 22,
@@ -189,7 +189,7 @@
     "title": "Cancel job during printing",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 25,
@@ -205,23 +205,23 @@
     "title": "Priority job jumps queue",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN HPJ [[]\nWHEN 2 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 27,
-    "domain": "unknown",
-    "title": "Case 27",
+    "domain": "printer",
+    "title": "Concurrent pause requests",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN CJ [[]\nWHEN 2 switches\nTHEN [[]"
+    "parsed_result": "GIVEN CJ [[]\nWHEN 2 switches\nTHEN 3 switches [[]"
   },
   {
     "id": 28,
-    "domain": "printer",
-    "title": "Auto-cleanup old printed jobs",
+    "domain": "unknown",
+    "title": "Case 28",
     "valid": true,
     "error": null,
-    "parsed_result": "GIVEN  [[]\nWHEN 1 switches\nTHEN [[]"
+    "parsed_result": "GIVEN PJL [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   },
   {
     "id": 29,
@@ -233,210 +233,10 @@
   },
   {
     "id": 30,
-    "domain": "unknown",
-    "title": "Case 30",
+    "domain": "printer",
+    "title": "Duplicate job submission detection",
     "valid": true,
     "error": null,
     "parsed_result": "GIVEN JF [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 31,
-    "domain": "unknown",
-    "title": "Case 31",
-    "valid": false,
-    "error": "No terminal matches '[' in the current parser context, at line 3 col 34\n\n!complete_all_jobs [true] SJL := []\n                                 ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* NOT\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NOT_SYMBOL\n\t* NUMBER\n\t* __ANON_1\n",
-    "parsed_result": null
-  },
-  {
-    "id": 32,
-    "domain": "printer",
-    "title": "Emergency stop during printing",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN CJ [[]\nWHEN 1 switches\nTHEN [[]"
-  },
-  {
-    "id": 33,
-    "domain": "banking",
-    "title": "Transfer funds between accounts",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN A, ,, B [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 34,
-    "domain": "banking",
-    "title": "Concurrent withdrawal attempts",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN A [[]\nWHEN 2 switches\nTHEN [[]"
-  },
-  {
-    "id": 35,
-    "domain": "banking",
-    "title": "Overdraft protection activation",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN A [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 36,
-    "domain": "banking",
-    "title": "Failed transfer rollback",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN A, ,, B [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 37,
-    "domain": "banking",
-    "title": "Detect fraudulent transaction pattern",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN A [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 38,
-    "domain": "banking",
-    "title": "Schedule recurring payment",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN A [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 39,
-    "domain": "banking",
-    "title": "Insufficient funds for scheduled payment",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN A [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 40,
-    "domain": "unknown",
-    "title": "Case 40",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN T [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 41,
-    "domain": "ecommerce",
-    "title": "Place order with insufficient stock",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN PX [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 42,
-    "domain": "ecommerce",
-    "title": "Apply discount code after cart modification",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN C [[]\nWHEN 1 switches\nTHEN [[]"
-  },
-  {
-    "id": 43,
-    "domain": "unknown",
-    "title": "Case 43",
-    "valid": false,
-    "error": "No terminal matches '_' in the current parser context, at line 1 col 36\n\nGIVEN C [C_discount_code_expiry = 5_minutes]\n                                   ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
-    "parsed_result": null
-  },
-  {
-    "id": 44,
-    "domain": "unknown",
-    "title": "Case 44",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN PY [[]\nWHEN 2 switches\nTHEN [[]"
-  },
-  {
-    "id": 45,
-    "domain": "ecommerce",
-    "title": "Cancel order after partial shipment",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN O [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 46,
-    "domain": "unknown",
-    "title": "Case 46",
-    "valid": false,
-    "error": "No terminal matches '_' in the current parser context, at line 1 col 66\n\n= thirtyFiveDaysAgo ∧ return_window = 30_days]\n                                        ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* AND\n\t* RBRACKET\n\t* STAR\n\t* OR\n\t* PERCENT\n",
-    "parsed_result": null
-  },
-  {
-    "id": 47,
-    "domain": "ecommerce",
-    "title": "Dynamic pricing based on demand",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN PZ [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 48,
-    "domain": "unknown",
-    "title": "Case 48",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN C [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 49,
-    "domain": "ecommerce",
-    "title": "Split payment across multiple methods",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN O [[]\nWHEN 2 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 50,
-    "domain": "unknown",
-    "title": "Case 50",
-    "valid": false,
-    "error": "No terminal matches ':' in the current parser context, at line 1 col 31\n\nGIVEN DA [DA.appointments = 10:00 ∧ DA.appointments = 11:00]\n                              ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
-    "parsed_result": null
-  },
-  {
-    "id": 51,
-    "domain": "unknown",
-    "title": "Case 51",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN P [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 52,
-    "domain": "healthcare",
-    "title": "Access patient records with privacy restrictions",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN PR [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 53,
-    "domain": "unknown",
-    "title": "Case 53",
-    "valid": false,
-    "error": "No terminal matches ':' in the current parser context, at line 1 col 36\n\nGIVEN OR [OR.scheduled_surgery = 14:00]\n                                   ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
-    "parsed_result": null
-  },
-  {
-    "id": 54,
-    "domain": "healthcare",
-    "title": "Conflicting diagnoses from multiple doctors",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN D1, ,, D2 [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
-  },
-  {
-    "id": 55,
-    "domain": "unknown",
-    "title": "Case 55",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN P [[]\nWHEN 1 switches\nTHEN 1 switches [[]"
   }
 ]

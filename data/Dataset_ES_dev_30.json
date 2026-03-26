@@ -1,0 +1,272 @@
+[
+  {
+    "id": 1,
+    "domain": "printer",
+    "title": "Enviar trabajo a la impresora",
+    "given": "un archivo de trabajo",
+    "when": "el operador envía el archivo de trabajo usando el método de envío",
+    "then": "la impresora agrega un nuevo trabajo de controlador a los trabajos programados Y el trabajo de controlador es del tipo Tipo de trabajo",
+    "complexity": "medium"
+  },
+  {
+    "id": 2,
+    "domain": "printer",
+    "title": "Completar impresión mueve trabajo a impresos",
+    "given": "un trabajo de controlador está en los trabajos programados Y el trabajo de controlador es un trabajo de producción",
+    "when": "la impresora comienza a imprimir el trabajo de controlador Y la impresora completa la impresión del trabajo de controlador",
+    "then": "el trabajo de controlador está en los trabajos impresos",
+    "complexity": "medium"
+  },
+  {
+    "id": 3,
+    "domain": "printer",
+    "title": "Limpieza al reiniciar",
+    "given": "el controlador de la impresora está en funcionamiento",
+    "when": "el operador reinicia el controlador de la impresora",
+    "then": "se ejecuta la limpieza de trabajos impresos",
+    "complexity": "simple"
+  },
+  {
+    "id": 4,
+    "domain": "printer",
+    "title": "Pausar impresión",
+    "given": "un trabajo de controlador se está imprimiendo",
+    "when": "el operador pausa la impresión del trabajo de controlador",
+    "then": "el trabajo de controlador está pausado",
+    "complexity": "simple"
+  },
+  {
+    "id": 5,
+    "domain": "printer",
+    "title": "Reanudar trabajo pausado",
+    "given": "un trabajo de controlador está pausado",
+    "when": "el operador reanuda la impresión del trabajo de controlador",
+    "then": "el trabajo de controlador se está imprimiendo",
+    "complexity": "simple"
+  },
+  {
+    "id": 6,
+    "domain": "printer",
+    "title": "Mover trabajo pausado a espera",
+    "given": "un trabajo de controlador está pausado",
+    "when": "el operador mueve el trabajo de controlador a los trabajos en espera antes de que la impresora complete la impresión",
+    "then": "el trabajo de controlador está en los trabajos en espera Y el trabajo de controlador no está en los trabajos impresos",
+    "complexity": "medium"
+  },
+  {
+    "id": 7,
+    "domain": "printer",
+    "title": "Mover de espera a programados",
+    "given": "un trabajo de controlador en los trabajos en espera",
+    "when": "el operador mueve el trabajo de controlador a los trabajos programados",
+    "then": "el trabajo de controlador está en los trabajos programados",
+    "complexity": "simple"
+  },
+  {
+    "id": 8,
+    "domain": "printer",
+    "title": "Copia impresa después de imprimir",
+    "given": "un trabajo de controlador está en los trabajos programados",
+    "when": "la impresora comienza a imprimir el trabajo de controlador Y la impresora completa la impresión del trabajo de controlador",
+    "then": "existe una salida impresa Y la salida impresa es una copia del trabajo de controlador",
+    "complexity": "complex"
+  },
+  {
+    "id": 9,
+    "domain": "calculator",
+    "title": "Sumar dos números",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 5 y 7 y elijo suma",
+    "then": "la calculadora muestra el resultado como 12",
+    "complexity": "simple"
+  },
+  {
+    "id": 10,
+    "domain": "calculator",
+    "title": "Restar dos números",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 10 y 3 y elijo resta",
+    "then": "la calculadora muestra el resultado como 7",
+    "complexity": "simple"
+  },
+  {
+    "id": 11,
+    "domain": "calculator",
+    "title": "Multiplicar dos números",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 4 y 6 y elijo multiplicación",
+    "then": "la calculadora muestra el resultado como 24",
+    "complexity": "simple"
+  },
+  {
+    "id": 12,
+    "domain": "calculator",
+    "title": "Dividir dos números",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 20 y 4 y elijo división",
+    "then": "la calculadora muestra el resultado como 5",
+    "complexity": "simple"
+  },
+  {
+    "id": 13,
+    "domain": "calculator",
+    "title": "Sumar tres números",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso el número 5 y sumo 3 y luego sumo 2",
+    "then": "la calculadora muestra el resultado como 10",
+    "complexity": "medium"
+  },
+  {
+    "id": 14,
+    "domain": "calculator",
+    "title": "Calcular porcentaje",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso el número 80 y calculo el 25 por ciento",
+    "then": "la calculadora muestra el resultado como 20",
+    "complexity": "simple"
+  },
+  {
+    "id": 15,
+    "domain": "calculator",
+    "title": "Elevar un número al cuadrado",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso el número 9 y elijo la operación elevar al cuadrado",
+    "then": "la calculadora muestra el resultado como 81",
+    "complexity": "simple"
+  },
+  {
+    "id": 16,
+    "domain": "calculator",
+    "title": "Calcular raíz cuadrada",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso el número 16 y elijo la operación raíz cuadrada",
+    "then": "la calculadora muestra el resultado como 4",
+    "complexity": "simple"
+  },
+  {
+    "id": 17,
+    "domain": "calculator",
+    "title": "Encadenar operaciones suma y multiplicación",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso 5, sumo 3 y luego multiplico por 2",
+    "then": "la calculadora muestra el resultado como 16",
+    "complexity": "medium"
+  },
+  {
+    "id": 18,
+    "domain": "calculator",
+    "title": "Calcular promedio de dos números",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 8 y 12 y elijo promedio",
+    "then": "la calculadora muestra el resultado como 10",
+    "complexity": "simple"
+  },
+  {
+    "id": 19,
+    "domain": "calculator",
+    "title": "Limpiar y sumar",
+    "given": "la calculadora muestra 42",
+    "when": "limpio la calculadora y luego ingreso 7 y sumo 3",
+    "then": "la calculadora muestra el resultado como 10",
+    "complexity": "medium"
+  },
+  {
+    "id": 20,
+    "domain": "calculator",
+    "title": "Sumar números negativos",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números -5 y -3 y elijo suma",
+    "then": "la calculadora muestra el resultado como -8",
+    "complexity": "simple"
+  },
+  {
+    "id": 21,
+    "domain": "calculator",
+    "title": "Restar con resultado negativo",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 5 y 12 y elijo resta",
+    "then": "la calculadora muestra el resultado como -7",
+    "complexity": "simple"
+  },
+  {
+    "id": 22,
+    "domain": "calculator",
+    "title": "Sumar números decimales",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 3.5 y 2.7 y elijo suma",
+    "then": "la calculadora muestra el resultado como 6.2",
+    "complexity": "simple"
+  },
+  {
+    "id": 23,
+    "domain": "calculator",
+    "title": "Multiplicar por cero",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 25 y 0 y elijo multiplicación",
+    "then": "la calculadora muestra el resultado como 0",
+    "complexity": "simple"
+  },
+  {
+    "id": 24,
+    "domain": "printer",
+    "title": "Cancelar trabajo durante la impresión",
+    "given": "un trabajo de controlador se está imprimiendo",
+    "when": "el operador cancela el trabajo de controlador",
+    "then": "el trabajo de controlador es eliminado de los trabajos programados Y el trabajo de controlador no está en los trabajos impresos Y la impresora deja de imprimir",
+    "complexity": "medium"
+  },
+  {
+    "id": 25,
+    "domain": "printer",
+    "title": "Manejar atasco de papel durante producción",
+    "given": "un trabajo de producción se está imprimiendo Y la impresora tiene papel suficiente",
+    "when": "ocurre un atasco de papel Y el operador despeja el atasco de papel Y el operador reanuda la impresión",
+    "then": "el trabajo de controlador continúa imprimiendo desde la última página exitosa",
+    "complexity": "complex"
+  },
+  {
+    "id": 26,
+    "domain": "printer",
+    "title": "Trabajo prioritario salta la cola",
+    "given": "hay 3 trabajos en los trabajos programados",
+    "when": "el operador envía un trabajo de alta prioridad Y lo marca como urgente",
+    "then": "el trabajo de alta prioridad es insertado al inicio de los trabajos programados",
+    "complexity": "medium"
+  },
+  {
+    "id": 27,
+    "domain": "printer",
+    "title": "Solicitudes de pausa concurrentes",
+    "given": "un trabajo de controlador se está imprimiendo",
+    "when": "dos operadores intentan pausar el mismo trabajo de controlador simultáneamente",
+    "then": "el trabajo de controlador se pausa solo una vez Y ambos operadores reciben confirmación",
+    "complexity": "complex"
+  },
+  {
+    "id": 28,
+    "domain": "printer",
+    "title": "Limpieza automática de trabajos impresos antiguos",
+    "given": "hay 50 trabajos en los trabajos impresos Y los trabajos impresos tienen más de 30 días de antigüedad",
+    "when": "se ejecuta la tarea de limpieza programada",
+    "then": "los trabajos con más de 30 días son eliminados de los trabajos impresos Y los trabajos recientes permanecen",
+    "complexity": "medium"
+  },
+  {
+    "id": 29,
+    "domain": "printer",
+    "title": "Reanudar impresión después de falla de energía",
+    "given": "un trabajo de controlador se está imprimiendo en la página 45 de 100",
+    "when": "ocurre una falla de energía Y la impresora se reinicia Y el operador reanuda el trabajo de controlador",
+    "then": "el trabajo de controlador continúa imprimiendo desde la página 45",
+    "complexity": "complex"
+  },
+  {
+    "id": 30,
+    "domain": "printer",
+    "title": "Detección de envío de trabajo duplicado",
+    "given": "un archivo de trabajo con checksum ABC123 está en los trabajos programados",
+    "when": "el operador envía el mismo archivo de trabajo con checksum ABC123",
+    "then": "la impresora rechaza el duplicado Y muestra un mensaje de advertencia",
+    "complexity": "medium"
+  }
+]

@@ -106,11 +106,15 @@ class LLMClient:
                 try:
                     msg = llm.invoke(messages)
                     return json.loads(msg.content)
-                except Exception:
+                except Exception as e:
                     if attempt < self.max_retries:
                         delay = 0.5 * (2 ** (attempt - 1)) + random.uniform(0, 0.5)
                         time.sleep(delay)
                     else:
+                        print(
+                            f"[LLMClient] OpenAI generate_json failed after {self.max_retries} intentos: "
+                            f"{type(e).__name__}: {e}"
+                        )
                         return None
 
         # JSON en mejor esfuerzo para modelos locales (validar si `jsonschema` está disponible)
@@ -133,10 +137,14 @@ class LLMClient:
                     jsonschema_validate(instance=parsed, schema=schema)
 
                 return parsed
-            except (json.JSONDecodeError, JsonSchemaValidationError, Exception):
+            except (json.JSONDecodeError, JsonSchemaValidationError, Exception) as e:
                 if attempt < self.max_retries:
                     delay = 0.5 * (2 ** (attempt - 1)) + random.uniform(0, 0.5)
                     time.sleep(delay)
                 else:
+                    print(
+                        f"[LLMClient] JSON best-effort generate_json failed after {self.max_retries} intentos: "
+                        f"{type(e).__name__}: {e}"
+                    )
                     return None
         return None

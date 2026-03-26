@@ -1,5 +1,183 @@
 [
   {
+    "case_id": 3,
+    "success": true,
+    "original_bdd": {
+      "given": "the printer controller is running",
+      "when": "the operator restarts the printer controller",
+      "then": "the printed jobs clean up is executed"
+    },
+    "previous_translation": "GIVEN [is_running(CTRL)]\nWHEN ?restart\n  true\n  (no assignment)\nTHEN !cleanup\n  true\n  PJL := empty(PJL)\n  [is_empty(PJL)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch, pero encontró '(no assignment)'. Cada switch debe tener una asignación válida o 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, después de '?restart'",
+    "correction_suggestion": "Reemplaza '(no assignment)' con una asignación válida. Por ejemplo, si no hay una asignación específica, usa 'true'.\n\nCorregido:\n```\nGIVEN [is_running(CTRL)]\nWHEN ?restart [true] true\nTHEN !cleanup [true] PJL := empty(PJL) [is_empty(PJL)]\n```",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación.",
+      "Revisa que las condiciones estén correctamente encerradas en corchetes.",
+      "Verifica que las asignaciones sean válidas y estén presentes."
+    ]
+  },
+  {
+    "case_id": 10,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 10 and 3 and choose subtraction",
+      "then": "the calculator displays the result as 7"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_numbers.calc,10,3\n  calc.state = Ready\n  CALC.state := Performing\n!choose_operation.calc,subtraction\n  calc.state = Performing\n  CALC.state := Result\nTHEN !display_result.calc\n  calc.result = 7\n  [calc.result = 7]",
+    "parse_error": "No terminal matches '1' in the current parser context, at line 2 col 26\n\nWHEN ?enter_numbers.calc,10,3\n                         ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser esperaba encontrar una condición encerrada en corchetes '[]' inmediatamente después de la interacción '?enter_numbers.calc,10,3'. Sin embargo, encontró una asignación 'calc.state = Ready' sin la condición requerida.",
+    "error_type": "Corchetes faltantes en condiciones",
+    "error_location": "Línea 2, después de '?enter_numbers.calc,10,3'",
+    "correction_suggestion": "Agrega una condición en corchetes después de '?enter_numbers.calc,10,3'. Por ejemplo: '?enter_numbers.calc,10,3 [true]'.",
+    "hints": [
+      "Asegúrate de que cada interacción en la sección WHEN esté seguida de una condición en corchetes.",
+      "Revisa que cada switch tenga la estructura: Interacción [Condición] Asignación."
+    ]
+  },
+  {
+    "case_id": 11,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 4 and 6 and choose multiplication",
+      "then": "the calculator displays the result as 24"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_numbers.n1,n2,operation\n  n1 = 4 ∧ n2 = 6 ∧ operation = multiplication\n  (no assignment)\nTHEN !display.result\n  result = n1 * n2\n  [result = 24]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el bloque WHEN. Cada switch debe tener una asignación explícita, incluso si es simplemente 'true'. En este caso, la línea '(no assignment)' indica que falta una asignación, lo que causa el error de parsing.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, después de la condición",
+    "correction_suggestion": "Agregar una asignación después de la condición en el bloque WHEN. Por ejemplo, se puede usar 'true' como asignación para indicar que la condición es suficiente para el cambio de estado.\n\nCorregido:\n```\nGIVEN [is_ready(CALC)]\nWHEN ?enter_numbers.n1,n2,operation\n  [n1 = 4 ∧ n2 = 6 ∧ operation = multiplication] true\nTHEN !display.result\n  result = n1 * n2\n  [result = 24]\n```",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación, incluso si es 'true'.",
+      "Revisa que todas las condiciones estén correctamente encerradas en corchetes '[...]'.",
+      "Verifica que las asignaciones estén correctamente formateadas después de cada condición."
+    ]
+  },
+  {
+    "case_id": 16,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the number 16 and choose square root operation",
+      "then": "the calculator displays the result as 4"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_number,16\n  true\n  NUM := 16\n?choose_operation,sqrt\n  true\n  OPERATION := sqrt\nTHEN !display_result\n  RESULT = sqrt(NUM)\n  DISPLAY := RESULT\n  [DISPLAY = 4]",
+    "parse_error": "No terminal matches ',' in the current parser context, at line 2 col 19\n\nWHEN ?enter_number,16\n                  ^\nExpected one of: \n\t* __ANON_0\n\t* FALSE\n\t* NUMBER\n\t* DOT\n\t* NOT_SYMBOL\n\t* __ANON_2\n\t* LBRACKET\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* THEN\n\t* LPAR\n",
+    "explanation": "El parser encontró un carácter ',' en un contexto donde esperaba un formato de interacción correctamente formado. Según la gramática IBDD, las interacciones deben seguir el formato 'g. iv1, ..., ivn'. En este caso, el gate debería comenzar con un '?' para indicar una entrada, pero la coma ',' está mal colocada y no es parte de la sintaxis esperada para una interacción.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, columna 19",
+    "correction_suggestion": "Corrige la línea de interacción para que cumpla con la sintaxis esperada. Debe ser algo como 'WHEN ?enter_number[NUM = 16] true'.",
+    "hints": [
+      "Asegúrate de que las interacciones sigan el formato 'g. iv1, ..., ivn'.",
+      "Revisa que las condiciones estén correctamente encerradas en corchetes '[...]'.",
+      "Verifica que cada switch tenga una asignación válida."
+    ]
+  },
+  {
+    "case_id": 17,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter 5 add 3 and then multiply by 2",
+      "then": "the calculator displays the result as 16"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?input.5\n  true\n  CALC.display := 5\n!add.3\n  true\n  CALC.display := CALC.display + 3\n!multiply.2\n  true\n  CALC.display := CALC.display * 2\nTHEN [CALC.display = 16]",
+    "parse_error": "No terminal matches '5' in the current parser context, at line 2 col 13\n\nWHEN ?input.5\n            ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser encontró un error en la línea 2, específicamente en la parte del Interaction. La sintaxis de un gate debe comenzar con '?' para entradas o '!' para salidas. En este caso, el número '5' fue interpretado como parte del gate, pero no sigue la sintaxis correcta de un gate.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, parte del Interaction",
+    "correction_suggestion": "Corrige la línea 2 para que el número '5' sea parte de la asignación o condición, no del gate. Por ejemplo, puedes modificar la línea para que sea parte de una asignación o condición válida, como: '?input.number := 5' o '?input.number [true] CALC.display := 5'.",
+    "hints": [
+      "Revisa que todos los gates comiencen con '?' o '!'.",
+      "Asegúrate de que los números o valores no estén directamente después de un gate sin un operador o contexto adecuado.",
+      "Considera usar variables o condiciones para manejar valores numéricos."
+    ]
+  },
+  {
+    "case_id": 18,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 8 and 12 and choose average",
+      "then": "the calculator displays the result as 10"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_numbers.calc,8,12,operation\n  calc.id = CALC.id ∧ operation = average\n  CALC.result := (8 + 12) / 2\nTHEN !display_result.calc\n  calc.result = 10\n  [CALC.result = 10]",
+    "parse_error": "No terminal matches '8' in the current parser context, at line 2 col 26\n\nWHEN ?enter_numbers.calc,8,12,operation\n                         ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser esperaba un formato de interacción que comenzara con un gate válido, que debe ser un '?' para entrada o '!' para salida, seguido de una lista de variables separadas por comas. Sin embargo, encontró '8' y '12' directamente en la lista de variables, lo cual no es permitido. Los números deben ser parte de la condición o asignación, no de la interacción directa.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, en el switch 'WHEN ?enter_numbers.calc,8,12,operation'",
+    "correction_suggestion": "Corrige el switch para que los números sean parte de la condición o asignación, no de la interacción directa. Por ejemplo:\n\nWHEN ?enter_numbers.calc,operation\n  [calc.id = CALC.id ∧ operation = average]\n  CALC.result := (8 + 12) / 2",
+    "hints": [
+      "Asegúrate de que las interacciones solo contengan variables o identificadores válidos.",
+      "Los valores numéricos deben ser manejados en las condiciones o asignaciones, no en las interacciones."
+    ]
+  },
+  {
+    "case_id": 19,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator displays 42",
+      "when": "I clear the calculator and then enter 7 and add 3",
+      "then": "the calculator displays the result as 10"
+    },
+    "previous_translation": "GIVEN [display = 42]\nWHEN ?clear\n  true\n  display := 0\n?enter.7\n  true\n  display := 7\n?add.3\n  true\n  display := display + 3\nTHEN [display = 10]",
+    "parse_error": "No terminal matches '7' in the current parser context, at line 5 col 8\n\n?enter.7\n       ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser encontró un error en la línea 5 debido a que el formato del gate es incorrecto. En IBDD, los gates deben comenzar con un prefijo de interacción que sea un identificador válido seguido de un punto y una lista de variables o valores separados por comas. Aquí, '7' no es un identificador válido como parte de un gate en esta posición.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 5, en '?enter.7'",
+    "correction_suggestion": "Corrige el gate en la línea 5 para que siga la sintaxis correcta de interacción. Un ejemplo corregido podría ser cambiar '?enter.7' por '?enter.7,' si '7' es un valor esperado en la interacción, o ajustar el gate a un formato válido.",
+    "hints": [
+      "Asegúrate de que todas las interacciones comiencen con un gate válido ('?' o '!').",
+      "Revisa que las interacciones tengan el formato correcto, con identificadores válidos y valores separados por comas si es necesario.",
+      "Verifica que cada línea de interacción tenga una asignación o 'true' después de la condición."
+    ]
+  },
+  {
+    "case_id": 21,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 5 and 12 and choose subtraction",
+      "then": "the calculator displays the result as -7"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_numbers.5,12\n  true\n  (no assignment)\n!choose_operation.subtraction\n  true\n  (no assignment)\nTHEN !display_result\n  result = -7\n  [displayed_result = result]",
+    "parse_error": "No terminal matches '5' in the current parser context, at line 2 col 21\n\nWHEN ?enter_numbers.5,12\n                    ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser esperaba un gate que comenzara con '?' o '!' para indicar una entrada o salida, respectivamente. Sin embargo, encontró '5' como parte del Interaction, lo cual no es válido. El Interaction debe seguir la sintaxis de 'g. iv1, ..., ivn', donde 'g' es el gate y 'iv1, ..., ivn' son los valores de interacción.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, parte del Interaction",
+    "correction_suggestion": "Corrige el Interaction para que sea válido. Por ejemplo, si 'enter_numbers' es una entrada, debería ser '?enter_numbers.5,12'. Asegúrate de que cada número o valor esté correctamente especificado como parte de un gate válido.",
+    "hints": [
+      "Asegúrate de que todos los valores de interacción estén precedidos por un gate válido ('?' o '!').",
+      "Revisa que las entradas y salidas estén correctamente formateadas según la gramática IBDD.",
+      "Considera dividir las interacciones en múltiples líneas si es necesario para claridad y corrección."
+    ]
+  },
+  {
+    "case_id": 22,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 3.5 and 2.7 and choose addition",
+      "then": "the calculator displays the result as 6.2"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_numbers.n1,n2\n  n1 = 3.5 ∧ n2 = 2.7\n  OP := 'addition'\nTHEN !display_result.calc\n  calc.result = 6.2\n  [calc.result = 6.2]",
+    "parse_error": "No terminal matches ''' in the current parser context, at line 4 col 7\n\nOP := 'addition'\n      ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba un valor que coincidiera con los tipos permitidos para una asignación, como un número, un símbolo de negación, paréntesis, valores booleanos, etc. Sin embargo, encontró una cadena de texto ('addition') que no es un tipo permitido en el contexto de una asignación directa en el IBDD.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 4, columna 7",
+    "correction_suggestion": "Para corregir el error, se debe asignar un valor permitido a 'OP'. Si 'OP' debe representar una operación, se puede usar un identificador o un valor booleano. Por ejemplo, se podría definir 'OP' como un identificador predefinido o usar un valor booleano si es aplicable. Alternativamente, si 'addition' es una operación que debe ser reconocida, se podría usar una función o un identificador que represente esa operación.",
+    "hints": [
+      "Revisa la gramática para asegurarte de que los valores asignados sean del tipo correcto.",
+      "Considera definir 'addition' como un identificador o función reconocida por el sistema.",
+      "Verifica que todas las asignaciones sean compatibles con los tipos esperados por el parser."
+    ]
+  },
+  {
     "case_id": 27,
     "success": true,
     "original_bdd": {
@@ -7,16 +185,16 @@
       "when": "two operators attempt to pause the same controller job simultaneously",
       "then": "the controller job is paused only once AND both operators receive confirmation"
     },
-    "previous_translation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?pause.cj.op1 [cj.id = CJ.id] CJ.state := Paused\n?pause.cj.op2 [cj.id = CJ.id] true\nTHEN [CJ.state = Paused ∧ confirmation_sent(op1) ∧ confirmation_sent(op2)]",
-    "parse_error": "No terminal matches '.' in the current parser context, at line 2 col 15\n\nWHEN ?pause.cj.op1 [cj.id = CJ.id] CJ.state := Paused\n              ^\nExpected one of: \n\t* MINUS\n\t* THEN\n\t* COMMA\n\t* __ANON_0\n\t* LPAR\n\t* NOT\n\t* __ANON_1\n\t* __ANON_2\n\t* FALSE\n\t* TRUE\n\t* NOT_SYMBOL\n\t* NUMBER\n\t* LBRACKET\n",
-    "explanation": "El parser encontró un error en la sintaxis del gate en la línea 2. Los gates deben comenzar con '!' para salidas o '?' para entradas, pero el parser no reconoce el uso del punto '.' en el nombre del gate. En este contexto, el parser esperaba un separador como coma, o el inicio de una nueva cláusula como 'THEN'.",
-    "error_type": "Sintaxis de gate incorrecta",
-    "error_location": "Línea 2, en el switch: '?pause.cj.op1'",
-    "correction_suggestion": "Revisa la sintaxis del gate en la línea 2. Asegúrate de que el nombre del gate esté correctamente formado y que no contenga caracteres no permitidos como el punto '.'. Una posible corrección sería renombrar el gate para evitar el uso de '.' o verificar que el nombre del gate esté correctamente definido en el contexto del parser.",
+    "previous_translation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?pause.cj,op1\n  cj.id = CJ.id\n  CJ.state := Paused\n?pause.cj,op2\n  cj.id = CJ.id\n  (no assignment)\nTHEN !confirm.op1\n  true\n  (no assignment)\n!confirm.op2\n  true\n  (no assignment)\n  [CJ.state = Paused]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 7 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de cada condición en los switches, pero encontró '(no assignment)' en su lugar. Cada switch debe tener una asignación explícita, incluso si es simplemente 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 7 y Línea 11",
+    "correction_suggestion": "Corrige el IBDD añadiendo una asignación 'true' donde falta:\n\n```\nGIVEN CJ [CJ.state = Printing]\nWHEN ?pause.cj,op1\n  [cj.id = CJ.id] CJ.state := Paused\n?pause.cj,op2\n  [cj.id = CJ.id] true\nTHEN !confirm.op1\n  true\n!confirm.op2\n  true\n  [CJ.state = Paused]\n```",
     "hints": [
-      "Revisa la definición de los gates en tu sistema para asegurar que el uso de '.' sea válido.",
-      "Considera utilizar un formato alternativo para los nombres de los gates que no incluya caracteres especiales.",
-      "Verifica que todos los elementos del switch estén correctamente delimitados y que el formato siga la gramática esperada."
+      "Revisa que cada switch tenga una asignación después de la condición.",
+      "Asegúrate de que las condiciones estén correctamente encerradas en corchetes '[]'.",
+      "Verifica que cada interacción comience con un gate válido ('?' o '!')."
     ]
   },
   {
@@ -27,212 +205,1270 @@
       "when": "the operator submits the same job file with checksum ABC123",
       "then": "the printer rejects the duplicate AND displays a warning message"
     },
-    "previous_translation": "GIVEN JF [checksum(JF) = \"ABC123\" ∧ is_in_list(JF, SJL)]\nWHEN ?submit.jf [checksum(jf) = \"ABC123\"] duplicate := true\nTHEN !reject_duplicate [duplicate] !display_warning [duplicate] [duplicate = true]",
-    "parse_error": "No terminal matches '\"' in the current parser context, at line 1 col 26\n\nGIVEN JF [checksum(JF) = \"ABC123\" ∧ is_in_list(JF, SJL)]\n                         ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NUMBER\n\t* __ANON_1\n",
-    "explanation": "El parser encontró un carácter '\"' inesperado dentro de la expresión de la guarda en la cláusula GIVEN. En IBDD, las cadenas de texto no deben estar entre comillas dobles, ya que no son reconocidas como un tipo de terminal válido. El parser esperaba un tipo de dato como número, verdadero, falso, o una variable, pero no una cadena entre comillas.",
+    "previous_translation": "GIVEN JF [is_in_list(JF, SJL) ∧ JF.checksum = \"ABC123\"]\nWHEN ?submit.jf\n  jf.checksum = \"ABC123\"\n  (no assignment)\nTHEN !reject_duplicate\n  true\n  [display_warning_message()]",
+    "parse_error": "No terminal matches '\"' in the current parser context, at line 1 col 47\n\nJF [is_in_list(JF, SJL) ∧ JF.checksum = \"ABC123\"]\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* LPAR\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "The parser encountered a string literal enclosed in double quotes (\"ABC123\") within the Guard expression. In the IBDD grammar, string literals are not expected in this context. The parser expected a NUMBER, a boolean value (TRUE/FALSE), or other valid expressions.",
     "error_type": "Expresiones mal formadas",
-    "error_location": "Línea 1, dentro de la guarda del 'GIVEN'",
-    "correction_suggestion": "Reemplaza la cadena entre comillas dobles con una representación que el parser pueda entender, como una variable o constante predefinida. Por ejemplo, si 'ABC123' es un identificador constante, podría ser definido previamente en el contexto del sistema.",
+    "error_location": "Line 1, col 47 in the Guard of the Given clause",
+    "correction_suggestion": "Replace the string literal \"ABC123\" with a valid expression according to the IBDD grammar. If the checksum is meant to be a string comparison, ensure it is handled appropriately within the allowed expressions.",
     "hints": [
-      "Asegúrate de que las cadenas de texto no estén entre comillas dobles en las expresiones.",
-      "Considera usar constantes o variables en lugar de cadenas literales.",
-      "Revisa la documentación del sistema para ver cómo se deben representar los valores de texto."
+      "Ensure that all literals in expressions are of expected types (e.g., NUMBER instead of string).",
+      "Review the grammar rules for valid expressions in Guard conditions."
     ]
   },
   {
     "case_id": 31,
     "success": true,
     "original_bdd": {
-      "given": "there are 10 jobs in scheduled jobs",
-      "when": "the operator starts batch printing AND the printer completes all 10 jobs",
-      "then": "all 10 jobs are in printed jobs AND the printer is idle"
+      "given": "a printer is online",
+      "when": "the operator checks the ink level",
+      "then": "the current ink level is displayed"
     },
-    "previous_translation": "GIVEN [job_count(SJL) = 10]\nWHEN ?start_batch_print [true] PJL := PJL + SJL\n!complete_all_jobs [true] SJL := []\nTHEN [job_count(PJL) = 10 ∧ job_count(SJL) = 0 ∧ printer_idle]",
-    "parse_error": "No terminal matches '[' in the current parser context, at line 3 col 34\n\n!complete_all_jobs [true] SJL := []\n                                 ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* NOT\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NOT_SYMBOL\n\t* NUMBER\n\t* __ANON_1\n",
-    "explanation": "El parser esperaba una asignación después del switch `!complete_all_jobs [true]`, pero no encontró ninguna. Cada switch en la sección WHEN debe tener una asignación asociada, incluso si es simplemente `true`.",
+    "previous_translation": "GIVEN [is_online(PRINTER)]\nWHEN ?check_ink_level\n  true\n  (no assignment)\nTHEN !display_ink_level\n  true\n  (no assignment)\n  [true]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de cada interacción en un switch. Sin embargo, encontró '(no assignment)' en las líneas 4 y 6, lo que indica que no se proporcionó una asignación válida.",
     "error_type": "Asignaciones faltantes",
-    "error_location": "Línea 3, después del switch `!complete_all_jobs [true]`",
-    "correction_suggestion": "Agregar una asignación después del switch `!complete_all_jobs [true]`. Por ejemplo, `!complete_all_jobs [true] SJL := []` ya tiene una asignación, pero el error sugiere que el parser no la reconoció correctamente. Asegúrate de que la sintaxis de la asignación sea correcta y que no haya errores tipográficos.",
+    "error_location": "Línea 4 y Línea 6",
+    "correction_suggestion": "Para corregir el error, asegúrate de que cada switch tenga una asignación válida. Por ejemplo, puedes reemplazar '(no assignment)' con 'true' o una asignación específica. Aquí está el IBDD corregido: ```\nGIVEN [is_online(PRINTER)]\nWHEN ?check_ink_level [true] true\nTHEN !display_ink_level [true] true [true]\n```",
     "hints": [
-      "Revisar la sintaxis de la asignación `SJL := []` para asegurarse de que sea reconocida por el parser.",
-      "Verificar que no haya caracteres invisibles o errores tipográficos que impidan el reconocimiento de la asignación.",
-      "Asegurarse de que cada switch tenga una asignación clara y explícita."
+      "Asegúrate de que cada switch en la sección WHEN y THEN tenga una asignación después de la condición.",
+      "Revisa que todas las interacciones y asignaciones estén correctamente formateadas y completas."
+    ]
+  },
+  {
+    "case_id": 34,
+    "success": true,
+    "original_bdd": {
+      "given": "the printer controller is running",
+      "when": "the operator requests the printer status",
+      "then": "the printer status information is displayed"
+    },
+    "previous_translation": "GIVEN [is_running(CTRL)]\nWHEN ?request_status\n  true\n  (no assignment)\nTHEN !display_status\n  true\n  (no assignment)\n  [true]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de cada interacción en un switch. En las líneas 4 y 7, se encontró '(no assignment)' en lugar de una asignación válida o 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4 y Línea 7",
+    "correction_suggestion": "Reemplazar '(no assignment)' con 'true' en las líneas 4 y 7 para cumplir con la sintaxis esperada de asignación en un switch.",
+    "hints": [
+      "Cada switch debe tener una asignación, incluso si es 'true'.",
+      "Revisa que cada interacción tenga una condición y una asignación.",
+      "Asegúrate de que las asignaciones estén correctamente formateadas."
+    ]
+  },
+  {
+    "case_id": 36,
+    "success": true,
+    "original_bdd": {
+      "given": "3 controller jobs are in the scheduled jobs AND job A requires color printing AND job B requires grayscale AND job C requires color printing",
+      "when": "the operator starts batch printing AND the printer processes each job with its individual settings",
+      "then": "job A is printed in color AND job B is printed in grayscale AND job C is printed in color AND all jobs are moved to printed jobs"
+    },
+    "previous_translation": "GIVEN CA, CB, CC [is_in_list(CA, SJL) ∧ is_in_list(CB, SJL) ∧ is_in_list(CC, SJL) ∧ CA.settings = Color ∧ CB.settings = Grayscale ∧ CC.settings = Color]\nWHEN ?start_batch_print\n  true\n  (no assignment)\n!process_job.ca\n  ca.id = CA.id ∧ ca.settings = CA.settings\n  CA.state := Printed\n!process_job.cb\n  cb.id = CB.id ∧ cb.settings = CB.settings\n  CB.state := Printed\n!process_job.cc\n  cc.id = CC.id ∧ cc.settings = CC.settings\n  CC.state := Printed, PJL := add(CA, add(CB, add(CC, PJL)))\nTHEN [is_in_list(CA, PJL) ∧ is_in_list(CB, PJL) ∧ is_in_list(CC, PJL) ∧ CA.state = Printed ∧ CB.state = Printed ∧ CC.state = Printed]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró '(no assignment)' en lugar de una asignación válida. Cada switch en la sección WHEN debe tener una asignación, incluso si es simplemente 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, columna 5",
+    "correction_suggestion": "Reemplazar '(no assignment)' con 'true' para indicar que no hay una asignación específica necesaria para ese switch.",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación válida.",
+      "Si no se requiere una asignación específica, utiliza 'true' como asignación por defecto.",
+      "Revisa que cada switch esté correctamente estructurado con interacción, condición y asignación."
+    ]
+  },
+  {
+    "case_id": 38,
+    "success": true,
+    "original_bdd": {
+      "given": "a controller job is printing AND scheduled maintenance is due in 5 minutes",
+      "when": "the maintenance timer expires AND the printer pauses all active jobs AND the operator completes maintenance AND the operator resumes printing",
+      "then": "the controller job continues from the interrupted page AND the maintenance log is updated"
+    },
+    "previous_translation": "GIVEN CJ [CJ.state = Printing ∧ maintenance_due_in(5)]\nWHEN !timer_expire\n  true\n  CJ.state := Paused\n!pause_all_jobs\n  true\n  (no assignment)\n?complete_maintenance\n  true\n  (no assignment)\n?resume_printing\n  true\n  CJ.state := Printing\nTHEN [CJ.state = Printing ∧ log_updated(MaintenanceLog)]\nCJ.page := CJ.interrupted_page\nMaintenanceLog := update_log(MaintenanceLog)",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 7 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser espera una asignación después de cada interacción en un switch. En las líneas donde se menciona '!pause_all_jobs' y '?complete_maintenance', no se proporciona una asignación, lo que causa el error de parsing. El parser encontró '(no assignment)' donde esperaba una expresión de asignación válida.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 7, parte del switch para '!pause_all_jobs' y '?complete_maintenance'",
+    "correction_suggestion": "Añadir una asignación válida después de cada interacción que actualmente tiene '(no assignment)'. Por ejemplo, puedes usar 'true' como una asignación por defecto si no se requiere un cambio de estado específico.",
+    "hints": [
+      "Cada switch debe tener una asignación después de la condición, incluso si es 'true'.",
+      "Revisa las líneas con '(no assignment)' y reemplázalas con una asignación válida.",
+      "Asegúrate de que cada interacción en 'WHEN' esté seguida por una condición en corchetes y una asignación."
+    ]
+  },
+  {
+    "case_id": 39,
+    "success": true,
+    "original_bdd": {
+      "given": "a controller job belongs to operator A AND operator B does not have permission to manage it",
+      "when": "operator B attempts to cancel the controller job",
+      "then": "the cancel request is denied AND operator B receives an access denied notification AND the controller job continues printing"
+    },
+    "previous_translation": "GIVEN CJ [CJ.owner = A ∧ ¬has_permission(B, CJ)]\nWHEN ?cancel_attempt.b,cj\n  b.id = B.id ∧ cj.id = CJ.id\n  true\nTHEN !deny_cancel.b\n  b.id = B.id\n  [¬cancelled(CJ) ∧ notified(B, \"access denied\") ∧ CJ.state = Printing]",
+    "parse_error": "No terminal matches '\"' in the current parser context, at line 7 col 31\n\n[¬cancelled(CJ) ∧ notified(B, \"access denied\") ∧ CJ.state = Printing]\n                              ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser encontró un problema con el uso de comillas dobles en la expresión 'notified(B, \"access denied\")'. En IBDD, las cadenas de texto no deben estar entre comillas dobles, ya que no son reconocidas como un terminal válido. El parser esperaba un identificador o expresión válida sin comillas dobles.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 7, en la expresión 'notified(B, \"access denied\")'",
+    "correction_suggestion": "Reemplaza '\"access denied\"' con un identificador sin comillas, por ejemplo, 'access_denied'. La línea corregida sería: '[¬cancelled(CJ) ∧ notified(B, access_denied) ∧ CJ.state = Printing]'",
+    "hints": [
+      "Revisa las reglas de sintaxis para expresiones en IBDD, especialmente el uso de cadenas de texto.",
+      "Asegúrate de que todas las expresiones dentro de las guardas y condiciones sean identificadores o expresiones válidas según la gramática IBDD.",
+      "Verifica que todas las condiciones y asignaciones estén correctamente formateadas y no incluyan caracteres no permitidos."
     ]
   },
   {
     "case_id": 40,
     "success": true,
     "original_bdd": {
-      "given": "a transaction of 250 was completed 2 hours ago",
-      "when": "the customer disputes the transaction AND the dispute is approved",
-      "then": "the transaction is reversed AND the account balance is restored AND both parties are notified"
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 10 and 0 and choose division",
+      "then": "the calculator displays an error AND the previous result is preserved"
     },
-    "previous_translation": "GIVEN T [T.amount = 250 ∧ T.completed_time = 2_hours_ago]\nWHEN ?dispute_transaction.t [t = T] approval := approve_dispute(t)\nTHEN !reverse_transaction [approval] !notify_parties [approval] [balance_restored ∧ approval = true]",
-    "parse_error": "No terminal matches '_' in the current parser context, at line 1 col 47\n\nT [T.amount = 250 ∧ T.completed_time = 2_hours_ago]\n                                        ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* AND\n\t* RBRACKET\n\t* STAR\n\t* OR\n\t* PERCENT\n",
-    "explanation": "El parser encontró un guion bajo ('_') en '2_hours_ago', lo cual no es reconocido como un operador o parte de una expresión válida en el contexto de la gramática esperada. Los nombres de variables o constantes deben seguir las convenciones de la gramática, y los operadores deben ser reconocidos por el parser.",
-    "error_type": "Expresiones mal formadas",
-    "error_location": "GIVEN clause, line 1, column 47",
-    "correction_suggestion": "Reemplazar '2_hours_ago' con una expresión que cumpla con las reglas de la gramática. Por ejemplo, si '2_hours_ago' es una constante, podría ser 'twoHoursAgo'.\n\nCorregido:\n```\nGIVEN T [T.amount = 250 ∧ T.completed_time = twoHoursAgo]\nWHEN ?dispute_transaction.t [t = T] approval := approve_dispute(t)\nTHEN !reverse_transaction [approval] !notify_parties [approval] [balance_restored ∧ approval = true]\n```",
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.n1,n2,op\n  n1 = 10 ∧ n2 = 0 ∧ op = division\n  (no assignment)\nTHEN !display.error\n  error = \"division by zero\"\n  [display = error ∧ previous_result = preserved]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch de la cláusula WHEN. Sin embargo, encontró la línea '(no assignment)', lo cual no es una asignación válida. Cada switch debe terminar con una asignación, incluso si es simplemente 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, columna 5",
+    "correction_suggestion": "Reemplaza '(no assignment)' con una asignación válida. Por ejemplo, podrías usar 'true' si no hay una asignación específica que realizar.\n\nCorregido:\n```\nGIVEN [is_ready(CALC)]\nWHEN ?enter.n1,n2,op\n  n1 = 10 ∧ n2 = 0 ∧ op = division\n  true\nTHEN !display.error\n  error = \"division by zero\"\n  [display = error ∧ previous_result = preserved]\n```",
     "hints": [
-      "Revisa las convenciones de nombres para constantes y variables en tu sistema.",
-      "Asegúrate de que todas las expresiones dentro de las guardas sean válidas según la gramática.",
-      "Verifica que los operadores utilizados sean reconocidos por el parser."
+      "Asegúrate de que cada switch en la cláusula WHEN tenga una asignación al final.",
+      "Si no hay una asignación específica, utiliza 'true' como asignación por defecto.",
+      "Revisa que todas las condiciones y asignaciones estén correctamente formateadas."
+    ]
+  },
+  {
+    "case_id": 41,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the number 42 and store it in memory AND I clear the display AND I recall the value from memory",
+      "then": "the calculator displays the result as 42"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_number.calc,42\n  calc.input = 42\n  MEM := 42\n!clear_display.calc\n  calc.display = clear_display\n  MEM := MEM\n!recall_memory.calc\n  calc.output = MEM\nTHEN [calc.display = 42]",
+    "parse_error": "No terminal matches '4' in the current parser context, at line 2 col 25\n\nWHEN ?enter_number.calc,42\n                        ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser esperaba encontrar una condición encerrada en corchetes '[]' después de la interacción '?enter_number.calc,42', pero encontró directamente una asignación 'calc.input = 42'. Esto viola la regla de que cada switch debe tener una condición en '[...]'.",
+    "error_type": "Corchetes faltantes en condiciones",
+    "error_location": "Línea 2, después de '?enter_number.calc,42'",
+    "correction_suggestion": "Agregar una condición en corchetes después de la interacción. Por ejemplo, si no hay una condición específica, se puede usar '[true]'.\n\nCorregido:\nWHEN ?enter_number.calc,42 [true]\n  calc.input = 42\n  MEM := 42",
+    "hints": [
+      "Revisar que cada interacción en la sección WHEN esté seguida de una condición en corchetes.",
+      "Asegurarse de que las condiciones sean expresiones booleanas válidas.",
+      "Verificar que las asignaciones estén correctamente alineadas con las interacciones correspondientes."
     ]
   },
   {
     "case_id": 43,
     "success": true,
     "original_bdd": {
-      "given": "a cart has a discount code applied that expires in 5 minutes",
-      "when": "the customer completes checkout 10 minutes later",
-      "then": "the discount is removed AND the customer is notified AND charged the full price"
+      "given": "the calculator displays 15 after adding 5 and 10",
+      "when": "I undo the last operation",
+      "then": "the calculator displays the result as 5 AND the last operation is removed from history"
     },
-    "previous_translation": "GIVEN C [C.discount_code.expiry = 5_minutes]\nWHEN !complete_checkout [time_elapsed = 10_minutes] discount_valid := false\nTHEN !remove_discount [¬discount_valid] !notify_customer [¬discount_valid] [charged_full_price]",
-    "parse_error": "No terminal matches '.' in the current parser context, at line 1 col 25\n\nGIVEN C [C.discount_code.expiry = 5_minutes]\n                        ^\nExpected one of: \n\t* GEQ_SYMBOL\n\t* CIRCUMFLEX\n\t* LT\n\t* AND\n\t* OR\n\t* NEQ_SYMBOL\n\t* EQEQ\n\t* AND_SYMBOL\n\t* RBRACKET\n\t* STAR\n\t* LEQ\n\t* EQ\n\t* MINUS\n\t* SLASH\n\t* LEQ_SYMBOL\n\t* GEQ\n\t* PERCENT\n\t* GT\n\t* PLUS\n\t* NEQ\n",
-    "explanation": "El parser encontró un punto (.) en 'C.discount_code.expiry', lo cual no es un operador válido en el contexto de una expresión de guardia. El parser esperaba operadores como '=', '>=', '<', etc., para comparar valores, pero no un punto que indica acceso a propiedades de un objeto.",
+    "previous_translation": "GIVEN C [C.display = 15 ∧ last_operation = add(5, 10)]\nWHEN ?undo\n  true\n  C.display := 5, history := remove_last(history)\nTHEN [C.display = 5 ∧ last_operation not_in history]",
+    "parse_error": "No terminal matches 'n' in the current parser context, at line 5 col 38\n\nTHEN [C.display = 5 ∧ last_operation not_in history]\n                                     ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró un problema con la expresión 'last_operation not_in history'. El operador 'not_in' no es reconocido por el parser. Se esperaba un operador válido como 'NEQ', 'EQ', 'AND', etc., pero 'not_in' no es parte de los operadores soportados según la gramática IBDD.",
     "error_type": "Expresiones mal formadas",
-    "error_location": "Línea 1, parte de la declaración de guardia",
-    "correction_suggestion": "Reemplaza 'C.discount_code.expiry' con una expresión que use operadores válidos. Por ejemplo, si 'C' es un objeto y 'discount_code.expiry' es una propiedad, asegúrate de que la expresión esté correctamente formada para el contexto del parser. Una posible corrección podría ser 'C_discount_code_expiry = 5_minutes'.",
+    "error_location": "Línea 5, parte de la expresión 'last_operation not_in history'",
+    "correction_suggestion": "Reemplaza 'last_operation not_in history' con una expresión válida. Por ejemplo, si la intención es verificar que 'last_operation' no está en 'history', podrías usar una expresión lógica equivalente que sea compatible con la gramática IBDD, como '¬(last_operation in history)'.",
     "hints": [
-      "Asegúrate de que las variables y propiedades estén correctamente referenciadas sin usar puntos (.) a menos que esté permitido en el contexto.",
-      "Revisa la gramática para asegurarte de que las expresiones usen operadores válidos.",
-      "Considera usar un nombre de variable que represente el valor de 'C.discount_code.expiry' sin usar la notación de punto."
+      "Revisa la lista de operadores válidos en la gramática IBDD para asegurarte de que la expresión utiliza operadores soportados.",
+      "Considera reformular la expresión para que se ajuste a los operadores disponibles, como usando negaciones o combinaciones de operadores válidos."
     ]
   },
   {
-    "case_id": 44,
+    "case_id": 45,
     "success": true,
     "original_bdd": {
-      "given": "product Y has 1 unit in stock",
-      "when": "two customers attempt to purchase product Y simultaneously",
-      "then": "only one order succeeds AND the other customer is notified that the item is out of stock"
+      "given": "the calculator is ready for use",
+      "when": "I enter 100 and subtract 25 and then multiply by 4 and then add 10",
+      "then": "the calculator displays the result as 310"
     },
-    "previous_translation": "GIVEN PY [PY.stock = 1]\nWHEN ?purchase.py.cust1 [py = PY] success1 := (PY.stock > 0)\n?purchase.py.cust2 [py = PY] success2 := (PY.stock > 0)\nTHEN [success1 ∧ ¬success2 ∧ notify_out_of_stock(cust2)]",
-    "parse_error": "No terminal matches '.' in the current parser context, at line 2 col 18\n\nWHEN ?purchase.py.cust1 [py = PY] success1 := (PY.stock >\n                 ^\nExpected one of: \n\t* MINUS\n\t* THEN\n\t* COMMA\n\t* __ANON_0\n\t* LPAR\n\t* NOT\n\t* __ANON_1\n\t* __ANON_2\n\t* FALSE\n\t* TRUE\n\t* NOT_SYMBOL\n\t* NUMBER\n\t* LBRACKET\n",
-    "explanation": "El parser encontró un punto ('.') en la expresión del gate, lo cual no es permitido. Los gates deben comenzar con '!' o '?', seguidos de un identificador válido sin puntos intermedios. La expresión '?purchase.py.cust1' es incorrecta debido al uso del punto después de 'purchase'.",
-    "error_type": "Sintaxis de gate incorrecta",
-    "error_location": "Línea 2, en 'WHEN ?purchase.py.cust1'",
-    "correction_suggestion": "Corrige la sintaxis del gate para eliminar el uso de puntos. Por ejemplo, '?purchase_py_cust1' en lugar de '?purchase.py.cust1'.",
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.value,subtract.value\n  value1 = 100 ∧ value2 = 25\n  CALC.display := 100 - 25\n!multiply.value\n  value = 4\n  CALC.display := CALC.display * 4\n!add.value\n  value = 10\n  CALC.display := CALC.display + 10\nTHEN [CALC.display = 310]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 2 col 27\n\nWHEN ?enter.value,subtract.value\n                          ^\nExpected one of: \n\t* __ANON_0\n\t* FALSE\n\t* NUMBER\n\t* NOT_SYMBOL\n\t* COMMA\n\t* __ANON_2\n\t* LBRACKET\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* THEN\n\t* LPAR\n",
+    "explanation": "El parser esperaba encontrar una condición encerrada en corchetes '[]' inmediatamente después de cada interacción en un switch. En el IBDD proporcionado, la interacción '?enter.value,subtract.value' no está seguida de una condición en corchetes, lo que causa el error de parsing.",
+    "error_type": "Corchetes faltantes en condiciones",
+    "error_location": "Línea 2, después de 'subtract.value'",
+    "correction_suggestion": "Agrega una condición entre corchetes después de la interacción en la línea 2. Por ejemplo: 'WHEN ?enter.value,subtract.value [condition]'.",
     "hints": [
-      "Revisa la sintaxis de los gates para asegurar que no contengan puntos.",
-      "Asegúrate de que los nombres de los gates sean identificadores válidos sin caracteres especiales como '.' o '-'."
+      "Asegúrate de que cada interacción en un switch esté seguida de una condición en corchetes.",
+      "Revisa la gramática para entender la estructura correcta de un switch."
     ]
   },
   {
-    "case_id": 46,
+    "case_id": 47,
     "success": true,
     "original_bdd": {
-      "given": "a customer purchased an item 35 days ago AND the return window is 30 days",
-      "when": "the customer reports the item as defective with proof",
-      "then": "an exception is created AND the return is approved AND a refund or replacement is offered"
+      "given": "the calculator is in statistics mode",
+      "when": "I enter the values 10 and 20 and 30 and 40 and choose mean",
+      "then": "the calculator displays the result as 25 AND the count of values is 4"
     },
-    "previous_translation": "GIVEN I [I.purchase_date = 35_days_ago ∧ return_window = 30_days]\nWHEN ?report_defect.i,proof [i = I ∧ proof = valid] exception_created := true\nTHEN !approve_return [exception_created] !offer_refund_or_replacement [exception_created] [exception_created]",
-    "parse_error": "No terminal matches '_' in the current parser context, at line 1 col 30\n\nGIVEN I [I.purchase_date = 35_days_ago ∧ return_window = 30_days]\n                             ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
-    "explanation": "El parser encontró un guion bajo ('_') en '35_days_ago', lo cual no es un operador válido ni un nombre de variable permitido en la gramática IBDD. La gramática espera operadores matemáticos o booleanos, o nombres de variables sin caracteres especiales.",
-    "error_type": "Expresión mal formada",
-    "error_location": "Línea 1, expresión '35_days_ago'",
-    "correction_suggestion": "Reemplaza '35_days_ago' con un identificador válido, como 'thirtyFiveDaysAgo', o utiliza una función que devuelva el valor correcto, como 'daysAgo(35)'.",
+    "previous_translation": "GIVEN [is_in_mode(CALC, Statistics)]\nWHEN ?enter_values.calc, v1, v2, v3, v4, operation\n  v1 = 10 ∧ v2 = 20 ∧ v3 = 30 ∧ v4 = 40 ∧ operation = mean\n  CALC.values := [v1, v2, v3, v4], CALC.operation := operation\nTHEN !display_result.calc\n  result = 25 ∧ count = 4\n  [CALC.result = result ∧ length(CALC.values) = count]",
+    "parse_error": "No terminal matches '[' in the current parser context, at line 4 col 16\n\nCALC.values := [v1, v2, v3, v4], CALC.operation := oper\n               ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba encontrar una condición encerrada en corchetes inmediatamente después de la declaración de interacción en el bloque WHEN. Sin embargo, la condición está escrita directamente sin los corchetes requeridos, lo que causa el error de parsing.",
+    "error_type": "Corchetes faltantes en condiciones",
+    "error_location": "Línea 3, parte de la condición del switch",
+    "correction_suggestion": "Agregar corchetes alrededor de la condición en el bloque WHEN. El fragmento corregido debería ser: `WHEN ?enter_values.calc, v1, v2, v3, v4, operation [v1 = 10 ∧ v2 = 20 ∧ v3 = 30 ∧ v4 = 40 ∧ operation = mean] CALC.values := [v1, v2, v3, v4], CALC.operation := operation`",
     "hints": [
-      "Revisa los nombres de variables para asegurarte de que no contengan caracteres especiales como guiones bajos.",
-      "Considera usar funciones para representar valores calculados o derivados, como 'daysAgo(35)'."
+      "Asegúrate de que cada condición en un switch esté encerrada en corchetes.",
+      "Verifica que cada switch en el bloque WHEN esté en una línea separada si hay múltiples switches.",
+      "Revisa que las asignaciones estén correctamente formadas y separadas por comas."
     ]
   },
   {
     "case_id": 48,
     "success": true,
     "original_bdd": {
-      "given": "a customer added items to cart 3 days ago but did not checkout",
-      "when": "the automated recovery system runs",
-      "then": "the customer receives a reminder email AND a special discount code is offered"
+      "given": "the calculator is in advanced mode",
+      "when": "I enter 2 multiplied by the sum of 3 and 4 and then divide the result by 7",
+      "then": "the calculator displays the result as 2"
     },
-    "previous_translation": "GIVEN C [C.last_activity = 3_days_ago ∧ C.checked_out = false]\nWHEN !recovery_system_run [true] reminder_sent := true\nTHEN !send_reminder_email [reminder_sent] !offer_discount_code [reminder_sent] [reminder_sent]",
-    "parse_error": "No terminal matches '_' in the current parser context, at line 1 col 29\n\nGIVEN C [C.last_activity = 3_days_ago ∧ C.checked_out = false]\n                            ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
-    "explanation": "The parser encountered an unexpected '_' character in the condition 'C.last_activity = 3_days_ago'. The parser expected a valid operator or end of expression, but found an underscore, which is not a valid character in this context.",
+    "previous_translation": "GIVEN [is_in_mode(CALC, Advanced)]\nWHEN ?enter_expression.calc,exp\n  exp = \"2 * (3 + 4) / 7\"\n  RESULT := evaluate(exp)\nTHEN !display_result.calc\n  result = 2\n  [RESULT = result]",
+    "parse_error": "No terminal matches '\"' in the current parser context, at line 3 col 7\n\nexp = \"2 * (3 + 4) / 7\"\n      ^\nExpected one of: \n\t* NUMBER\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* LPAR\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser encontró un error al intentar interpretar la cadena de texto '\"2 * (3 + 4) / 7\"' como una expresión válida. En el contexto de IBDD, las expresiones deben estar formadas por elementos que el parser pueda reconocer, como números, operadores, o identificadores válidos. Las comillas dobles no son reconocidas en este contexto, lo que causa el error.",
     "error_type": "Expresiones mal formadas",
-    "error_location": "GIVEN clause, line 1, condition 'C.last_activity = 3_days_ago'",
-    "correction_suggestion": "Replace '3_days_ago' with a valid expression or variable name that does not contain underscores. For example, use 'C.last_activity = threeDaysAgo' if 'threeDaysAgo' is a valid variable or constant in your context.",
+    "error_location": "Línea 3, columna 7",
+    "correction_suggestion": "Para corregir este error, la expresión debe ser representada de una manera que el parser pueda entender. Una opción es definir la expresión de manera que cada elemento sea un token reconocido, por ejemplo utilizando variables o funciones predefinidas para representar operaciones matemáticas. Alternativamente, si la expresión debe ser evaluada como un string, asegúrate de que el parser esté configurado para manejar strings en ese contexto.",
     "hints": [
-      "Ensure all variable names and constants do not contain underscores unless they are part of a valid identifier.",
-      "Check the grammar rules for valid characters in expressions.",
-      "Consider using camelCase or another naming convention that avoids underscores."
+      "Revisa cómo se definen y manejan las expresiones en tu implementación de IBDD.",
+      "Asegúrate de que las operaciones matemáticas estén descompuestas en tokens reconocibles por el parser.",
+      "Considera el uso de funciones o variables intermedias para representar partes de la expresión."
     ]
   },
   {
-    "case_id": 50,
+    "case_id": 49,
     "success": true,
     "original_bdd": {
-      "given": "doctor A has appointments at 10:00 and 11:00",
-      "when": "a patient requests an appointment at 10:30",
-      "then": "the system suggests alternative times AND the appointment is not scheduled"
+      "given": "a product exists in the catalog",
+      "when": "the user views the product page",
+      "then": "the product details are displayed"
     },
-    "previous_translation": "GIVEN DA [DA.appointments = {10:00, 11:00}]\nWHEN ?request_appointment.time [time = 10:30] conflict := check_availability(DA, time)\nTHEN !suggest_alternatives [conflict] [appointment_not_scheduled]",
-    "parse_error": "No terminal matches '{' in the current parser context, at line 1 col 29\n\nGIVEN DA [DA.appointments = {10:00, 11:00}]\n                            ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NUMBER\n\t* __ANON_1\n",
-    "explanation": "El parser encontró un error al intentar interpretar la expresión 'DA.appointments = {10:00, 11:00}'. El uso de llaves '{...}' no es reconocido como una expresión válida en el contexto de una guarda. El parser esperaba una expresión booleana bien formada que no incluya llaves, como una comparación directa o una conjunción de condiciones.",
-    "error_type": "Expresiones mal formadas",
-    "error_location": "Línea 1, expresión dentro de los corchetes de la guarda",
-    "correction_suggestion": "Para corregir el error, reemplace la expresión con una que no use llaves. Por ejemplo, si el objetivo es verificar que las citas de 'DA' incluyan las horas 10:00 y 11:00, la expresión podría ser 'DA.appointments = 10:00 ∧ DA.appointments = 11:00'.\n\nIBDD corregido:\n```\nGIVEN DA [DA.appointments = 10:00 ∧ DA.appointments = 11:00]\nWHEN ?request_appointment.time [time = 10:30] conflict := check_availability(DA, time)\nTHEN !suggest_alternatives [conflict] [appointment_not_scheduled]\n```",
+    "previous_translation": "GIVEN P [is_in_catalog(P)]\nWHEN ?view_product.p\n  p.id = P.id\n  (no assignment)\nTHEN !display_product_details\n  true\n  [details_displayed(P)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró '(no assignment)' en lugar de una asignación válida. Cada switch en la sección WHEN debe tener una asignación, incluso si es simplemente 'true'. La ausencia de una asignación válida causó que el parser no pudiera continuar.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, columna 5",
+    "correction_suggestion": "Reemplaza '(no assignment)' con una asignación válida. Por ejemplo, si no hay una asignación específica, utiliza 'true' para indicar que la acción se completa sin cambios de estado adicionales.",
     "hints": [
-      "Reemplace las llaves '{...}' con una expresión que use operadores válidos como '=' y '∧'.",
-      "Asegúrese de que las condiciones dentro de las guardas sean expresiones booleanas válidas."
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación, incluso si es 'true'.",
+      "Revisa la sintaxis de las asignaciones para asegurarte de que son válidas.",
+      "Considera el contexto del escenario BDD original para determinar la asignación adecuada."
     ]
   },
   {
-    "case_id": 51,
+    "case_id": 62,
     "success": true,
     "original_bdd": {
-      "given": "a patient has a documented allergy to penicillin",
-      "when": "a doctor prescribes amoxicillin (a penicillin derivative)",
-      "then": "the system displays a critical allergy warning AND the prescription is blocked until acknowledged"
+      "given": "a customer has purchased a product AND the order has been delivered",
+      "when": "the customer submits a review with a rating of 4 stars and a comment",
+      "then": "the review is added to the product page AND the average rating is recalculated"
     },
-    "previous_translation": "GIVEN P [P.allergies = {penicillin}]\nWHEN ?prescribe.medication [medication = amoxicillin] allergy_warning := check_allergy(P, medication)\nTHEN !display_allergy_warning [allergy_warning] !block_prescription [allergy_warning] [allergy_warning]",
-    "parse_error": "No terminal matches '{' in the current parser context, at line 1 col 24\n\nGIVEN P [P.allergies = {penicillin}]\n                       ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NUMBER\n\t* __ANON_1\n",
-    "explanation": "El parser encontró un uso incorrecto de llaves '{' en la expresión de la guarda. En IBDD, las llaves no son un símbolo reconocido para definir conjuntos o listas en las guardas. El parser esperaba un valor o expresión que no incluyera llaves.",
+    "previous_translation": "GIVEN C, O [has_purchased(C, P) ∧ is_delivered(O)]\nWHEN ?submit_review.c,p,rating,comment\n  c.id = C.id ∧ p.id = P.id ∧ rating = 4 ∧ comment ≠ \"\"\n  P.reviews := add_review(P.reviews, rating, comment)\nTHEN [is_in_list(review, P.reviews) ∧ P.avg_rating = recalculate_avg(P.reviews)]",
+    "parse_error": "No terminal matches '\"' in the current parser context, at line 3 col 52\n\n ∧ p.id = P.id ∧ rating = 4 ∧ comment ≠ \"\"\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* LPAR\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser encontró un error al intentar procesar la expresión 'comment ≠ \"\"'. El uso de comillas dobles \"\" para representar una cadena vacía no es reconocido por el parser en este contexto. El parser esperaba un número, una expresión booleana o un identificador, pero encontró comillas dobles, lo cual no es válido en esta gramática.",
     "error_type": "Expresiones mal formadas",
-    "error_location": "GIVEN P [P.allergies = {penicillin}]",
-    "correction_suggestion": "Reemplaza '{penicillin}' con una expresión válida, como una lista entre paréntesis o una expresión lógica. Por ejemplo: '[P.allergies = penicillin]' o '[P.allergies.contains(penicillin)]'.",
+    "error_location": "Línea 3, condición del switch",
+    "correction_suggestion": "Para corregir este error, se debe utilizar una representación válida para una cadena vacía. Si el lenguaje admite una función o constante para representar una cadena vacía, debe usarse en lugar de comillas dobles. Por ejemplo, si existe una función isEmpty(comment), la condición podría reescribirse como '¬isEmpty(comment)'.",
     "hints": [
-      "Revisa cómo se representan las listas o conjuntos en tu contexto de IBDD.",
-      "Asegúrate de que las expresiones en las guardas usen solo operadores y símbolos válidos.",
-      "Considera usar funciones o métodos que verifiquen pertenencia en lugar de llaves."
+      "Revisa cómo se representan las cadenas vacías en la gramática IBDD.",
+      "Asegúrate de que todas las condiciones dentro de los corchetes sean expresiones válidas según la gramática.",
+      "Verifica si hay funciones predefinidas para manejar cadenas vacías o condiciones similares."
     ]
   },
   {
-    "case_id": 53,
+    "case_id": 64,
     "success": true,
     "original_bdd": {
-      "given": "an operating room is scheduled for a routine surgery at 14:00",
-      "when": "an emergency case arrives at 13:45",
-      "then": "the routine surgery is rescheduled AND the emergency case takes priority AND affected parties are notified"
+      "given": "a product has 2 items in stock AND the user has 5 units in the cart",
+      "when": "the user proceeds to checkout AND the system verifies inventory availability",
+      "then": "the user is notified of insufficient stock AND the cart quantity is adjusted to 2 AND the order is not placed"
     },
-    "previous_translation": "GIVEN OR [OR.scheduled_surgery = 14:00]\nWHEN !emergency_case.arrival [arrival_time = 13:45] reschedule := true\nTHEN !reschedule_surgery [reschedule] !notify_affected_parties [true] [emergency_priority]",
-    "parse_error": "No terminal matches ':' in the current parser context, at line 1 col 36\n\nGIVEN OR [OR.scheduled_surgery = 14:00]\n                                   ^\nExpected one of: \n\t* PLUS\n\t* AND_SYMBOL\n\t* MINUS\n\t* CIRCUMFLEX\n\t* SLASH\n\t* RBRACKET\n\t* AND\n\t* STAR\n\t* OR\n\t* PERCENT\n",
-    "explanation": "El parser encontró un símbolo ':' inesperado en la asignación 'reschedule := true'. En IBDD, las asignaciones deben seguir la forma 'variable = valor' o simplemente 'true'. El uso de ':=' no es reconocido por la gramática IBDD.",
+    "previous_translation": "GIVEN P, UC [P.stock = 2 ∧ UC.cart(P) = 5]\nWHEN ?proceed_to_checkout.uc\n  uc.id = UC.id\n!verify_inventory.p\n  p.id = P.id ∧ P.stock < UC.cart(P)\n  (no assignment)\nTHEN !notify_insufficient_stock.uc\n  uc.id = UC.id\nUC.cart(P) := P.stock\n  [UC.cart(P) = 2 ∧ order_not_placed(UC)]",
+    "parse_error": "No terminal matches '(' in the current parser context, at line 1 col 35\n\nGIVEN P, UC [P.stock = 2 ∧ UC.cart(P) = 5]\n                                  ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró un paréntesis '(' inesperado en la expresión de la guarda. En la gramática IBDD, las expresiones dentro de las guardas no deben contener paréntesis para llamadas a funciones o similares. El parser esperaba operadores o el cierre de corchetes ']' para finalizar la expresión de la guarda.",
     "error_type": "Expresiones mal formadas",
-    "error_location": "Línea 2, parte de la asignación",
-    "correction_suggestion": "Reemplazar 'reschedule := true' por 'reschedule = true'.",
+    "error_location": "GIVEN P, UC [P.stock = 2 ∧ UC.cart(P) = 5]",
+    "correction_suggestion": "Reemplazar la llamada a función UC.cart(P) con una expresión válida sin paréntesis. Por ejemplo, si UC.cart es un atributo, podría ser UC.cart = 5. Si es necesario mantener la lógica de función, se debe reformular de acuerdo con las reglas de la gramática.",
     "hints": [
-      "Asegúrate de que las asignaciones usen '=' en lugar de ':='.",
-      "Verifica que todas las asignaciones sean válidas según la gramática IBDD."
+      "Revisar la expresión UC.cart(P) para asegurarse de que no utiliza paréntesis en la guarda.",
+      "Verificar que todas las expresiones en las guardas cumplan con la sintaxis esperada por la gramática IBDD.",
+      "Asegurarse de que las guardas están correctamente formadas sin el uso de llamadas a funciones con paréntesis."
     ]
   },
   {
-    "case_id": 55,
+    "case_id": 65,
     "success": true,
     "original_bdd": {
-      "given": "a patient is taking medication A",
-      "when": "a doctor prescribes medication B that interacts with medication A",
-      "then": "the system alerts about the interaction AND suggests alternatives"
+      "given": "a user is logged in AND the shopping cart has items AND a shipping address is saved",
+      "when": "the user selects a payment method AND enters payment details AND confirms the order",
+      "then": "the payment is processed AND the order is created AND the inventory is reduced AND a confirmation email is sent"
     },
-    "previous_translation": "GIVEN P [P.medications = {A}]\nWHEN ?prescribe.medication [medication = B] interaction_detected := check_interaction(P, medication)\nTHEN !alert_interaction [interaction_detected] !suggest_alternatives [interaction_detected] [interaction_detected]",
-    "parse_error": "No terminal matches '{' in the current parser context, at line 1 col 26\n\nGIVEN P [P.medications = {A}]\n                         ^\nExpected one of: \n\t* MINUS\n\t* LPAR\n\t* FALSE\n\t* __ANON_2\n\t* TRUE\n\t* NUMBER\n\t* __ANON_1\n",
-    "explanation": "El parser encontró un carácter '{' en la expresión de la guarda, lo cual no es reconocido como parte de una expresión válida en la gramática IBDD. Las guardas deben contener expresiones booleanas bien formadas, y el uso de llaves '{}' no está definido en la gramática proporcionada.",
+    "previous_translation": "GIVEN U, SC, SA [is_logged_in(U) ∧ has_items(SC) ∧ is_saved(SA)]\nWHEN ?select_payment_method.u,sc\n  u.id = U.id ∧ sc.id = SC.id\n  (no assignment)\n?enter_payment_details.u,sc\n  u.id = U.id ∧ sc.id = SC.id\n  (no assignment)\n?confirm_order.u,sc\n  u.id = U.id ∧ sc.id = SC.id\n  (no assignment)\nTHEN !process_payment.u,sc\n  u.id = U.id ∧ sc.id = SC.id\n  (no assignment)\n!create_order.u,sc\n  u.id = U.id ∧ sc.id = SC.id\n  (no assignment)\n!reduce_inventory.sc\n  sc.id = SC.id\n  (no assignment)\n!send_confirmation_email.u\n  u.id = U.id\n  (no assignment)\n  [is_payment_processed(U, SC) ∧ is_order_created(U, SC) ∧ is_inventory_reduced(SC) ∧ is_confirmation_email_sent(U)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "Cada switch en la sección WHEN y THEN debe tener una asignación, pero en este caso, todos los switches carecen de una asignación explícita. El parser esperaba una asignación después de la condición de cada switch, pero encontró '(no assignment)' en su lugar.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, 7, 10, 13, 16, 19, 22",
+    "correction_suggestion": "Para cada switch en las secciones WHEN y THEN, asegúrate de proporcionar una asignación válida. Si no hay una asignación específica, utiliza 'true' como asignación por defecto. Por ejemplo, reemplaza '(no assignment)' con 'true'.",
+    "hints": [
+      "Revisa la gramática IBDD para asegurarte de que cada switch tenga una asignación.",
+      "Considera usar 'true' como asignación cuando no haya una acción específica que realizar.",
+      "Verifica que cada interacción en las secciones WHEN y THEN siga el formato correcto de 'Interaction [Condition] Assignment'."
+    ]
+  },
+  {
+    "case_id": 67,
+    "success": true,
+    "original_bdd": {
+      "given": "an order has 3 items AND 1 item has been shipped AND 2 items are pending shipment",
+      "when": "the customer requests cancellation of the entire order",
+      "then": "the shipped item remains in shipped status AND the pending items are cancelled AND a partial refund is initiated for the cancelled items AND the inventory is restored for cancelled items"
+    },
+    "previous_translation": "GIVEN O [O.items = 3 ∧ shipped_items(O) = 1 ∧ pending_items(O) = 2]\nWHEN ?cancel_order.o\n  o.id = O.id\n  (no assignment)\nTHEN !update_status.o,si\n  si.status = Shipped ∧ pi.status = Cancelled ∧ refund_initiated(pi) ∧ inventory_restored(pi)\n  SI := shipped_items(O), PI := pending_items(O)\n  [is_in_status(SI, Shipped) ∧ is_in_status(PI, Cancelled)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch de la sección WHEN. Sin una asignación, el switch está incompleto y no cumple con la gramática IBDD.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, parte '(no assignment)'",
+    "correction_suggestion": "Reemplaza '(no assignment)' con una asignación válida o 'true'. Por ejemplo, 'o.cancelled := true'.",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación.",
+      "Revisa que las asignaciones sean válidas dentro del contexto del escenario.",
+      "Considera que la asignación puede ser una simple afirmación como 'true' si no hay un cambio de estado específico."
+    ]
+  },
+  {
+    "case_id": 68,
+    "success": true,
+    "original_bdd": {
+      "given": "a user is logged in on two devices AND the cart contains a product with quantity 2",
+      "when": "the user adds a new product on device one AND the user removes the existing product on device two",
+      "then": "the cart contains only the new product AND the removed product is no longer in the cart AND the cart is synchronized across both sessions"
+    },
+    "previous_translation": "GIVEN U, SC [is_logged_in(U, D1) ∧ is_logged_in(U, D2) ∧ is_in_list(P, SC.items) ∧ SC.items[P.id].qty = 2]\nWHEN ?add_to_cart.new_p,sc,d1\n  new_p.id = NP.id ∧ sc.id = SC.id ∧ device = D1\n  SC.items := add(new_p, SC.items)\n?remove_from_cart.p,sc,d2\n  p.id = P.id ∧ sc.id = SC.id ∧ device = D2\n  SC.items := remove(p, SC.items)\nTHEN [is_in_list(NP, SC.items) ∧ ¬is_in_list(P, SC.items) ∧ is_synchronized(SC, D1, D2)]",
+    "parse_error": "No terminal matches '[' in the current parser context, at line 1 col 92\n\nD2) ∧ is_in_list(P, SC.items) ∧ SC.items[P.id].qty = 2]\n                                        ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "The parser encountered a '[' within the expression 'SC.items[P.id].qty = 2', which it did not expect in this context. The parser expected operators or the end of the expression, not an index operation on an array or list.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "GIVEN clause, line 1, condition: SC.items[P.id].qty = 2",
+    "correction_suggestion": "Modify the expression to avoid using array indexing directly. Consider using a function or a different representation that does not involve brackets. For example, replace 'SC.items[P.id].qty = 2' with a function call like 'get_quantity(SC.items, P.id) = 2'.",
+    "hints": [
+      "Ensure that expressions do not use array or list indexing directly within guards.",
+      "Consider refactoring expressions to use functions or predicates that abstract away the indexing.",
+      "Review the grammar rules to ensure compliance with expected syntax for conditions."
+    ]
+  },
+  {
+    "case_id": 69,
+    "success": true,
+    "original_bdd": {
+      "given": "a product is in the cart at price 100 AND a competitor offers the same product at price 80",
+      "when": "the customer submits a price match request with competitor proof AND the system verifies the competitor price",
+      "then": "the product price is adjusted to 80 AND the price difference is applied to the order AND the adjustment is logged"
+    },
+    "previous_translation": "GIVEN P [is_in_cart(P, SC) ∧ P.price = 100 ∧ competitor_offer(P, 80)]\nWHEN ?price_match_request.p,proof\n  p.id = P.id ∧ is_valid(proof)\n!verify_competitor_price.p\n  p.id = P.id ∧ competitor_price = 80\n  P.price := 80, order.total := order.total - (100 - 80), log := add(log, \"Price adjusted\")\nTHEN [P.price = 80 ∧ order.total = calculate_total(order.items) ∧ is_logged(\"Price adjusted\", log)]",
+    "parse_error": "No terminal matches '\"' in the current parser context, at line 6 col 73\n\nder.total - (100 - 80), log := add(log, \"Price adjusted\")\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser encontró un problema con la expresión de asignación que contiene una llamada a función con comillas dobles. En IBDD, las expresiones deben estar formadas por números, variables, operadores y funciones predefinidas. Las comillas dobles no son reconocidas como parte de una expresión válida en este contexto.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 6, en la expresión de asignación",
+    "correction_suggestion": "Reemplace la llamada a la función `add(log, \"Price adjusted\")` con una expresión que no use comillas dobles. Por ejemplo, si `add` es una función que registra un mensaje, asegúrese de que el mensaje esté representado de una manera que el parser pueda interpretar, como `add(log, Price_adjusted)` o defina `Price_adjusted` como una constante o variable previamente.",
+    "hints": [
+      "Verifique si `Price adjusted` puede ser representado como una constante o variable sin comillas.",
+      "Asegúrese de que todas las funciones y operadores utilizados estén definidos y sean compatibles con la gramática IBDD.",
+      "Revise la documentación de funciones para ver cómo deben ser llamadas dentro de un IBDD."
+    ]
+  },
+  {
+    "case_id": 71,
+    "success": true,
+    "original_bdd": {
+      "given": "a user has items in the cart AND the cart has been inactive for 24 hours AND the user has email notifications enabled",
+      "when": "the abandonment recovery system runs AND the system sends a reminder email to the user",
+      "then": "the reminder email is sent with cart contents AND a discount incentive is included AND the cart is preserved for 7 more days"
+    },
+    "previous_translation": "GIVEN U, C [has_items(C) ∧ C.inactive_time = 24h ∧ U.notifications = enabled]\nWHEN !run_recovery\n  true\n  !send_email.u\n  u.id = U.id\nTHEN [reminder_sent(U, C) ∧ discount_included(U) ∧ cart_preserved(C, 7d)]",
+    "parse_error": "No terminal matches 'h' in the current parser context, at line 1 col 48\n\n, C [has_items(C) ∧ C.inactive_time = 24h ∧ U.notifications = enabled]\n                                        ^\nExpected one of: \n\t* STAR\n\t* PLUS\n\t* OR\n\t* AND_SYMBOL\n\t* OR_SYMBOL\n\t* CIRCUMFLEX\n\t* MINUS\n\t* PERCENT\n\t* RBRACKET\n\t* AND\n\t* SLASH\n",
+    "explanation": "The parser encountered an unexpected character 'h' in the expression 'C.inactive_time = 24h'. The parser expected a valid operator or closing bracket but found an invalid time unit 'h'. The correct syntax should use a valid expression format without unsupported units.",
     "error_type": "Guarda mal formada",
-    "error_location": "Línea 1, dentro de la guarda de 'GIVEN'",
-    "correction_suggestion": "Reemplaza el uso de llaves '{}' con una expresión válida. Por ejemplo, si 'P.medications = {A}' está intentando verificar si 'A' está en un conjunto de medicamentos, podría ser reformulado como 'P.medications.contains(A)' o una expresión equivalente que sea válida según la gramática de guardas.",
+    "error_location": "GIVEN clause, line 1, column 48",
+    "correction_suggestion": "Replace '24h' with a valid expression, such as 'C.inactive_time = 24'. Ensure that the expression uses supported units or formats.",
     "hints": [
-      "Revisa la gramática de guardas para asegurar que las expresiones sean booleanas y bien formadas.",
-      "Asegúrate de que las operaciones de conjunto o listas estén expresadas en términos de funciones o métodos reconocidos por la gramática.",
-      "Verifica que no se utilicen caracteres especiales no definidos en la gramática IBDD."
+      "Ensure that all expressions within guards use valid syntax and supported units.",
+      "Verify that all logical operators and expressions are correctly formatted.",
+      "Check the IBDD grammar rules for supported syntax and operators."
+    ]
+  },
+  {
+    "case_id": 72,
+    "success": true,
+    "original_bdd": {
+      "given": "a flash sale starts for a product with 5 units available AND 10 users are waiting to purchase",
+      "when": "the flash sale begins AND multiple users attempt to add the product to their carts simultaneously",
+      "then": "only the first 5 successful users have the product in their carts AND the remaining users are notified that the product is sold out AND the product is marked as unavailable"
+    },
+    "previous_translation": "GIVEN P [P.stock = 5 ∧ flashSaleActive(P)]\nWHEN !beginFlashSale.p\n  p.id = P.id\n  P.state := FlashSaleStarted\n?attemptPurchase.u1,...,u10\n  true\n  for each u in [u1,...,u10] do\n    if P.stock > 0 then\n      SC[u].items := add(P, SC[u].items), P.stock := P.stock - 1\n    else\n      !notifySoldOut.u\nTHEN [for each u in [u1,...,u5] is_in_list(P, SC[u].items) ∧ P.stock = 0 ∧ P.state = Unavailable]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 5 col 21\n\n?attemptPurchase.u1,...,u10\n                    ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser encontró un error en la declaración de interacción '?attemptPurchase.u1,...,u10'. En el contexto de una interacción, se espera que los gates comiencen con '!' para salidas o '?' para entradas, pero el parser no pudo procesar correctamente el uso de ',' en la lista de usuarios debido a un problema de sintaxis con el separador de las variables de interacción.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 5, en la declaración de interacción",
+    "correction_suggestion": "Reemplaza la coma ',' por un separador que sea compatible con la sintaxis esperada, como ';' o utiliza un formato que el parser pueda interpretar correctamente. Por ejemplo: '?attemptPurchase.u1;u2;u3;u4;u5;u6;u7;u8;u9;u10'.",
+    "hints": [
+      "Revisa la sintaxis de las interacciones para asegurarte de que los separadores de variables sean correctos.",
+      "Asegúrate de que cada variable de interacción esté correctamente delimitada y que el formato sea compatible con el parser."
+    ]
+  },
+  {
+    "case_id": 73,
+    "success": true,
+    "original_bdd": {
+      "given": "a bank account exists with balance 5000",
+      "when": "the customer checks the account balance",
+      "then": "the balance is displayed as 5000"
+    },
+    "previous_translation": "GIVEN BA [BA.balance = 5000]\nWHEN ?check_balance.ba\n  ba.id = BA.id\n  (no assignment)\nTHEN !display_balance\n  true\n  [BA.balance = 5000]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch 'WHEN'. Sin embargo, encontró '(no assignment)', lo cual no es una asignación válida. Cada switch debe tener una asignación explícita o 'true' para indicar que la acción se realiza incondicionalmente.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, parte del switch 'WHEN'",
+    "correction_suggestion": "Reemplazar '(no assignment)' con 'true' para indicar que la acción se realiza sin condiciones adicionales. El IBDD corregido sería:\n```\nGIVEN BA [BA.balance = 5000]\nWHEN ?check_balance.ba\n  ba.id = BA.id\n  true\nTHEN !display_balance\n  true\n  [BA.balance = 5000]\n```",
+    "hints": [
+      "Asegúrate de que cada switch en la sección 'WHEN' tenga una asignación válida.",
+      "Considera usar 'true' como asignación si no hay una acción específica que realizar."
+    ]
+  },
+  {
+    "case_id": 79,
+    "success": true,
+    "original_bdd": {
+      "given": "a customer is enrolled in credit monitoring",
+      "when": "the customer requests the credit score",
+      "then": "the current credit score is displayed"
+    },
+    "previous_translation": "GIVEN C [is_enrolled_in_credit_monitoring(C)]\nWHEN ?request_credit_score.c\n  c.id = C.id\n  (no assignment)\nTHEN !display_credit_score\n  true\n  (no assignment)\n  [is_credit_score_displayed(C)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en cada switch, pero encontró '(no assignment)' en su lugar. Cada switch en la sección WHEN y THEN debe tener una asignación válida o 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, después de la condición en el bloque WHEN y THEN",
+    "correction_suggestion": "Corrige el IBDD añadiendo una asignación válida después de cada condición en los bloques WHEN y THEN. Por ejemplo, en el bloque WHEN, después de 'c.id = C.id', añade una asignación como 'A = true'. En el bloque THEN, después de '!display_credit_score', añade una asignación como 'A = true'.",
+    "hints": [
+      "Asegúrate de que cada switch en WHEN y THEN tenga una asignación válida.",
+      "Revisa que las asignaciones sean consistentes con el escenario BDD original."
+    ]
+  },
+  {
+    "case_id": 85,
+    "success": true,
+    "original_bdd": {
+      "given": "a bank account has a transaction of 150 that the customer does not recognize",
+      "when": "the customer disputes the transaction AND provides the transaction ID",
+      "then": "the transaction is flagged as disputed AND a temporary credit of 150 is applied AND an investigation case is opened"
+    },
+    "previous_translation": "GIVEN T [is_in_list(T, AC.transactions) ∧ T.amount = 150 ∧ not_recognized(T)]\nWHEN ?dispute.tid\n  t.id = T.id\n  T.status := 'disputed', AC.balance := AC.balance + T.amount, IC := open_investigation(T)\nTHEN [T.status = 'disputed' ∧ is_in_list(IC, Investigations) ∧ AC.balance = calculate_balance(AC)]",
+    "parse_error": "No terminal matches ''' in the current parser context, at line 4 col 13\n\nT.status := 'disputed', AC.balance := AC.balance + T\n            ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba una expresión válida después del operador de asignación ':=' en la línea 4. Sin embargo, encontró una coma ',' que no es un separador válido para múltiples asignaciones en el contexto de IBDD. Cada asignación debe estar en una línea separada o ser parte de una expresión compuesta correctamente.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, después de 'T.status := 'disputed', AC.balance := AC.balance + T",
+    "correction_suggestion": "Reescribir las asignaciones en líneas separadas o utilizar un operador adecuado para separar las expresiones. Por ejemplo:\n```\nWHEN ?dispute.tid\n  t.id = T.id\n  T.status := 'disputed'\n  AC.balance := AC.balance + T.amount\n  IC := open_investigation(T)\n```",
+    "hints": [
+      "Cada asignación debe estar en su propia línea o ser parte de una expresión compuesta correctamente.",
+      "Verifica que las asignaciones estén correctamente formadas y no mezcladas con otros operadores sin separación adecuada."
+    ]
+  },
+  {
+    "case_id": 88,
+    "success": true,
+    "original_bdd": {
+      "given": "a bank account with balance 10000 in USD AND the transfer fee is 25 AND the exchange rate from USD to EUR is 0.85",
+      "when": "the customer initiates a wire transfer of 1000 USD to a European account AND confirms the transfer",
+      "then": "the account balance is reduced by 1025 AND the recipient receives 850 EUR AND the fee is deducted AND the transaction is recorded with the exchange rate"
+    },
+    "previous_translation": "GIVEN BA, TF, ER [BA.balance = 10000 ∧ TF = 25 ∧ ER = 0.85]\nWHEN ?initiate_transfer.ba,amt,currency\n  ba.id = BA.id ∧ amt = 1000 ∧ currency = \"USD\"\n  BA.balance := BA.balance - (amt + TF), recipient.amount := amt * ER\n!confirm_transfer.ba\n  ba.id = BA.id\n  (no assignment)\nTHEN !record_transaction.ba\n  ba.id = BA.id ∧ transaction.amount = amt ∧ transaction.fee = TF ∧ transaction.exchange_rate = ER\n  TRANSACTIONS := add(transaction, TRANSACTIONS)\n  [BA.balance = 8975 ∧ recipient.amount = 850 ∧ TF = 25 ∧ is_recorded(transaction, TRANSACTIONS)]",
+    "parse_error": "No terminal matches '\"' in the current parser context, at line 3 col 41\n\nba.id = BA.id ∧ amt = 1000 ∧ currency = \"USD\"\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* LPAR\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser encontró un uso incorrecto de comillas dobles alrededor de \"USD\" en la condición del primer switch. En IBDD, las condiciones deben utilizar valores numéricos o booleanos, y las cadenas de texto no están permitidas en este contexto.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 3, condición del primer switch",
+    "correction_suggestion": "Reemplaza la cadena de texto \"USD\" con una representación numérica o booleana válida, o utiliza una variable que represente el tipo de moneda. Por ejemplo, podrías definir una variable como `currency_code` que asigne un valor numérico a \"USD\".",
+    "hints": [
+      "Revisa las condiciones para asegurar que solo se utilicen valores numéricos o booleanos.",
+      "Considera definir variables para representar valores de texto como tipos de moneda.",
+      "Asegúrate de que todas las condiciones en los switches sean válidas según la gramática IBDD."
+    ]
+  },
+  {
+    "case_id": 93,
+    "success": true,
+    "original_bdd": {
+      "given": "a bank account with balance 5000 AND the daily withdrawal limit is 1000 AND 700 has already been withdrawn today",
+      "when": "the customer attempts to withdraw 500 at the ATM",
+      "then": "the withdrawal is declined AND the customer is informed that only 300 remains available today AND the account balance is unchanged"
+    },
+    "previous_translation": "GIVEN AC [AC.balance = 5000 ∧ AC.daily_limit = 1000 ∧ AC.withdrawn_today = 700]\nWHEN ?withdraw.ac,atm,amount\n  ac.id = AC.id ∧ atm.id = ATM.id ∧ amount = 500\n  (no assignment)\nTHEN !decline\n  AC.withdrawn_today + amount > AC.daily_limit\n  (no assignment)\n!inform.customer\n  available = AC.daily_limit - AC.withdrawn_today\n  (no assignment)\n[AC.balance = 5000 ∧ available = 300]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de cada condición en los switches del bloque WHEN y THEN. Sin embargo, no se proporcionó ninguna asignación, lo que llevó al error de parsing.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, 5 y 7",
+    "correction_suggestion": "Agregar una asignación (por ejemplo, 'true') después de cada condición en los switches del bloque WHEN y THEN. Por ejemplo, en el bloque WHEN, después de 'amount = 500', agregar 'true'. En el bloque THEN, después de 'AC.withdrawn_today + amount > AC.daily_limit' y 'available = AC.daily_limit - AC.withdrawn_today', agregar 'true'.",
+    "hints": [
+      "Cada switch debe tener una asignación, incluso si es simplemente 'true'.",
+      "Revisar que cada condición en el bloque THEN esté seguida de una asignación."
+    ]
+  },
+  {
+    "case_id": 94,
+    "success": true,
+    "original_bdd": {
+      "given": "a customer purchased an item for 200 with a debit card AND the merchant did not deliver the item AND 30 days have passed",
+      "when": "the customer files a chargeback request AND provides proof of non-delivery",
+      "then": "the chargeback is initiated AND a temporary credit of 200 is applied to the account AND the merchant is notified AND a resolution deadline is set to 45 days"
+    },
+    "previous_translation": "GIVEN C, M, P [purchase(C, M, 200, debit) ∧ ¬deliver(M, P) ∧ days_passed(P, 30)]\nWHEN ?file_chargeback.c, pnd\n  c.id = C.id ∧ proof_nd = pnd\n  request := create_chargeback_request(C, P, proof_nd)\nTHEN !initiate_chargeback, credit_temporary\n  request.status = Initiated ∧ credit_amount = 200 ∧ notification = notify(M) ∧ deadline = set_deadline(45)\n  Account.balance := Account.balance + credit_amount\n  [request.status = Initiated ∧ Account.balance = OriginalBalance + 200 ∧ is_notified(M) ∧ deadline = 45]",
+    "parse_error": "No terminal matches ',' in the current parser context, at line 5 col 26\n\nTHEN !initiate_chargeback, credit_temporary\n                         ^\nExpected one of: \n\t* __ANON_0\n\t* NEQ\n\t* EQ\n\t* NOT_SYMBOL\n\t* __ANON_2\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* FALSE\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* LBRACKET\n\t* CIRCUMFLEX\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* TRUE\n\t* LPAR\n\t* NOT\n\t* LT\n\t* THEN\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* NUMBER\n\t* GT\n\t* GEQ\n\t* AND\n\t* __ANON_1\n",
+    "explanation": "El parser encontró una coma ',' después de '!initiate_chargeback', lo cual no es permitido en la sintaxis de un switch. Los switches deben tener una interacción seguida de una condición entre corchetes y una asignación, pero no se permite separar múltiples interacciones con comas en un solo switch.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 5, después de '!initiate_chargeback'",
+    "correction_suggestion": "Separar las interacciones en switches individuales o combinarlas adecuadamente dentro de un solo switch. Por ejemplo:\n\nTHEN !initiate_chargeback [request.status = Initiated] request := create_chargeback_request(C, P, proof_nd)\n!credit_temporary [credit_amount = 200] Account.balance := Account.balance + credit_amount\n!notify_merchant [notification = notify(M)] true\n!set_resolution_deadline [deadline = 45] true\n[request.status = Initiated ∧ Account.balance = OriginalBalance + 200 ∧ is_notified(M) ∧ deadline = 45]",
+    "hints": [
+      "Revisar que cada interacción en THEN esté correctamente separada en switches individuales.",
+      "Asegurarse de que cada switch tenga su propia condición y asignación.",
+      "Verificar que no se usen comas para separar interacciones dentro de un switch."
+    ]
+  },
+  {
+    "case_id": 97,
+    "success": true,
+    "original_bdd": {
+      "given": "a book exists in the library catalog",
+      "when": "the member searches for the book by title",
+      "then": "the book information is displayed with availability status"
+    },
+    "previous_translation": "GIVEN B [is_in_catalog(B, LC)]\nWHEN ?search_by_title.b\n  b.title = B.title\n  (no assignment)\nTHEN !display_info.b\n  b.info = get_info(B) ∧ b.availability = get_availability(B)\n  [b.info = get_info(B) ∧ b.availability = get_availability(B)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch, pero encontró '(no assignment)', lo cual no es válido. Cada switch debe tener una asignación explícita o 'true' como asignación por defecto.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, después de 'b.title = B.title'",
+    "correction_suggestion": "Reemplazar '(no assignment)' con 'true' para indicar que la condición se cumple sin cambios adicionales. El switch debería ser: '?search_by_title.b [b.title = B.title] true'",
+    "hints": [
+      "Asegúrate de que cada switch tenga una asignación válida.",
+      "Puedes usar 'true' como asignación si no se requiere una acción específica.",
+      "Revisa que cada switch esté en una línea separada para evitar errores de sintaxis."
+    ]
+  },
+  {
+    "case_id": 102,
+    "success": true,
+    "original_bdd": {
+      "given": "a book reservation exists for the member",
+      "when": "the member cancels the reservation",
+      "then": "the reservation is removed AND the book becomes available for others"
+    },
+    "previous_translation": "GIVEN BR [is_reserved(BR, M)]\nWHEN ?cancel.br\n  br.id = BR.id\n  (no assignment)\nTHEN !remove_reservation.br\n  true\n  BR := null, B := make_available(B)\n  [is_available(B)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición 'br.id = BR.id', pero encontró '(no assignment)'. Cada switch en la sección WHEN debe incluir una asignación, incluso si es simplemente 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, después de 'br.id = BR.id'",
+    "correction_suggestion": "Reemplazar '(no assignment)' con 'true' para indicar que no hay una asignación específica necesaria pero se cumple la condición.",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación, incluso si es 'true'.",
+      "Verifica que todas las condiciones estén correctamente encerradas en corchetes.",
+      "Revisa que las interacciones comiencen con '?' para entradas y '!' para salidas."
+    ]
+  },
+  {
+    "case_id": 103,
+    "success": true,
+    "original_bdd": {
+      "given": "a member has an active library membership",
+      "when": "the member checks the membership status",
+      "then": "the membership details are displayed including the expiration date"
+    },
+    "previous_translation": "GIVEN M [M.status = Active]\nWHEN ?check_status.m\n  m.id = M.id\n  (no assignment)\nTHEN !display_details\n  m.id = M.id\n  [M.details.displayed = true]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch de la sección WHEN. Sin embargo, encontró '(no assignment)', lo cual no es una asignación válida. Cada switch debe terminar con una asignación, incluso si es simplemente 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, después de la condición",
+    "correction_suggestion": "Reemplaza '(no assignment)' con una asignación válida. Por ejemplo, podrías usar 'true' si no hay una asignación específica que realizar. El IBDD corregido sería:\n\n```\nGIVEN M [M.status = Active]\nWHEN ?check_status.m [m.id = M.id] true\nTHEN !display_details [M.details.displayed = true]\n```",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación al final.",
+      "Las asignaciones pueden ser cualquier expresión válida o simplemente 'true' si no hay una acción específica que realizar.",
+      "Revisa que las condiciones estén correctamente encerradas en corchetes."
+    ]
+  },
+  {
+    "case_id": 109,
+    "success": true,
+    "original_bdd": {
+      "given": "a member has a room reserved for 2 hours AND the room is available for the following hour",
+      "when": "the member requests a 1 hour extension",
+      "then": "the reservation is extended to 3 hours AND the additional time slot is blocked"
+    },
+    "previous_translation": "GIVEN MBR, RM [has_reservation(MBR, RM, 2) ∧ is_available(RM, next_hour)]\nWHEN ?request_extension.mbr,rm,1\n  mbr.id = MBR.id ∧ rm.id = RM.id ∧ 1 = 1\n  RM.reservation := extend(RM.reservation, 1)\nTHEN [has_reservation(MBR, RM, 3) ∧ is_blocked(RM, next_hour)]",
+    "parse_error": "No terminal matches '1' in the current parser context, at line 2 col 32\n\nWHEN ?request_extension.mbr,rm,1\n                               ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser esperaba que la condición del switch estuviera encerrada entre corchetes '[...]'. Sin embargo, encontró una expresión lógica directamente sin los corchetes necesarios.",
+    "error_type": "Corchetes faltantes en condiciones",
+    "error_location": "Línea 2, parte de la condición del switch",
+    "correction_suggestion": "Corrige el IBDD colocando la condición del switch entre corchetes:\n\nWHEN ?request_extension.mbr,rm,1 [mbr.id = MBR.id ∧ rm.id = RM.id ∧ 1 = 1] RM.reservation := extend(RM.reservation, 1)",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga su condición entre corchetes '[...]'.",
+      "Revisa que todas las condiciones lógicas estén correctamente formadas y encerradas en corchetes."
+    ]
+  },
+  {
+    "case_id": 110,
+    "success": true,
+    "original_bdd": {
+      "given": "a book is not available in the local catalog AND the book exists in a partner library catalog",
+      "when": "the member requests an interlibrary loan for the book",
+      "then": "the loan request is submitted to the partner library AND the estimated arrival date is set"
+    },
+    "previous_translation": "GIVEN B [!is_in_catalog(B, LOCAL_CATALOG) ∧ is_in_catalog(B, PARTNER_CATALOG)]\nWHEN ?request_loan.b,member\n  b.id = B.id ∧ member.is_active = true\n  LR := createLoanRequest(B, member)\nTHEN !submit_loan_request.lr,partner\n  lr.book_id = B.id ∧ lr.status = Submitted\n  EST_ARRIVAL := calculate_estimated_arrival(B, partner)\n  [lr in PARTNER_REQUESTS ∧ EST_ARRIVAL > current_date]",
+    "parse_error": "No terminal matches 'i' in the current parser context, at line 8 col 5\n\n[lr in PARTNER_REQUESTS ∧ EST_ARRIVAL > curr\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba que la cláusula THEN terminara con una guarda encerrada en corchetes. Sin embargo, la condición final está fuera de los corchetes, lo que causa el error de parsing.",
+    "error_type": "Postcondición faltante",
+    "error_location": "Línea 8, al inicio de la condición",
+    "correction_suggestion": "Asegúrate de que la cláusula THEN termine con una guarda correctamente encerrada en corchetes. Corrige la línea final para que esté completamente dentro de los corchetes: `THEN !submit_loan_request.lr,partner [lr.book_id = B.id ∧ lr.status = Submitted ∧ lr in PARTNER_REQUESTS ∧ EST_ARRIVAL > current_date]`",
+    "hints": [
+      "Revisa que todas las condiciones dentro de THEN estén encapsuladas en corchetes.",
+      "Verifica que no haya condiciones sueltas fuera de los corchetes al final de THEN."
+    ]
+  },
+  {
+    "case_id": 113,
+    "success": true,
+    "original_bdd": {
+      "given": "a popular book has 2 holds from students AND the library gives faculty priority over students",
+      "when": "a faculty member places a hold on the book",
+      "then": "the faculty hold is placed at position 1 AND the student holds move to positions 2 and 3"
+    },
+    "previous_translation": "GIVEN B, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]\nWHEN ?place_hold.fh,b\n  fh.book_id = B.id ∧ fh.type = Faculty\n  holds(B) := [fh, S1H, S2H]\nTHEN [holds(B) = [fh, S1H, S2H]]",
+    "parse_error": "No terminal matches '[' in the current parser context, at line 1 col 47\n\nB, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* LPAR\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba que la declaración de 'GIVEN' terminara con un corchete de apertura '[' inmediatamente después de las variables 'B, S1H, S2H'. Sin embargo, encontró una expresión directamente, lo que causó el error. La guarda debe estar completamente encerrada en corchetes.",
+    "error_type": "Corchetes faltantes en guardas",
+    "error_location": "Línea 1, después de 'GIVEN B, S1H, S2H'",
+    "correction_suggestion": "Corrige la línea de 'GIVEN' para que las variables estén seguidas inmediatamente por el corchete de apertura '[': 'GIVEN B, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]'",
+    "hints": [
+      "Asegúrate de que todas las guardas estén correctamente encerradas en corchetes '[...]'.",
+      "Verifica que no haya espacios innecesarios entre las variables y el corchete de apertura."
+    ]
+  },
+  {
+    "case_id": 115,
+    "success": true,
+    "original_bdd": {
+      "given": "a study room is reserved by member A from 10 to 12 AND member B requests the same room from 11 to 13",
+      "when": "member B submits the reservation request AND the system detects the time conflict",
+      "then": "member B is notified of the conflict AND alternative available time slots are suggested AND the original reservation remains unchanged"
+    },
+    "previous_translation": "GIVEN SR, MA, MB [is_reserved(SR, MA, 10, 12) ∧ is_requested(SR, MB, 11, 13)]\nWHEN ?submit_request.mb,sr\n  mb.id = MB.id ∧ sr.id = SR.id\n  (no assignment)\n!detect_conflict.sr\n  sr.id = SR.id ∧ time_conflict(SR, 11, 13)\n  (no assignment)\nTHEN !notify_conflict.mb\n  mb.id = MB.id\n!suggest_alternatives.sr\n  sr.id = SR.id ∧ alternative_slots(SR)\n  (no assignment)\n[is_reserved(SR, MA, 10, 12)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba encontrar una asignación después de cada condición en los switches, pero encontró '(no assignment)' en su lugar. Cada switch necesita una asignación explícita, incluso si es simplemente 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4 y Línea 8",
+    "correction_suggestion": "Reemplace '(no assignment)' con 'true' en las líneas 4 y 8 para indicar que no hay cambios de estado necesarios después de la condición. El IBDD corregido sería:\n\n```\nGIVEN SR, MA, MB [is_reserved(SR, MA, 10, 12) ∧ is_requested(SR, MB, 11, 13)]\nWHEN ?submit_request.mb,sr\n  mb.id = MB.id ∧ sr.id = SR.id\n  true\n!detect_conflict.sr\n  sr.id = SR.id ∧ time_conflict(SR, 11, 13)\n  true\nTHEN !notify_conflict.mb\n  mb.id = MB.id\n!suggest_alternatives.sr\n  sr.id = SR.id ∧ alternative_slots(SR)\n  true\n[is_reserved(SR, MA, 10, 12)]\n```",
+    "hints": [
+      "Cada switch debe tener una asignación, incluso si es 'true'.",
+      "Revise que cada interacción tenga una condición entre corchetes y una asignación."
+    ]
+  },
+  {
+    "case_id": 118,
+    "success": true,
+    "original_bdd": {
+      "given": "a book is checked out to member A AND the book is 2 days overdue AND member B has placed a hold on the book",
+      "when": "member A attempts to renew the book",
+      "then": "the renewal is denied because of the existing hold AND member A is notified to return the book AND the overdue fine continues to accumulate"
+    },
+    "previous_translation": "GIVEN B, MA, MB [is_checked_out(B, MA) ∧ is_overdue(B, 2) ∧ has_hold(MB, B)]\nWHEN ?attempt_renew.ma,b  \n  ma.id = MA.id ∧ b.id = B.id\n  (no assignment)\nTHEN !deny_renewal\n  true\n  MA.notify := 'return_book'\n  [renewal_denied(B, 'hold') ∧ is_notified(MA, 'return_book') ∧ overdue_fine_accumulates(B)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch dentro de la cláusula WHEN. Sin embargo, encontró '(no assignment)', lo cual no es válido. Cada switch debe tener una asignación explícita o la palabra clave 'true' para indicar que no hay cambios de estado.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, columna 5",
+    "correction_suggestion": "Reemplazar '(no assignment)' con 'true' en la línea 4 para indicar que no hay una asignación específica necesaria en este switch.",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación válida o 'true'.",
+      "Revisa que todas las condiciones y asignaciones estén correctamente formateadas y en líneas separadas.",
+      "Verifica que las interacciones comiencen con '?' o '!' según corresponda."
+    ]
+  },
+  {
+    "case_id": 119,
+    "success": true,
+    "original_bdd": {
+      "given": "the semester is ending in 7 days AND 50 books are checked out AND 20 of those books have holds from other members",
+      "when": "the library initiates the semester-end recall process",
+      "then": "recall notices are sent for the 20 books with holds AND the due dates for recalled books are shortened to 3 days AND non-recalled books retain their original due dates AND fines are doubled for recalled books not returned on time"
+    },
+    "previous_translation": "GIVEN B, H\n  [semester_ends_in(7) ∧ count(B, checked_out) = 50 ∧ count(H, holds) = 20]\nWHEN !initiate_recall_process\n  true\n  RECALLS := filter(H, B), set_due_dates(RECALLS, 3), double_fines(RECALLS)\nTHEN !send_notices.recalls\n  true\n  [all_have_notice(RECALLS) ∧ due_dates(RECALLS) = 3 ∧ original_due_dates(non_recalled(B, RECALLS)) ∧ fines_doubled(late(RECALLS))]",
+    "parse_error": "No terminal matches '(' in the current parser context, at line 5 col 39\n\nRECALLS := filter(H, B), set_due_dates(RECALLS, 3), double_fines(RECALLS)\n                                      ^\nExpected one of: \n\t* DOT\n\t* ASSIGN\n",
+    "explanation": "El parser encontró un error en la línea 5, específicamente en la parte de la asignación. En el IBDD, cada switch necesita una asignación que debe seguir la sintaxis correcta. En este caso, el parser esperaba un operador de asignación ':' seguido de una expresión válida. Sin embargo, encontró una llamada a función 'set_due_dates(RECALLS, 3)' sin un operador de asignación adecuado, lo que causó el error.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 5, parte de la asignación",
+    "correction_suggestion": "Corrige la asignación en la línea 5 para que cada operación esté claramente separada y asignada correctamente. Por ejemplo:\n```\nRECALLS := filter(H, B)\nset_due_dates(RECALLS, 3)\ndouble_fines(RECALLS)\n```",
+    "hints": [
+      "Asegúrate de que cada operación en la asignación esté claramente separada por líneas o asignada correctamente.",
+      "Revisa la sintaxis de las asignaciones para asegurarte de que sigan el formato esperado por el parser."
+    ]
+  },
+  {
+    "case_id": 120,
+    "success": true,
+    "original_bdd": {
+      "given": "a book checked out to a member has been lost AND the book replacement cost is 45 AND the member has a clean borrowing record",
+      "when": "the member reports the book as lost AND the system processes the lost book claim",
+      "then": "the replacement fee of 45 is charged to the member account AND the book is removed from the member active loans AND the catalog is updated to reflect the lost copy AND a replacement order is placed if the book has active holds"
+    },
+    "previous_translation": "GIVEN B, M [is_checked_out(B, M) ∧ B.replacement_cost = 45 ∧ has_clean_record(M)]\nWHEN ?report_lost.b,m\n  b.id = B.id ∧ m.id = M.id\n  !process_lost_claim.b\n  B.state := Lost, M.account := charge_fee(M.account, B.replacement_cost)\nTHEN !remove_from_loans.b,m\n  !update_catalog.b\n  !place_order.b [B.has_active_holds]\n  [M.account.balance = calculate_balance(M.account) ∧ !is_checked_out(B, M) ∧ is_updated_catalog(B) ∧ order_placed(B)]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 9 col 11\n\n[M.account.balance = calculate_balance(M.account) \n          ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba un operador lógico o un símbolo de comparación después de 'M.account.balance = calculate_balance(M.account)'. Sin embargo, encontró un gate '!is_checked_out(B, M)' que no está precedido por un operador lógico o de comparación, lo cual es incorrecto en este contexto. Los gates deben comenzar con '!' o '?' y deben ser parte de una interacción o condición adecuadamente formada.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 9, en la postcondición dentro de THEN",
+    "correction_suggestion": "Revisar la postcondición en la cláusula THEN para asegurar que los gates estén correctamente formateados y precedidos por operadores lógicos o de comparación. Un posible fragmento corregido podría ser: '[M.account.balance = calculate_balance(M.account) ∧ !is_checked_out(B, M) ∧ is_updated_catalog(B) ∧ order_placed(B)]'. Asegúrate de que cada expresión esté correctamente separada y que los operadores lógicos conecten adecuadamente las condiciones.",
+    "hints": [
+      "Asegúrate de que los gates estén correctamente formateados y precedidos por operadores lógicos o de comparación.",
+      "Revisa que todas las condiciones dentro de los corchetes estén correctamente formadas y conectadas.",
+      "Verifica que cada interacción en WHEN y THEN esté en líneas separadas y correctamente formateada."
+    ]
+  },
+  {
+    "case_id": 10,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 10 and 3 and choose subtraction",
+      "then": "the calculator displays the result as 7"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_numbers.calc,10,3 [true] calc.state := Ready\n!choose_operation.calc,subtraction [calc.state = Ready] CALC.state := Performing\nTHEN !display_result.calc [CALC.state = Result] calc.result := 7\n[calc.result = 7]",
+    "parse_error": "No terminal matches '1' in the current parser context, at line 2 col 26\n\nWHEN ?enter_numbers.calc,10,3 [true] calc.state := Ready\n                         ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser encontró un error en la línea 2, específicamente en la interacción '?enter_numbers.calc,10,3'. Los gates de interacción deben comenzar con '!' para salidas o '?' para entradas, pero el parser no reconoce el formato después del gate inicial '?'. El problema radica en la coma ',' que sigue a 'calc'. En el contexto de IBDD, las interacciones deben seguir el formato 'g.iv1, ..., ivn', donde 'g' es el gate y 'iv1, ..., ivn' son las interacciones válidas. La coma después de 'calc' está causando un conflicto en el reconocimiento del parser.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, en el switch de interacción",
+    "correction_suggestion": "Revisar la sintaxis de la interacción para asegurar que sigue el formato correcto. Una posible corrección es asegurarse de que los parámetros de interacción estén correctamente formateados, por ejemplo, '?enter_numbers.calc(10,3)'.",
+    "hints": [
+      "Revisar la sintaxis de las interacciones para asegurar que no haya comas innecesarias.",
+      "Asegurarse de que las interacciones estén correctamente formateadas según las reglas de IBDD."
+    ]
+  },
+  {
+    "case_id": 19,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator displays 42",
+      "when": "I clear the calculator and then enter 7 and add 3",
+      "then": "the calculator displays the result as 10"
+    },
+    "previous_translation": "GIVEN [display = 42]\nWHEN ?clear [true] display := 0\n?enter,7 [true] display := 7\n?add,3 [true] display := display + 3\nTHEN [display = 10]",
+    "parse_error": "No terminal matches ',' in the current parser context, at line 3 col 7\n\n?enter,7 [true] display := 7\n      ^\nExpected one of: \n\t* __ANON_0\n\t* FALSE\n\t* NUMBER\n\t* DOT\n\t* NOT_SYMBOL\n\t* __ANON_2\n\t* LBRACKET\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* THEN\n\t* LPAR\n",
+    "explanation": "El parser encontró un carácter ',' en la línea 3, que no es esperado en el contexto actual. En la gramática IBDD, los 'Interactions' deben estar formados por un gate seguido de una lista de variables separadas por comas, pero el gate debe comenzar con un '?' o '!' seguido de un punto (.) antes de las variables. Aquí, '?enter,7' debería ser '?enter.7'.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 3, parte '?enter,7'",
+    "correction_suggestion": "Corrige la línea 3 para que el gate esté correctamente formado: '?enter.7 [true] display := 7'.",
+    "hints": [
+      "Asegúrate de que cada 'Interaction' comience con '?' o '!' seguido de un punto (.) antes de las variables.",
+      "Revisa que las variables en 'Interaction' estén separadas por comas después del punto."
+    ]
+  },
+  {
+    "case_id": 38,
+    "success": true,
+    "original_bdd": {
+      "given": "a controller job is printing AND scheduled maintenance is due in 5 minutes",
+      "when": "the maintenance timer expires AND the printer pauses all active jobs AND the operator completes maintenance AND the operator resumes printing",
+      "then": "the controller job continues from the interrupted page AND the maintenance log is updated"
+    },
+    "previous_translation": "GIVEN CJ [CJ.state = Printing ∧ maintenance_due_in(5)]\nWHEN !timer_expire [true] CJ.state := Paused\n!pause_all_jobs [true] true\n?complete_maintenance [true] true\n?resume_printing [true] CJ.state := Printing\nTHEN [CJ.state = Printing ∧ log_updated(MaintenanceLog)]\nCJ.page := CJ.interrupted_page\nMaintenanceLog := update_log(MaintenanceLog)",
+    "parse_error": "Unexpected end-of-input. Expected one of: \n\t* CIRCUMFLEX\n\t* TRUE\n\t* __ANON_2\n\t* NOT\n\t* NOT_SYMBOL\n\t* LPAR\n\t* TRUE\n\t* FALSE\n\t* NUMBER\n\t* MINUS\n\t* __ANON_1\n\t* LBRACKET\n\t* __ANON_0\n\t* THEN\n\t* THEN\n\t* COMMA\n\t* OR\n\t* OR_SYMBOL\n\t* AND\n\t* AND_SYMBOL\n\t* EQ\n\t* EQEQ\n\t* NEQ\n\t* LT\n\t* GT\n\t* LEQ\n\t* GEQ\n\t* GEQ_SYMBOL\n\t* LEQ_SYMBOL\n\t* NEQ_SYMBOL\n\t* PLUS\n\t* MINUS\n\t* STAR\n\t* SLASH\n\t* PERCENT\n\t* CIRCUMFLEX\n",
+    "explanation": "The THEN clause is missing the required postcondition brackets at the end. The parser expected the THEN clause to end with a guard enclosed in brackets '[...]', but it encountered assignments without a closing guard.",
+    "error_type": "Postcondición faltante",
+    "error_location": "THEN clause",
+    "correction_suggestion": "Add a closing guard to the THEN clause to encapsulate the final state conditions. The corrected THEN clause should look like: THEN CJ.page := CJ.interrupted_page MaintenanceLog := update_log(MaintenanceLog) [CJ.state = Printing ∧ log_updated(MaintenanceLog)]",
+    "hints": [
+      "Ensure the THEN clause ends with a guard enclosed in brackets '[...]'.",
+      "Review the original BDD scenario to ensure semantic correctness."
+    ]
+  },
+  {
+    "case_id": 41,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the number 42 and store it in memory AND I clear the display AND I recall the value from memory",
+      "then": "the calculator displays the result as 42"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_number.calc,42 [true] calc.input := 42, MEM := 42\n!clear_display.calc [true] calc.display := clear_display\n!recall_memory.calc [true] calc.output := MEM\nTHEN [calc.display = 42]",
+    "parse_error": "No terminal matches '4' in the current parser context, at line 2 col 25\n\nWHEN ?enter_number.calc,42 [true] calc.input := 42, MEM := 42\n                        ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser esperaba un formato de interacción correcto, donde los gates deben ser precedidos por un '?' para entrada o '!' para salida. En este caso, el problema radica en la coma ',' después de '?enter_number.calc'. El parser no reconoce '42' como parte de la interacción porque no está correctamente delimitado o separado de la interacción anterior.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, después de '?enter_number.calc'",
+    "correction_suggestion": "Corrige la interacción para que el número '42' sea parte de la asignación o condición, no de la interacción. Por ejemplo, separa la entrada de número de la asignación:\n\nWHEN ?enter_number.calc [calc.input := 42] MEM := 42\n!clear_display.calc [true] calc.display := clear_display\n!recall_memory.calc [true] calc.output := MEM",
+    "hints": [
+      "Asegúrate de que cada interacción esté correctamente separada y delimitada.",
+      "Revisa que las asignaciones estén correctamente ubicadas después de las condiciones en corchetes.",
+      "Verifica que el uso de comas y otros delimitadores sea apropiado en el contexto de la gramática."
+    ]
+  },
+  {
+    "case_id": 43,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator displays 15 after adding 5 and 10",
+      "when": "I undo the last operation",
+      "then": "the calculator displays the result as 5 AND the last operation is removed from history"
+    },
+    "previous_translation": "GIVEN C [C.display = 15 ∧ last_operation = add(5, 10)]\nWHEN ?undo [true] C.display := 5, history := remove_last(history)\nTHEN [C.display = 5 ∧ ¬(last_operation in history)]",
+    "parse_error": "No terminal matches 'i' in the current parser context, at line 3 col 40\n\nTHEN [C.display = 5 ∧ ¬(last_operation in history)]\n                                       ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró un error al intentar interpretar la expresión '¬(last_operation in history)'. La sintaxis utilizada para verificar si un elemento está en una colección no es compatible con la gramática IBDD. El parser esperaba operadores de comparación válidos como EQ, NEQ, AND, OR, etc., pero encontró 'in', que no es un operador reconocido.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 3, expresión '¬(last_operation in history)'",
+    "correction_suggestion": "Reescribir la expresión para utilizar operadores válidos. Por ejemplo, si la intención es verificar que 'last_operation' no está en 'history', se podría usar una función o método que devuelva un booleano, como '¬contains(history, last_operation)'.",
+    "hints": [
+      "Revisa la sintaxis de las expresiones para asegurarte de que solo se utilizan operadores válidos.",
+      "Considera usar funciones auxiliares para operaciones complejas que no son directamente soportadas por la gramática.",
+      "Asegúrate de que todas las expresiones dentro de las guardas y condiciones sean compatibles con los operadores esperados por el parser."
+    ]
+  },
+  {
+    "case_id": 47,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is in statistics mode",
+      "when": "I enter the values 10 and 20 and 30 and 40 and choose mean",
+      "then": "the calculator displays the result as 25 AND the count of values is 4"
+    },
+    "previous_translation": "GIVEN CALC [is_in_mode(CALC, Statistics)]\nWHEN ?enter_values.calc, v1, v2, v3, v4, operation [v1 = 10 ∧ v2 = 20 ∧ v3 = 30 ∧ v4 = 40 ∧ operation = mean] CALC.values := [v1, v2, v3, v4], CALC.operation := operation\nTHEN !display_result.calc [result = 25 ∧ count = 4] [CALC.result = result ∧ length(CALC.values) = count]",
+    "parse_error": "No terminal matches '[' in the current parser context, at line 2 col 126\n\n= 40 ∧ operation = mean] CALC.values := [v1, v2, v3, v4], CALC.operation := oper\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch, pero encontró un corchete de apertura '[' en su lugar. Cada switch debe tener una asignación explícita o 'true' después de la condición encerrada en corchetes.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 2, después de la condición del switch",
+    "correction_suggestion": "Corrige el IBDD añadiendo una asignación después de la condición en el switch. Por ejemplo, puedes usar 'true' si no hay una asignación específica que hacer: `WHEN ?enter_values.calc, v1, v2, v3, v4, operation [v1 = 10 ∧ v2 = 20 ∧ v3 = 30 ∧ v4 = 40 ∧ operation = mean] true CALC.values := [v1, v2, v3, v4], CALC.operation := operation`",
+    "hints": [
+      "Asegúrate de que cada switch tenga una asignación después de la condición.",
+      "Revisa que todas las condiciones estén correctamente encerradas en corchetes.",
+      "Verifica que las asignaciones sean claras y específicas."
+    ]
+  },
+  {
+    "case_id": 71,
+    "success": true,
+    "original_bdd": {
+      "given": "a user has items in the cart AND the cart has been inactive for 24 hours AND the user has email notifications enabled",
+      "when": "the abandonment recovery system runs AND the system sends a reminder email to the user",
+      "then": "the reminder email is sent with cart contents AND a discount incentive is included AND the cart is preserved for 7 more days"
+    },
+    "previous_translation": "GIVEN U, C [has_items(C) ∧ C.inactive_time = 24 ∧ U.notifications = enabled]\nWHEN !run_recovery [true] true\n!send_email.u [u.id = U.id] true\nTHEN [reminder_sent(U, C) ∧ discount_included(U) ∧ cart_preserved(C, 7d)]",
+    "parse_error": "No terminal matches 'd' in the current parser context, at line 4 col 71\n\nscount_included(U) ∧ cart_preserved(C, 7d)]\n                                        ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró un carácter 'd' inesperado en el contexto actual. Esto ocurre porque '7d' no es una expresión válida en el contexto de una guarda. El parser esperaba un operador o un cierre de expresión, pero encontró un sufijo de tiempo ('d') que no está definido en la gramática IBDD.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 4, col 71",
+    "correction_suggestion": "Reemplaza '7d' con un formato numérico o una expresión que sea compatible con la gramática IBDD. Por ejemplo, si '7d' representa 7 días, podrías usar un número entero o una variable que represente la duración en días, como '7'.\n\nCorregido:\n```\nTHEN [reminder_sent(U, C) ∧ discount_included(U) ∧ cart_preserved(C, 7)]\n```",
+    "hints": [
+      "Asegúrate de que todas las expresiones en las guardas sean válidas según la gramática IBDD.",
+      "Considera usar variables o constantes predefinidas para representar unidades de tiempo si es necesario.",
+      "Revisa las expresiones para asegurarte de que no incluyan sufijos o notaciones no soportadas."
+    ]
+  },
+  {
+    "case_id": 72,
+    "success": true,
+    "original_bdd": {
+      "given": "a flash sale starts for a product with 5 units available AND 10 users are waiting to purchase",
+      "when": "the flash sale begins AND multiple users attempt to add the product to their carts simultaneously",
+      "then": "only the first 5 successful users have the product in their carts AND the remaining users are notified that the product is sold out AND the product is marked as unavailable"
+    },
+    "previous_translation": "GIVEN P [P.stock = 5 ∧ flashSaleActive(P)]\nWHEN !beginFlashSale.p [p.id = P.id] P.state := FlashSaleStarted\n?attemptPurchase.u1;u2;u3;u4;u5;u6;u7;u8;u9;u10 [true] \n  for each u in [u1;u2;u3;u4;u5;u6;u7;u8;u9;u10] do\n    if P.stock > 0 then\n      SC[u].items := add(P, SC[u].items), P.stock := P.stock - 1\n    else\n      !notifySoldOut.u [true]\nTHEN [for each u in [u1;u2;u3;u4;u5] is_in_list(P, SC[u].items) ∧ P.stock = 0 ∧ P.state = Unavailable]",
+    "parse_error": "No terminal matches ';' in the current parser context, at line 3 col 20\n\n?attemptPurchase.u1;u2;u3;u4;u5;u6;u7;u8;u9;u10 [true]\n                   ^\nExpected one of: \n\t* __ANON_0\n\t* FALSE\n\t* NUMBER\n\t* NOT_SYMBOL\n\t* COMMA\n\t* __ANON_2\n\t* LBRACKET\n\t* MINUS\n\t* NOT\n\t* TRUE\n\t* __ANON_1\n\t* THEN\n\t* LPAR\n",
+    "explanation": "El parser encontró un ';' en lugar de un ',' para separar los identificadores de los usuarios en el gate de interacción. En IBDD, los gates deben separar los identificadores con comas, no con punto y coma.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 3, después de '?attemptPurchase.u1'",
+    "correction_suggestion": "Reemplaza los ';' por ',' en la línea de interacción: '?attemptPurchase.u1,u2,u3,u4,u5,u6,u7,u8,u9,u10 [true]'",
+    "hints": [
+      "Revisa la sintaxis de los gates para asegurar que los identificadores estén separados por comas.",
+      "Asegúrate de que cada interacción esté correctamente formada según las reglas de IBDD.",
+      "Verifica que las condiciones y asignaciones estén correctamente formadas y ubicadas."
+    ]
+  },
+  {
+    "case_id": 85,
+    "success": true,
+    "original_bdd": {
+      "given": "a bank account has a transaction of 150 that the customer does not recognize",
+      "when": "the customer disputes the transaction AND provides the transaction ID",
+      "then": "the transaction is flagged as disputed AND a temporary credit of 150 is applied AND an investigation case is opened"
+    },
+    "previous_translation": "GIVEN T [is_in_list(T, AC.transactions) ∧ T.amount = 150 ∧ not_recognized(T)]\nWHEN ?dispute.tid [t.id = T.id] T.status := 'disputed'\nAC.balance := AC.balance + T.amount\nIC := open_investigation(T)\nTHEN [T.status = 'disputed' ∧ is_in_list(IC, Investigations) ∧ AC.balance = calculate_balance(AC)]",
+    "parse_error": "No terminal matches ''' in the current parser context, at line 2 col 45\n\n ?dispute.tid [t.id = T.id] T.status := 'disputed'\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba una expresión válida después del operador de asignación ':=' en el switch. En su lugar, encontró una cadena de texto sin comillas simples, lo que no es una expresión válida en este contexto.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 2, después de 'T.status := 'disputed''",
+    "correction_suggestion": "Reemplaza la asignación 'T.status := 'disputed'' con 'T.status := \"disputed\"' para usar comillas dobles, asegurando que el valor asignado sea reconocido como una cadena válida.",
+    "hints": [
+      "Asegúrate de que todas las asignaciones usen comillas dobles para los valores de cadena.",
+      "Verifica que cada switch tenga una asignación válida después del operador ':='.",
+      "Revisa la sintaxis de las condiciones y asignaciones para asegurar que sean expresiones válidas."
+    ]
+  },
+  {
+    "case_id": 88,
+    "success": true,
+    "original_bdd": {
+      "given": "a bank account with balance 10000 in USD AND the transfer fee is 25 AND the exchange rate from USD to EUR is 0.85",
+      "when": "the customer initiates a wire transfer of 1000 USD to a European account AND confirms the transfer",
+      "then": "the account balance is reduced by 1025 AND the recipient receives 850 EUR AND the fee is deducted AND the transaction is recorded with the exchange rate"
+    },
+    "previous_translation": "GIVEN BA, TF, ER [BA.balance = 10000 ∧ TF = 25 ∧ ER = 0.85]\nWHEN ?initiate_transfer.ba,amt\n[ba.id = BA.id ∧ amt = 1000] BA.balance := BA.balance - (amt + TF)\n!confirm_transfer.ba [ba.id = BA.id] (no assignment)\nTHEN !record_transaction.ba\n[ba.id = BA.id ∧ transaction.amount = amt ∧ transaction.fee = TF ∧ transaction.exchange_rate = ER] TRANSACTIONS := add(transaction, TRANSACTIONS)\n[BA.balance = 8975 ∧ recipient.amount = amt * ER ∧ is_recorded(transaction, TRANSACTIONS)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 42\n\nconfirm_transfer.ba [ba.id = BA.id] (no assignment)\n                                        ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba encontrar una asignación después de la condición en el switch de 'confirm_transfer.ba'. Sin embargo, encontró '(no assignment)', lo cual no es válido según la gramática IBDD. Cada switch debe incluir una asignación, incluso si es simplemente 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, en el switch de confirm_transfer.ba",
+    "correction_suggestion": "Corrige el switch de 'confirm_transfer.ba' para incluir una asignación válida. Por ejemplo, puedes usar 'true' como asignación: '!confirm_transfer.ba [ba.id = BA.id] true'.",
+    "hints": [
+      "Asegúrate de que cada switch tenga una asignación después de la condición.",
+      "Revisa la gramática IBDD para entender cómo deben estructurarse los switches.",
+      "Considera usar 'true' como asignación cuando no haya una acción específica que realizar."
+    ]
+  },
+  {
+    "case_id": 103,
+    "success": true,
+    "original_bdd": {
+      "given": "a member has an active library membership",
+      "when": "the member checks the membership status",
+      "then": "the membership details are displayed including the expiration date"
+    },
+    "previous_translation": "GIVEN M [M.status = Active]\nWHEN ?check_status.m [m.id = M.id] true\nTHEN !display_details [M.details.displayed = true]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 3 col 33\n\nTHEN !display_details [M.details.displayed = true]\n                                ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró un punto (.) en la expresión 'M.details.displayed = true', lo cual no es un operador válido en el contexto de una condición. El parser esperaba operadores como EQ, NEQ, OR_SYMBOL, etc., para evaluar la condición, pero encontró un punto que no es reconocido como un operador válido.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 3, parte de la condición dentro de los corchetes",
+    "correction_suggestion": "Revisar la expresión 'M.details.displayed = true' para asegurar que se está utilizando una sintaxis válida. Si 'M.details.displayed' es una expresión booleana válida, asegúrate de que no haya puntos innecesarios o mal colocados. Si es necesario, reformula la expresión para que sea compatible con los operadores esperados por el parser.",
+    "hints": [
+      "Verifica que 'M.details.displayed' sea una expresión válida o reformula la expresión para que sea compatible con los operadores esperados.",
+      "Asegúrate de que las condiciones dentro de los corchetes usen operadores válidos y reconocidos por el parser."
+    ]
+  },
+  {
+    "case_id": 109,
+    "success": true,
+    "original_bdd": {
+      "given": "a member has a room reserved for 2 hours AND the room is available for the following hour",
+      "when": "the member requests a 1 hour extension",
+      "then": "the reservation is extended to 3 hours AND the additional time slot is blocked"
+    },
+    "previous_translation": "GIVEN MBR, RM [has_reservation(MBR, RM, 2) ∧ is_available(RM, next_hour)]\nWHEN ?request_extension.mbr,rm,1 [mbr.id = MBR.id ∧ rm.id = RM.id ∧ 1 = 1] RM.reservation := extend(RM.reservation, 1)\nTHEN [has_reservation(MBR, RM, 3) ∧ is_blocked(RM, next_hour)]",
+    "parse_error": "No terminal matches '1' in the current parser context, at line 2 col 32\n\nWHEN ?request_extension.mbr,rm,1 [mbr.id = MBR.id ∧ rm.id = RM.id ∧ 1 =\n                               ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser esperaba que la condición del switch estuviera completamente encerrada entre corchetes '[...]'. Sin embargo, el corchete de cierre ']' está ausente, lo que causa que el parser no pueda interpretar correctamente el final de la condición y el inicio de la asignación.",
+    "error_type": "Corchetes faltantes en condiciones",
+    "error_location": "Línea 2, parte del switch en WHEN",
+    "correction_suggestion": "Corrige la línea 2 para asegurarte de que la condición esté completamente encerrada entre corchetes. Debería ser: WHEN ?request_extension.mbr,rm,1 [mbr.id = MBR.id ∧ rm.id = RM.id ∧ 1 = 1] RM.reservation := extend(RM.reservation, 1)",
+    "hints": [
+      "Asegúrate de que cada condición en un switch esté completamente encerrada en corchetes '[...]'.",
+      "Revisa la línea 2 para verificar que el corchete de cierre esté presente después de la condición antes de la asignación."
+    ]
+  },
+  {
+    "case_id": 110,
+    "success": true,
+    "original_bdd": {
+      "given": "a book is not available in the local catalog AND the book exists in a partner library catalog",
+      "when": "the member requests an interlibrary loan for the book",
+      "then": "the loan request is submitted to the partner library AND the estimated arrival date is set"
+    },
+    "previous_translation": "GIVEN B [!is_in_catalog(B, LOCAL_CATALOG) ∧ is_in_catalog(B, PARTNER_CATALOG)]\nWHEN ?request_loan.b,member [b.id = B.id ∧ member.is_active = true] LR := createLoanRequest(B, member)\nTHEN !submit_loan_request.lr,partner [lr.book_id = B.id ∧ lr.status = Submitted ∧ lr in PARTNER_REQUESTS ∧ EST_ARRIVAL > current_date]",
+    "parse_error": "No terminal matches 'i' in the current parser context, at line 3 col 86\n\n_id = B.id ∧ lr.status = Submitted ∧ lr in PARTNER_REQUESTS ∧ EST_ARRIVAL > curr\n                                        ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró un error debido a la presencia de 'in' en la expresión 'lr in PARTNER_REQUESTS'. La gramática no reconoce 'in' como un operador válido en las condiciones. El parser esperaba operadores como EQ, NEQ, AND, OR, etc., pero encontró 'in', lo cual no es parte de la gramática permitida.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 3, en la condición del THEN",
+    "correction_suggestion": "Reemplaza 'lr in PARTNER_REQUESTS' con una expresión válida. Por ejemplo, podrías usar una función que verifique la pertenencia, como 'isIn(lr, PARTNER_REQUESTS)'.",
+    "hints": [
+      "Revisa las expresiones condicionales para asegurarte de que solo utilizan operadores y funciones válidas según la gramática.",
+      "Considera definir una función auxiliar que encapsule la lógica de pertenencia si es necesario."
+    ]
+  },
+  {
+    "case_id": 113,
+    "success": true,
+    "original_bdd": {
+      "given": "a popular book has 2 holds from students AND the library gives faculty priority over students",
+      "when": "a faculty member places a hold on the book",
+      "then": "the faculty hold is placed at position 1 AND the student holds move to positions 2 and 3"
+    },
+    "previous_translation": "GIVEN B, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]\nWHEN ?place_hold.fh,b [fh.book_id = B.id ∧ fh.type = Faculty] holds(B) := [fh, S1H, S2H]\nTHEN [holds(B) = [fh, S1H, S2H]]",
+    "parse_error": "No terminal matches '[' in the current parser context, at line 1 col 47\n\nB, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* LPAR\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba encontrar un corchete de apertura '[' inmediatamente después de la declaración de variables 'B, S1H, S2H'. Sin embargo, encontró una expresión lógica sin estar encerrada en corchetes, lo cual viola la gramática IBDD que requiere que las guardas estén siempre dentro de corchetes.",
+    "error_type": "Corchetes faltantes en guardas",
+    "error_location": "Línea 1, después de 'GIVEN B, S1H, S2H'",
+    "correction_suggestion": "Asegúrate de que la guarda esté correctamente encerrada en corchetes. El fragmento corregido debería ser: 'GIVEN B, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]'",
+    "hints": [
+      "Revisa que todas las guardas estén dentro de corchetes '[...]'.",
+      "Verifica que no falten corchetes de apertura o cierre en las guardas.",
+      "Asegúrate de que las declaraciones y las guardas estén correctamente separadas."
+    ]
+  },
+  {
+    "case_id": 118,
+    "success": true,
+    "original_bdd": {
+      "given": "a book is checked out to member A AND the book is 2 days overdue AND member B has placed a hold on the book",
+      "when": "member A attempts to renew the book",
+      "then": "the renewal is denied because of the existing hold AND member A is notified to return the book AND the overdue fine continues to accumulate"
+    },
+    "previous_translation": "GIVEN B, MA, MB [is_checked_out(B, MA) ∧ is_overdue(B, 2) ∧ has_hold(MB, B)]\nWHEN ?attempt_renew.ma,b [ma.id = MA.id ∧ b.id = B.id] true\nTHEN !deny_renewal [true] MA.notify := 'return_book'\n[renewal_denied(B, 'hold') ∧ is_notified(MA, 'return_book') ∧ overdue_fine_accumulates(B)]",
+    "parse_error": "No terminal matches ''' in the current parser context, at line 3 col 40\n\nTHEN !deny_renewal [true] MA.notify := 'return_book'\n                                       ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba una expresión válida para la asignación después del operador ':=' en 'MA.notify := 'return_book''. Sin embargo, encontró un string entre comillas simples, lo cual no es una expresión válida según la gramática esperada por el parser.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 3, parte de la asignación",
+    "correction_suggestion": "Reemplazar la asignación 'MA.notify := 'return_book'' con una expresión válida. Por ejemplo, podrías usar un identificador o una función que represente la acción de notificación, como 'MA.notify := notify_return_book()'.",
+    "hints": [
+      "Revisa que las asignaciones usen expresiones o funciones válidas en lugar de strings literales.",
+      "Asegúrate de que las asignaciones sigan la sintaxis esperada por el parser, que no incluye strings entre comillas simples."
+    ]
+  },
+  {
+    "case_id": 120,
+    "success": true,
+    "original_bdd": {
+      "given": "a book checked out to a member has been lost AND the book replacement cost is 45 AND the member has a clean borrowing record",
+      "when": "the member reports the book as lost AND the system processes the lost book claim",
+      "then": "the replacement fee of 45 is charged to the member account AND the book is removed from the member active loans AND the catalog is updated to reflect the lost copy AND a replacement order is placed if the book has active holds"
+    },
+    "previous_translation": "GIVEN B, M [is_checked_out(B, M) ∧ B.replacement_cost = 45 ∧ has_clean_record(M)]\nWHEN ?report_lost.b,m [b.id = B.id ∧ m.id = M.id] B.state := Lost\n!process_lost_claim.b [true] M.account := charge_fee(M.account, B.replacement_cost)\nTHEN !remove_from_loans.b,m [true] true\n!update_catalog.b [true] true\n!place_order.b [B.has_active_holds] true\n[M.account.balance = calculate_balance(M.account) ∧ ¬is_checked_out(B, M) ∧ is_updated_catalog(B) ∧ (!B.has_active_holds ∨ order_placed(B))]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 7 col 11\n\n[M.account.balance = calculate_balance(M.account) \n          ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró un punto ('.') en una expresión dentro de la guarda de la cláusula THEN, lo cual no es un operador válido en este contexto. El parser esperaba operadores lógicos o de comparación como EQ, NEQ, AND, OR, etc., pero encontró un punto que no tiene significado en la gramática esperada.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 7, columna 11",
+    "correction_suggestion": "Revisar la expresión 'M.account.balance = calculate_balance(M.account)' y asegurarse de que se utilicen operadores válidos. Si 'calculate_balance' es una función, asegúrate de que su resultado se compare correctamente con 'M.account.balance'. Por ejemplo, 'M.account.balance == calculate_balance(M.account)'.",
+    "hints": [
+      "Verifica que todas las expresiones dentro de las guardas usen operadores válidos según la gramática IBDD.",
+      "Asegúrate de que las funciones o métodos estén correctamente integrados en las expresiones lógicas y de comparación.",
+      "Revisa que no haya errores tipográficos en los nombres de variables o funciones."
+    ]
+  },
+  {
+    "case_id": 10,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 10 and 3 and choose subtraction",
+      "then": "the calculator displays the result as 7"
+    },
+    "previous_translation": "GIVEN CALC [is_ready(CALC)]\nWHEN ?enter_numbers.calc(10,3) [calc.state = Ready] true\n!choose_operation.calc(subtraction) [calc.state = Ready] CALC.state := Performing\nTHEN !display_result.calc [CALC.state = Result] calc.result := 7\n[calc.result = 7]",
+    "parse_error": "No terminal matches ',' in the current parser context, at line 2 col 28\n\nWHEN ?enter_numbers.calc(10,3) [calc.state = Ready] true\n                           ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró una coma ',' en la expresión de interacción '?enter_numbers.calc(10,3)', lo cual no es válido en la gramática esperada. Las interacciones no deben contener comas en sus argumentos, ya que no están soportadas por el parser en este contexto.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 2, parte de interacción",
+    "correction_suggestion": "Reemplaza la coma en '?enter_numbers.calc(10,3)' con un formato que no use comas, por ejemplo: '?enter_numbers.calc(10 3)' o '?enter_numbers.calc(10_3)'.",
+    "hints": [
+      "Revisa las interacciones para asegurar que no contengan caracteres no soportados como comas.",
+      "Asegúrate de que las funciones o métodos llamados en las interacciones sigan la sintaxis esperada por el parser."
+    ]
+  },
+  {
+    "case_id": 19,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator displays 42",
+      "when": "I clear the calculator and then enter 7 and add 3",
+      "then": "the calculator displays the result as 10"
+    },
+    "previous_translation": "GIVEN display [display = 42]\nWHEN ?clear [true] display := 0\n?enter.7 [true] display := 7\n?add.3 [true] display := display + 3\nTHEN [display = 10]",
+    "parse_error": "No terminal matches '7' in the current parser context, at line 3 col 8\n\n?enter.7 [true] display := 7\n       ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser encontró un error en la línea 3 debido a un uso incorrecto de la sintaxis de gate. Los gates deben comenzar con un prefijo de interacción seguido de un punto y luego el nombre de la interacción. En este caso, el parser no reconoce '7' como parte de un nombre de interacción válido.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 3, en el gate '?enter.7'",
+    "correction_suggestion": "Corrige la línea 3 para que el gate tenga un formato válido. Por ejemplo, usa '?enter.7' como '?enter.number' donde 'number' es un identificador válido. Aquí está el IBDD corregido:\n```\nGIVEN display [display = 42]\nWHEN ?clear [true] display := 0\n?enter.number [true] display := 7\n?add.3 [true] display := display + 3\nTHEN [display = 10]\n```",
+    "hints": [
+      "Asegúrate de que los nombres de interacción no comiencen con números.",
+      "Verifica que cada interacción tenga un nombre que siga la convención de prefijo y nombre separados por un punto."
+    ]
+  },
+  {
+    "case_id": 38,
+    "success": true,
+    "original_bdd": {
+      "given": "a controller job is printing AND scheduled maintenance is due in 5 minutes",
+      "when": "the maintenance timer expires AND the printer pauses all active jobs AND the operator completes maintenance AND the operator resumes printing",
+      "then": "the controller job continues from the interrupted page AND the maintenance log is updated"
+    },
+    "previous_translation": "GIVEN CJ [CJ.state = Printing ∧ maintenance_due_in(5)]\nWHEN !timer_expire [true] CJ.state := Paused\n!pause_all_jobs [true] true\n?complete_maintenance [true] true\n?resume_printing [true] CJ.state := Printing\nTHEN CJ.page := CJ.interrupted_page, MaintenanceLog := update_log(MaintenanceLog) [CJ.state = Printing ∧ log_updated(MaintenanceLog)]",
+    "parse_error": "Unexpected end-of-input. Expected one of: \n\t* TRUE\n\t* __ANON_2\n\t* NOT\n\t* NOT_SYMBOL\n\t* LPAR\n\t* TRUE\n\t* FALSE\n\t* NUMBER\n\t* MINUS\n\t* __ANON_1\n\t* LBRACKET\n\t* __ANON_0\n\t* THEN\n\t* THEN\n",
+    "explanation": "El parser esperaba que la cláusula THEN terminara con una guarda encerrada en corchetes '[...]', pero encontró el final del input sin esta estructura. Esto es necesario para definir las condiciones finales esperadas después de las acciones en THEN.",
+    "error_type": "Postcondición faltante",
+    "error_location": "Final de la cláusula THEN",
+    "correction_suggestion": "Añadir corchetes alrededor de la guarda al final de la cláusula THEN para cumplir con la sintaxis esperada. El IBDD corregido debería ser:\n\n```\nGIVEN CJ [CJ.state = Printing ∧ maintenance_due_in(5)]\nWHEN !timer_expire [true] CJ.state := Paused\n!pause_all_jobs [true] true\n?complete_maintenance [true] true\n?resume_printing [true] CJ.state := Printing\nTHEN CJ.page := CJ.interrupted_page, MaintenanceLog := update_log(MaintenanceLog) [CJ.state = Printing ∧ log_updated(MaintenanceLog)]\n```",
+    "hints": [
+      "Asegúrate de que todas las cláusulas THEN terminen con una guarda en '[...]'.",
+      "Revisa que cada switch en WHEN tenga una asignación válida."
+    ]
+  },
+  {
+    "case_id": 41,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the number 42 and store it in memory AND I clear the display AND I recall the value from memory",
+      "then": "the calculator displays the result as 42"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_number.calc [calc.input := 42] MEM := 42\n!clear_display.calc [true] calc.display := clear_display\n!recall_memory.calc [true] calc.output := MEM\nTHEN [calc.display = 42]",
+    "parse_error": "No terminal matches ':' in the current parser context, at line 2 col 37\n\nWHEN ?enter_number.calc [calc.input := 42] MEM := 42\n                                    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación o una expresión booleana después de 'calc.input := 42', pero encontró 'MEM := 42' sin un operador de separación adecuado. Cada switch debe tener una asignación clara y separada por una nueva línea.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 2, después de 'calc.input := 42'",
+    "correction_suggestion": "Separar las asignaciones en líneas distintas y asegurarse de que cada switch tenga una asignación clara. Por ejemplo:\n```\nWHEN ?enter_number.calc [calc.input := 42] MEM := 42\n```\nDebería ser:\n```\nWHEN ?enter_number.calc [calc.input := 42] MEM := 42\n```\nRevisar que cada switch esté en una línea separada y tenga una asignación clara.",
+    "hints": [
+      "Asegúrate de que cada switch esté en una línea separada.",
+      "Verifica que cada switch tenga una asignación clara y correcta.",
+      "Revisa que las asignaciones estén separadas por operadores adecuados o en líneas distintas."
+    ]
+  },
+  {
+    "case_id": 47,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is in statistics mode",
+      "when": "I enter the values 10 and 20 and 30 and 40 and choose mean",
+      "then": "the calculator displays the result as 25 AND the count of values is 4"
+    },
+    "previous_translation": "GIVEN CALC [is_in_mode(CALC, Statistics)]\nWHEN ?enter_values.calc, v1, v2, v3, v4, operation [v1 = 10 ∧ v2 = 20 ∧ v3 = 30 ∧ v4 = 40 ∧ operation = mean] true CALC.values := [v1, v2, v3, v4], CALC.operation := operation\nTHEN !display_result.calc [result = 25 ∧ count = 4] [CALC.result = result ∧ length(CALC.values) = count]",
+    "parse_error": "No terminal matches '[' in the current parser context, at line 2 col 131\n\n∧ operation = mean] true CALC.values := [v1, v2, v3, v4], CALC.operation := oper\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch, pero encontró 'true' seguido de una asignación múltiple sin un operador de asignación explícito para 'true'.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 2, después de la condición del switch",
+    "correction_suggestion": "Reemplazar 'true' con una asignación explícita como 'CALC.values := [v1, v2, v3, v4], CALC.operation := operation'. Asegúrate de que cada switch tenga una asignación clara después de la condición.",
+    "hints": [
+      "Cada switch debe tener una asignación explícita después de la condición.",
+      "Revisa que 'true' no se use incorrectamente como una asignación.",
+      "Asegúrate de que las asignaciones estén correctamente separadas por comas."
+    ]
+  },
+  {
+    "case_id": 72,
+    "success": true,
+    "original_bdd": {
+      "given": "a flash sale starts for a product with 5 units available AND 10 users are waiting to purchase",
+      "when": "the flash sale begins AND multiple users attempt to add the product to their carts simultaneously",
+      "then": "only the first 5 successful users have the product in their carts AND the remaining users are notified that the product is sold out AND the product is marked as unavailable"
+    },
+    "previous_translation": "GIVEN P [P.stock = 5 ∧ flashSaleActive(P)]\nWHEN !beginFlashSale.p [p.id = P.id] P.state := FlashSaleStarted\n?attemptPurchase.u1,u2,u3,u4,u5,u6,u7,u8,u9,u10 [true]\nfor each u in [u1,u2,u3,u4,u5,u6,u7,u8,u9,u10] do\nif P.stock > 0 then\nSC[u].items := add(P, SC[u].items), P.stock := P.stock - 1\nelse\n!notifySoldOut.u [true]\nTHEN [for each u in [u1,u2,u3,u4,u5] is_in_list(P, SC[u].items) ∧ P.stock = 0 ∧ P.state = Unavailable]",
+    "parse_error": "No terminal matches ',' in the current parser context, at line 4 col 18\n\nfor each u in [u1,u2,u3,u4,u5,u6,u7,u8,u9,u10] do\n                 ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró una coma ',' en un contexto donde esperaba operadores lógicos o aritméticos, o el cierre de corchetes. Esto indica que la expresión 'for each u in [u1,u2,u3,u4,u5,u6,u7,u8,u9,u10] do' no está permitida en la gramática IBDD, ya que no se soportan bucles o iteraciones de esta manera.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 4, columna 18",
+    "correction_suggestion": "Reescribir la lógica de iteración para que cada interacción de usuario se maneje individualmente en switches separados. Por ejemplo, crear un switch para cada usuario u1, u2, ..., u10, evaluando la condición y realizando la asignación correspondiente.",
+    "hints": [
+      "Revisa cómo se manejan múltiples interacciones en IBDD, generalmente cada interacción debe ser un switch separado.",
+      "Asegúrate de que las condiciones y asignaciones estén correctamente formadas y que cada switch esté en una línea separada.",
+      "Considera la posibilidad de usar una estructura de control externa al IBDD para manejar iteraciones complejas."
+    ]
+  },
+  {
+    "case_id": 85,
+    "success": true,
+    "original_bdd": {
+      "given": "a bank account has a transaction of 150 that the customer does not recognize",
+      "when": "the customer disputes the transaction AND provides the transaction ID",
+      "then": "the transaction is flagged as disputed AND a temporary credit of 150 is applied AND an investigation case is opened"
+    },
+    "previous_translation": "GIVEN T [is_in_list(T, AC.transactions) ∧ T.amount = 150 ∧ not_recognized(T)]\nWHEN ?dispute.tid [T.id = tid] T.status := \"disputed\"\n!apply_credit.ac [true] AC.balance := AC.balance + T.amount\n!open_case.ic [true] IC := open_investigation(T)\nTHEN [T.status = \"disputed\" ∧ is_in_list(IC, Investigations) ∧ AC.balance = calculate_balance(AC)]",
+    "parse_error": "No terminal matches '\"' in the current parser context, at line 2 col 44\n\nN ?dispute.tid [T.id = tid] T.status := \"disputed\"\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "The parser encountered an unexpected character '\"' when it was expecting a valid assignment value. In IBDD, assignments should use valid expressions or literals like numbers, TRUE, FALSE, etc. The use of double quotes for a string assignment is not recognized by the parser in this context.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Line 2, column 44",
+    "correction_suggestion": "Replace the assignment `T.status := \"disputed\"` with a valid expression. If the intention is to set a status, consider using a predefined constant or a valid identifier without quotes, e.g., `T.status := DISPUTED_STATUS`.",
+    "hints": [
+      "Ensure that assignments use valid identifiers or constants without quotes.",
+      "Review the grammar rules for valid assignment expressions.",
+      "Consider defining a constant for status values if needed."
+    ]
+  },
+  {
+    "case_id": 103,
+    "success": true,
+    "original_bdd": {
+      "given": "a member has an active library membership",
+      "when": "the member checks the membership status",
+      "then": "the membership details are displayed including the expiration date"
+    },
+    "previous_translation": "GIVEN M [M.status = Active]\nWHEN ?check_status.m [m.id = M.id] true\nTHEN !display_details [M.details_displayed = true] true",
+    "parse_error": "Unexpected end-of-input. Expected one of: \n\t* LPAR\n\t* LPAR\n\t* CIRCUMFLEX\n\t* TRUE\n\t* __ANON_2\n\t* NOT\n\t* NOT_SYMBOL\n\t* LPAR\n\t* TRUE\n\t* FALSE\n\t* NUMBER\n\t* MINUS\n\t* __ANON_1\n\t* LBRACKET\n\t* __ANON_0\n\t* THEN\n\t* THEN\n\t* OR\n\t* OR_SYMBOL\n\t* AND\n\t* AND_SYMBOL\n\t* EQ\n\t* EQEQ\n\t* NEQ\n\t* LT\n\t* GT\n\t* LEQ\n\t* GEQ\n\t* GEQ_SYMBOL\n\t* LEQ_SYMBOL\n\t* NEQ_SYMBOL\n\t* PLUS\n\t* MINUS\n\t* STAR\n\t* SLASH\n\t* PERCENT\n\t* DOT\n\t* ASSIGN\n",
+    "explanation": "El parser esperaba que la cláusula THEN terminara con una postcondición encerrada en corchetes '[...]'. Sin embargo, el IBDD proporcionado termina con una asignación 'true' sin la postcondición requerida.",
+    "error_type": "Postcondición faltante",
+    "error_location": "Línea 4, al final del THEN",
+    "correction_suggestion": "THEN !display_details [M.details_displayed = true] [M.details_displayed = true]",
+    "hints": [
+      "Asegúrate de que cada cláusula THEN termine con una postcondición entre corchetes.",
+      "Revisa que todas las guardas y condiciones estén correctamente encerradas en corchetes.",
+      "Verifica que cada switch tenga una asignación válida."
+    ]
+  },
+  {
+    "case_id": 109,
+    "success": true,
+    "original_bdd": {
+      "given": "a member has a room reserved for 2 hours AND the room is available for the following hour",
+      "when": "the member requests a 1 hour extension",
+      "then": "the reservation is extended to 3 hours AND the additional time slot is blocked"
+    },
+    "previous_translation": "GIVEN MBR, RM [has_reservation(MBR, RM, 2) ∧ is_available(RM, next_hour)]\nWHEN ?request_extension.mbr,rm,1 [mbr.id = MBR.id ∧ rm.id = RM.id] RM.reservation := extend(RM.reservation, 1)\nTHEN [has_reservation(MBR, RM, 3) ∧ is_blocked(RM, next_hour)]",
+    "parse_error": "No terminal matches '1' in the current parser context, at line 2 col 32\n\nWHEN ?request_extension.mbr,rm,1 [mbr.id = MBR.id ∧ rm.id = RM.id] RM.r\n                               ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser encontró un error en la línea 2 donde se especifica el Switch en la cláusula WHEN. El problema es que el gate de interacción `?request_extension.mbr,rm,1` incluye un número `1` que no es parte de la sintaxis esperada para un gate. Los gates deben comenzar con `!` (para salida) o `?` (para entrada) y seguir con identificadores válidos, no con números.",
+    "error_type": "Sintaxis de gate incorrecta",
+    "error_location": "Línea 2, parte del Switch",
+    "correction_suggestion": "Corrige el gate de interacción en la cláusula WHEN para que no incluya el número `1` dentro de la parte del gate. Una posible corrección sería mover el `1` a la asignación o manejarlo dentro de la función de asignación. Por ejemplo:\n\n```\nWHEN ?request_extension.mbr,rm [mbr.id = MBR.id ∧ rm.id = RM.id] RM.reservation := extend(RM.reservation, 1)\n```",
+    "hints": [
+      "Revisa la sintaxis de los gates para asegurarte de que no incluyan números directamente.",
+      "Asegúrate de que los elementos dentro del gate sean identificadores válidos.",
+      "Considera mover valores numéricos a la parte de asignación o condición si son necesarios para la lógica."
+    ]
+  },
+  {
+    "case_id": 113,
+    "success": true,
+    "original_bdd": {
+      "given": "a popular book has 2 holds from students AND the library gives faculty priority over students",
+      "when": "a faculty member places a hold on the book",
+      "then": "the faculty hold is placed at position 1 AND the student holds move to positions 2 and 3"
+    },
+    "previous_translation": "GIVEN B, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]\nWHEN ?place_hold.fh [fh.book_id = B.id ∧ fh.type = Faculty] holds(B) := [fh, S1H, S2H]\nTHEN [holds(B) = [fh, S1H, S2H]]",
+    "parse_error": "No terminal matches '[' in the current parser context, at line 1 col 47\n\nB, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]\n                                        ^\nExpected one of: \n\t* NUMBER\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* LPAR\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser esperaba encontrar un corchete de apertura '[' inmediatamente después de la declaración de variables 'B, S1H, S2H'. Esto es necesario para encerrar la guarda que sigue, pero encontró una expresión directamente sin el corchete, lo que causó el error de parsing.",
+    "error_type": "Corchetes faltantes en guardas",
+    "error_location": "Línea 1, después de 'S2H'",
+    "correction_suggestion": "Asegúrate de que la declaración de variables esté seguida inmediatamente por un corchete de apertura '[' para encerrar la guarda. La línea corregida debería ser: 'GIVEN B, S1H, S2H [is_popular(B) ∧ holds(B) = [S1H, S2H] ∧ faculty_priority = true]'",
+    "hints": [
+      "Revisa que todas las guardas estén correctamente encerradas en corchetes '[...]'.",
+      "Verifica que no falten corchetes de apertura o cierre en las guardas y condiciones."
+    ]
+  },
+  {
+    "case_id": 118,
+    "success": true,
+    "original_bdd": {
+      "given": "a book is checked out to member A AND the book is 2 days overdue AND member B has placed a hold on the book",
+      "when": "member A attempts to renew the book",
+      "then": "the renewal is denied because of the existing hold AND member A is notified to return the book AND the overdue fine continues to accumulate"
+    },
+    "previous_translation": "GIVEN B, MA, MB [is_checked_out(B, MA) ∧ is_overdue(B, 2) ∧ has_hold(MB, B)]\nWHEN ?attempt_renew.ma,b [ma.id = MA.id ∧ b.id = B.id] true\nTHEN !deny_renewal [renewal_denied(B, 'hold')] MA.notify := notify_return_book()\n[is_notified(MA, 'return_book') ∧ overdue_fine_accumulates(B)]",
+    "parse_error": "No terminal matches ''' in the current parser context, at line 3 col 39\n\nTHEN !deny_renewal [renewal_denied(B, 'hold')] MA.notify := notify_return_book\n                                      ^\nExpected one of: \n\t* NUMBER\n\t* NOT_SYMBOL\n\t* LPAR\n\t* __ANON_2\n\t* MINUS\n\t* TRUE\n\t* NOT\n\t* __ANON_1\n\t* FALSE\n",
+    "explanation": "El parser encontró un carácter de comilla simple (') dentro de la expresión 'renewal_denied(B, 'hold')'. Este carácter no es esperado en el contexto actual, ya que las comillas simples no son parte de la gramática esperada para las expresiones en IBDD. Las comillas simples pueden estar causando que el parser no reconozca correctamente la expresión como un todo.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 3, col 39",
+    "correction_suggestion": "Reemplaza las comillas simples con comillas dobles en la expresión para que sea: [renewal_denied(B, \"hold\")].",
+    "hints": [
+      "Asegúrate de que todas las cadenas de texto en las expresiones estén delimitadas por comillas dobles.",
+      "Verifica que todas las expresiones dentro de corchetes estén correctamente formadas según la gramática esperada."
+    ]
+  },
+  {
+    "case_id": 120,
+    "success": true,
+    "original_bdd": {
+      "given": "a book checked out to a member has been lost AND the book replacement cost is 45 AND the member has a clean borrowing record",
+      "when": "the member reports the book as lost AND the system processes the lost book claim",
+      "then": "the replacement fee of 45 is charged to the member account AND the book is removed from the member active loans AND the catalog is updated to reflect the lost copy AND a replacement order is placed if the book has active holds"
+    },
+    "previous_translation": "GIVEN B, M [is_checked_out(B, M) ∧ B.replacement_cost = 45 ∧ has_clean_record(M)]\nWHEN ?report_lost.b,m [b.id = B.id ∧ m.id = M.id] B.state := Lost\n!process_lost_claim.b [true] M.account := charge_fee(M.account, B.replacement_cost)\nTHEN !remove_from_loans.b,m [true] true\n!update_catalog.b [true] true\n!place_order.b [B.has_active_holds] true\n[M.account.balance == calculate_balance(M.account) ∧ ¬is_checked_out(B, M) ∧ is_updated_catalog(B) ∧ (!B.has_active_holds ∨ order_placed(B))]",
+    "parse_error": "No terminal matches '.' in the current parser context, at line 7 col 11\n\n[M.account.balance == calculate_balance(M.account)\n          ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* EQEQ\n\t* PLUS\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RBRACKET\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser encontró un punto (.) en una expresión de guardia donde no se esperaba. En el contexto de la guardia, se esperaba un operador lógico o de comparación, pero no un punto, que es generalmente utilizado para acceder a propiedades de objetos. Esto sugiere que la expresión está intentando realizar una operación o acceso de propiedad que no está permitido en este contexto.",
+    "error_type": "Expresiones mal formadas",
+    "error_location": "Línea 7, columna 11",
+    "correction_suggestion": "Revisa la expresión en la guardia final para asegurar que no se utilicen puntos (.) para acceder a propiedades. La expresión debería estar compuesta únicamente de operadores lógicos y de comparación válidos. Una posible corrección sería revisar la lógica de la expresión para asegurarse de que se ajuste a las reglas sintácticas esperadas.",
+    "hints": [
+      "Revisa el uso de operadores en la expresión de la guardia final.",
+      "Asegúrate de que las expresiones dentro de las guardias no utilicen accesos a propiedades con puntos (.) a menos que sean parte de una declaración válida.",
+      "Verifica que todas las condiciones en las guardias estén correctamente formadas usando operadores lógicos y de comparación."
     ]
   }
 ]

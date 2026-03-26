@@ -1,0 +1,812 @@
+[
+  {
+    "id": 31,
+    "domain": "printer",
+    "title": "Check ink level",
+    "given": "a printer is online",
+    "when": "the operator checks the ink level",
+    "then": "the current ink level is displayed",
+    "complexity": "simple"
+  },
+  {
+    "id": 32,
+    "domain": "printer",
+    "title": "Select paper tray",
+    "given": "the printer has two paper trays loaded",
+    "when": "the operator selects tray 2 for the next job",
+    "then": "the active paper tray is set to tray 2",
+    "complexity": "simple"
+  },
+  {
+    "id": 33,
+    "domain": "printer",
+    "title": "Enable duplex printing",
+    "given": "the printer supports duplex mode",
+    "when": "the operator enables duplex printing",
+    "then": "the print mode is set to duplex",
+    "complexity": "simple"
+  },
+  {
+    "id": 34,
+    "domain": "printer",
+    "title": "View printer status",
+    "given": "the printer controller is running",
+    "when": "the operator requests the printer status",
+    "then": "the printer status information is displayed",
+    "complexity": "simple"
+  },
+  {
+    "id": 35,
+    "domain": "printer",
+    "title": "Reorder jobs in queue",
+    "given": "there are 3 jobs in the scheduled jobs AND job B is at position 2",
+    "when": "the operator moves job B to position 1",
+    "then": "job B is at position 1 AND the remaining jobs shift down by one position",
+    "complexity": "medium"
+  },
+  {
+    "id": 36,
+    "domain": "printer",
+    "title": "Batch print with mixed settings",
+    "given": "3 controller jobs are in the scheduled jobs AND job A requires color printing AND job B requires grayscale AND job C requires color printing",
+    "when": "the operator starts batch printing AND the printer processes each job with its individual settings",
+    "then": "job A is printed in color AND job B is printed in grayscale AND job C is printed in color AND all jobs are moved to printed jobs",
+    "complexity": "complex"
+  },
+  {
+    "id": 37,
+    "domain": "printer",
+    "title": "Print job with insufficient paper",
+    "given": "a controller job requires 100 pages AND the printer has only 50 pages of paper remaining",
+    "when": "the printer starts printing the controller job AND the paper runs out at page 50",
+    "then": "the controller job is paused at page 50 AND the operator is notified of insufficient paper AND the job resumes after paper is refilled",
+    "complexity": "complex"
+  },
+  {
+    "id": 38,
+    "domain": "printer",
+    "title": "Scheduled maintenance interrupts printing",
+    "given": "a controller job is printing AND scheduled maintenance is due in 5 minutes",
+    "when": "the maintenance timer expires AND the printer pauses all active jobs AND the operator completes maintenance AND the operator resumes printing",
+    "then": "the controller job continues from the interrupted page AND the maintenance log is updated",
+    "complexity": "complex"
+  },
+  {
+    "id": 39,
+    "domain": "printer",
+    "title": "Access control denies unauthorized cancel",
+    "given": "a controller job belongs to operator A AND operator B does not have permission to manage it",
+    "when": "operator B attempts to cancel the controller job",
+    "then": "the cancel request is denied AND operator B receives an access denied notification AND the controller job continues printing",
+    "complexity": "complex"
+  },
+  {
+    "id": 40,
+    "domain": "calculator",
+    "title": "Division by zero handling",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 10 and 0 and choose division",
+    "then": "the calculator displays an error AND the previous result is preserved",
+    "complexity": "medium"
+  },
+  {
+    "id": 41,
+    "domain": "calculator",
+    "title": "Memory store and recall",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 42 and store it in memory AND I clear the display AND I recall the value from memory",
+    "then": "the calculator displays the result as 42",
+    "complexity": "medium"
+  },
+  {
+    "id": 42,
+    "domain": "calculator",
+    "title": "Convert result to percentage",
+    "given": "the calculator displays 0.75",
+    "when": "I choose the convert to percentage operation",
+    "then": "the calculator displays the result as 75",
+    "complexity": "medium"
+  },
+  {
+    "id": 43,
+    "domain": "calculator",
+    "title": "Undo last operation",
+    "given": "the calculator displays 15 after adding 5 and 10",
+    "when": "I undo the last operation",
+    "then": "the calculator displays the result as 5 AND the last operation is removed from history",
+    "complexity": "medium"
+  },
+  {
+    "id": 44,
+    "domain": "calculator",
+    "title": "Toggle sign of number",
+    "given": "the calculator displays 25",
+    "when": "I press the toggle sign button",
+    "then": "the calculator displays the result as -25",
+    "complexity": "medium"
+  },
+  {
+    "id": 45,
+    "domain": "calculator",
+    "title": "Chain four operations",
+    "given": "the calculator is ready for use",
+    "when": "I enter 100 and subtract 25 and then multiply by 4 and then add 10",
+    "then": "the calculator displays the result as 310",
+    "complexity": "complex"
+  },
+  {
+    "id": 46,
+    "domain": "calculator",
+    "title": "Compound interest calculation",
+    "given": "the calculator is in scientific mode",
+    "when": "I enter the principal 1000 and the rate 5 percent and the period 3 years and choose compound interest calculation",
+    "then": "the calculator computes the compound amount AND the result is greater than the principal AND the interest earned is displayed separately",
+    "complexity": "complex"
+  },
+  {
+    "id": 47,
+    "domain": "calculator",
+    "title": "Statistical mean of multiple values",
+    "given": "the calculator is in statistics mode",
+    "when": "I enter the values 10 and 20 and 30 and 40 and choose mean",
+    "then": "the calculator displays the result as 25 AND the count of values is 4",
+    "complexity": "complex"
+  },
+  {
+    "id": 48,
+    "domain": "calculator",
+    "title": "Expression with nested operations",
+    "given": "the calculator is in advanced mode",
+    "when": "I enter 2 multiplied by the sum of 3 and 4 and then divide the result by 7",
+    "then": "the calculator displays the result as 2",
+    "complexity": "complex"
+  },
+  {
+    "id": 49,
+    "domain": "ecommerce",
+    "title": "View product details",
+    "given": "a product exists in the catalog",
+    "when": "the user views the product page",
+    "then": "the product details are displayed",
+    "complexity": "simple"
+  },
+  {
+    "id": 50,
+    "domain": "ecommerce",
+    "title": "Add item to wishlist",
+    "given": "a user is logged in AND a product is available in the catalog",
+    "when": "the user adds the product to the wishlist",
+    "then": "the product is in the user wishlist",
+    "complexity": "simple"
+  },
+  {
+    "id": 51,
+    "domain": "ecommerce",
+    "title": "Remove item from cart",
+    "given": "a product is in the shopping cart",
+    "when": "the user removes the product from the cart",
+    "then": "the product is not in the shopping cart AND the cart total is updated",
+    "complexity": "simple"
+  },
+  {
+    "id": 52,
+    "domain": "ecommerce",
+    "title": "Search for a product",
+    "given": "the product catalog is loaded",
+    "when": "the user searches for a product by name",
+    "then": "the search results contain matching products",
+    "complexity": "simple"
+  },
+  {
+    "id": 53,
+    "domain": "ecommerce",
+    "title": "Log in to account",
+    "given": "a user account exists with valid credentials",
+    "when": "the user enters the credentials and submits the login form",
+    "then": "the user is authenticated AND the session is active",
+    "complexity": "simple"
+  },
+  {
+    "id": 54,
+    "domain": "ecommerce",
+    "title": "Update shipping address",
+    "given": "a user is logged in AND has a saved shipping address",
+    "when": "the user updates the shipping address",
+    "then": "the new shipping address is saved in the account",
+    "complexity": "simple"
+  },
+  {
+    "id": 55,
+    "domain": "ecommerce",
+    "title": "Log out of account",
+    "given": "a user session is active",
+    "when": "the user clicks the logout button",
+    "then": "the session is terminated AND the user is redirected to the home page",
+    "complexity": "simple"
+  },
+  {
+    "id": 56,
+    "domain": "ecommerce",
+    "title": "Add product with stock check",
+    "given": "a product is available with 10 items in stock",
+    "when": "the user adds 3 units of the product to the cart",
+    "then": "the cart contains 3 units of the product AND the reserved stock is updated to 7",
+    "complexity": "medium"
+  },
+  {
+    "id": 57,
+    "domain": "ecommerce",
+    "title": "Apply discount code",
+    "given": "a shopping cart with total 100 AND a valid discount code for 20 percent off",
+    "when": "the user applies the discount code at checkout",
+    "then": "the cart total is reduced to 80 AND the discount code is marked as used",
+    "complexity": "medium"
+  },
+  {
+    "id": 58,
+    "domain": "ecommerce",
+    "title": "Return item within policy",
+    "given": "an order was delivered 5 days ago AND the return policy allows returns within 30 days",
+    "when": "the customer initiates a return for the item AND provides the reason",
+    "then": "a return label is generated AND the item status is changed to return pending",
+    "complexity": "medium"
+  },
+  {
+    "id": 59,
+    "domain": "ecommerce",
+    "title": "Update quantity in cart",
+    "given": "a product with 3 units is in the cart AND 10 items are in stock",
+    "when": "the user changes the quantity to 5",
+    "then": "the cart reflects 5 units of the product AND the reserved stock is updated",
+    "complexity": "medium"
+  },
+  {
+    "id": 60,
+    "domain": "ecommerce",
+    "title": "Apply loyalty points to order",
+    "given": "a customer has 500 loyalty points AND the order total is 50",
+    "when": "the customer applies 200 loyalty points to the order",
+    "then": "the order total is reduced by the point value AND the loyalty balance is updated to 300",
+    "complexity": "medium"
+  },
+  {
+    "id": 61,
+    "domain": "ecommerce",
+    "title": "Filter products by price range",
+    "given": "the product catalog contains products with various prices",
+    "when": "the user sets a minimum price of 20 and a maximum price of 50 AND applies the filter",
+    "then": "only products within the price range are displayed AND the result count is updated",
+    "complexity": "medium"
+  },
+  {
+    "id": 62,
+    "domain": "ecommerce",
+    "title": "Leave product review",
+    "given": "a customer has purchased a product AND the order has been delivered",
+    "when": "the customer submits a review with a rating of 4 stars and a comment",
+    "then": "the review is added to the product page AND the average rating is recalculated",
+    "complexity": "medium"
+  },
+  {
+    "id": 63,
+    "domain": "ecommerce",
+    "title": "Subscribe to restock notification",
+    "given": "a product is out of stock AND the user is logged in",
+    "when": "the user subscribes to restock notifications for the product",
+    "then": "the subscription is created AND the user is added to the notification list",
+    "complexity": "medium"
+  },
+  {
+    "id": 64,
+    "domain": "ecommerce",
+    "title": "Checkout with insufficient inventory",
+    "given": "a product has 2 items in stock AND the user has 5 units in the cart",
+    "when": "the user proceeds to checkout AND the system verifies inventory availability",
+    "then": "the user is notified of insufficient stock AND the cart quantity is adjusted to 2 AND the order is not placed",
+    "complexity": "complex"
+  },
+  {
+    "id": 65,
+    "domain": "ecommerce",
+    "title": "Multi-step checkout process",
+    "given": "a user is logged in AND the shopping cart has items AND a shipping address is saved",
+    "when": "the user selects a payment method AND enters payment details AND confirms the order",
+    "then": "the payment is processed AND the order is created AND the inventory is reduced AND a confirmation email is sent",
+    "complexity": "complex"
+  },
+  {
+    "id": 66,
+    "domain": "ecommerce",
+    "title": "Bundle discount calculation",
+    "given": "a bundle offer requires 3 products from the same category AND a 15 percent bundle discount applies",
+    "when": "the user adds 3 eligible products to the cart AND the system detects the bundle",
+    "then": "the bundle discount is applied to the cart total AND each product shows the discounted price AND the savings amount is displayed",
+    "complexity": "complex"
+  },
+  {
+    "id": 67,
+    "domain": "ecommerce",
+    "title": "Cancel order after partial shipment",
+    "given": "an order has 3 items AND 1 item has been shipped AND 2 items are pending shipment",
+    "when": "the customer requests cancellation of the entire order",
+    "then": "the shipped item remains in shipped status AND the pending items are cancelled AND a partial refund is initiated for the cancelled items AND the inventory is restored for cancelled items",
+    "complexity": "complex"
+  },
+  {
+    "id": 68,
+    "domain": "ecommerce",
+    "title": "Concurrent cart updates from two sessions",
+    "given": "a user is logged in on two devices AND the cart contains a product with quantity 2",
+    "when": "the user adds a new product on device one AND the user removes the existing product on device two",
+    "then": "the cart contains only the new product AND the removed product is no longer in the cart AND the cart is synchronized across both sessions",
+    "complexity": "complex"
+  },
+  {
+    "id": 69,
+    "domain": "ecommerce",
+    "title": "Price match guarantee",
+    "given": "a product is in the cart at price 100 AND a competitor offers the same product at price 80",
+    "when": "the customer submits a price match request with competitor proof AND the system verifies the competitor price",
+    "then": "the product price is adjusted to 80 AND the price difference is applied to the order AND the adjustment is logged",
+    "complexity": "complex"
+  },
+  {
+    "id": 70,
+    "domain": "ecommerce",
+    "title": "Gift card partial payment",
+    "given": "an order total is 150 AND a gift card has a balance of 100",
+    "when": "the user applies the gift card AND pays the remaining balance with a credit card",
+    "then": "the gift card balance is reduced to 0 AND the credit card is charged 50 AND the order is confirmed AND both payment methods are recorded",
+    "complexity": "complex"
+  },
+  {
+    "id": 71,
+    "domain": "ecommerce",
+    "title": "Cart abandonment recovery",
+    "given": "a user has items in the cart AND the cart has been inactive for 24 hours AND the user has email notifications enabled",
+    "when": "the abandonment recovery system runs AND the system sends a reminder email to the user",
+    "then": "the reminder email is sent with cart contents AND a discount incentive is included AND the cart is preserved for 7 more days",
+    "complexity": "complex"
+  },
+  {
+    "id": 72,
+    "domain": "ecommerce",
+    "title": "Flash sale with limited stock",
+    "given": "a flash sale starts for a product with 5 units available AND 10 users are waiting to purchase",
+    "when": "the flash sale begins AND multiple users attempt to add the product to their carts simultaneously",
+    "then": "only the first 5 successful users have the product in their carts AND the remaining users are notified that the product is sold out AND the product is marked as unavailable",
+    "complexity": "complex"
+  },
+  {
+    "id": 73,
+    "domain": "banking",
+    "title": "Check account balance",
+    "given": "a bank account exists with balance 5000",
+    "when": "the customer checks the account balance",
+    "then": "the balance is displayed as 5000",
+    "complexity": "simple"
+  },
+  {
+    "id": 74,
+    "domain": "banking",
+    "title": "Deposit money",
+    "given": "a bank account has a balance of 1000",
+    "when": "the customer deposits 500 into the account",
+    "then": "the account balance is updated to 1500",
+    "complexity": "simple"
+  },
+  {
+    "id": 75,
+    "domain": "banking",
+    "title": "Withdraw cash",
+    "given": "a bank account has a balance of 3000",
+    "when": "the customer withdraws 200",
+    "then": "the account balance is updated to 2800 AND the cash is dispensed",
+    "complexity": "simple"
+  },
+  {
+    "id": 76,
+    "domain": "banking",
+    "title": "View transaction history",
+    "given": "a bank account has recorded transactions",
+    "when": "the customer requests the transaction history",
+    "then": "the list of transactions is displayed",
+    "complexity": "simple"
+  },
+  {
+    "id": 77,
+    "domain": "banking",
+    "title": "Freeze debit card",
+    "given": "a debit card is active",
+    "when": "the customer freezes the debit card",
+    "then": "the card status is set to frozen AND new transactions are blocked",
+    "complexity": "simple"
+  },
+  {
+    "id": 78,
+    "domain": "banking",
+    "title": "Update contact phone number",
+    "given": "a customer account exists with a registered phone number",
+    "when": "the customer updates the phone number to a new number",
+    "then": "the phone number is updated in the account records",
+    "complexity": "simple"
+  },
+  {
+    "id": 79,
+    "domain": "banking",
+    "title": "Check credit score",
+    "given": "a customer is enrolled in credit monitoring",
+    "when": "the customer requests the credit score",
+    "then": "the current credit score is displayed",
+    "complexity": "simple"
+  },
+  {
+    "id": 80,
+    "domain": "banking",
+    "title": "Transfer between own accounts",
+    "given": "a checking account with balance 3000 AND a savings account with balance 2000",
+    "when": "the customer transfers 500 from the checking account to the savings account",
+    "then": "the checking balance is 2500 AND the savings balance is 2500 AND the transfer is recorded",
+    "complexity": "medium"
+  },
+  {
+    "id": 81,
+    "domain": "banking",
+    "title": "Pay bill with sufficient funds",
+    "given": "a bank account with balance 1500 AND a pending electricity bill of 300",
+    "when": "the customer pays the bill from the account",
+    "then": "the account balance is 1200 AND the bill is marked as paid AND the payment is recorded in transaction history",
+    "complexity": "medium"
+  },
+  {
+    "id": 82,
+    "domain": "banking",
+    "title": "Set up recurring payment",
+    "given": "a bank account is active AND a payee is registered",
+    "when": "the customer sets up a monthly payment of 100 to the payee starting on the 15th",
+    "then": "the recurring payment is created AND the next payment date is set to the 15th",
+    "complexity": "medium"
+  },
+  {
+    "id": 83,
+    "domain": "banking",
+    "title": "Request overdraft protection",
+    "given": "a checking account without overdraft protection AND the customer meets eligibility criteria",
+    "when": "the customer requests overdraft protection with a limit of 1000",
+    "then": "overdraft protection is enabled AND the overdraft limit is set to 1000",
+    "complexity": "medium"
+  },
+  {
+    "id": 84,
+    "domain": "banking",
+    "title": "Change daily withdrawal limit",
+    "given": "an account with a daily withdrawal limit of 500",
+    "when": "the customer requests to increase the daily limit to 1000 AND provides additional verification",
+    "then": "the daily withdrawal limit is updated to 1000 AND the change is logged",
+    "complexity": "medium"
+  },
+  {
+    "id": 85,
+    "domain": "banking",
+    "title": "Dispute a transaction",
+    "given": "a bank account has a transaction of 150 that the customer does not recognize",
+    "when": "the customer disputes the transaction AND provides the transaction ID",
+    "then": "the transaction is flagged as disputed AND a temporary credit of 150 is applied AND an investigation case is opened",
+    "complexity": "medium"
+  },
+  {
+    "id": 86,
+    "domain": "banking",
+    "title": "Open a fixed deposit",
+    "given": "a savings account with balance 10000 AND the fixed deposit rate is 4 percent for 12 months",
+    "when": "the customer opens a fixed deposit of 5000 for 12 months",
+    "then": "the savings balance is reduced to 5000 AND the fixed deposit is created with maturity date in 12 months AND the interest rate is locked at 4 percent",
+    "complexity": "medium"
+  },
+  {
+    "id": 87,
+    "domain": "banking",
+    "title": "Schedule a future transfer",
+    "given": "a bank account with balance 5000 AND a beneficiary is registered",
+    "when": "the customer schedules a transfer of 1000 to the beneficiary for next Monday",
+    "then": "the scheduled transfer is created AND the funds are reserved AND the execution date is confirmed",
+    "complexity": "medium"
+  },
+  {
+    "id": 88,
+    "domain": "banking",
+    "title": "International wire transfer with currency conversion",
+    "given": "a bank account with balance 10000 in USD AND the transfer fee is 25 AND the exchange rate from USD to EUR is 0.85",
+    "when": "the customer initiates a wire transfer of 1000 USD to a European account AND confirms the transfer",
+    "then": "the account balance is reduced by 1025 AND the recipient receives 850 EUR AND the fee is deducted AND the transaction is recorded with the exchange rate",
+    "complexity": "complex"
+  },
+  {
+    "id": 89,
+    "domain": "banking",
+    "title": "Loan payment with interest calculation",
+    "given": "a loan with outstanding principal 10000 and annual interest rate 6 percent AND a monthly payment is due",
+    "when": "the system calculates the monthly interest AND the customer makes a payment of 500",
+    "then": "the interest portion is calculated as 50 AND the principal is reduced by 450 AND the customer account balance decreases by 500 AND the loan schedule is updated",
+    "complexity": "complex"
+  },
+  {
+    "id": 90,
+    "domain": "banking",
+    "title": "Detect and block suspicious transaction",
+    "given": "a customer account with normal spending patterns AND the fraud detection system is active",
+    "when": "a transaction of 5000 from a foreign location is attempted AND the amount exceeds the typical spending by 400 percent",
+    "then": "the transaction is blocked AND the customer is notified AND the card is temporarily frozen AND a fraud investigation case is opened",
+    "complexity": "complex"
+  },
+  {
+    "id": 91,
+    "domain": "banking",
+    "title": "Joint account dual authorization",
+    "given": "a joint account with two holders AND the account requires dual authorization for transfers above 5000",
+    "when": "holder A initiates a transfer of 8000 AND holder B approves the transfer",
+    "then": "the transfer is executed AND both approvals are recorded AND the account balance is updated",
+    "complexity": "complex"
+  },
+  {
+    "id": 92,
+    "domain": "banking",
+    "title": "Account closure with balance transfer",
+    "given": "account A has balance 3000 AND account B has balance 2000 AND both belong to the same customer",
+    "when": "the customer requests to close account B and transfer its balance to account A",
+    "then": "account A balance is updated to 5000 AND account B is closed AND all recurring payments from account B are cancelled AND the customer is notified",
+    "complexity": "complex"
+  },
+  {
+    "id": 93,
+    "domain": "banking",
+    "title": "ATM withdrawal exceeds daily limit",
+    "given": "a bank account with balance 5000 AND the daily withdrawal limit is 1000 AND 700 has already been withdrawn today",
+    "when": "the customer attempts to withdraw 500 at the ATM",
+    "then": "the withdrawal is declined AND the customer is informed that only 300 remains available today AND the account balance is unchanged",
+    "complexity": "complex"
+  },
+  {
+    "id": 94,
+    "domain": "banking",
+    "title": "Chargeback processing",
+    "given": "a customer purchased an item for 200 with a debit card AND the merchant did not deliver the item AND 30 days have passed",
+    "when": "the customer files a chargeback request AND provides proof of non-delivery",
+    "then": "the chargeback is initiated AND a temporary credit of 200 is applied to the account AND the merchant is notified AND a resolution deadline is set to 45 days",
+    "complexity": "complex"
+  },
+  {
+    "id": 95,
+    "domain": "banking",
+    "title": "Multi-currency account conversion",
+    "given": "a multi-currency account with USD balance 5000 and EUR balance 0 AND the exchange rate is 0.85 USD to EUR",
+    "when": "the customer converts 1000 USD to EUR within the account",
+    "then": "the USD balance is reduced to 4000 AND the EUR balance is updated to 850 AND the conversion is recorded with the exchange rate AND a confirmation is sent",
+    "complexity": "complex"
+  },
+  {
+    "id": 96,
+    "domain": "banking",
+    "title": "Mortgage early repayment with penalty",
+    "given": "a mortgage with outstanding balance 200000 AND the early repayment penalty is 2 percent of remaining balance AND the customer account has 210000",
+    "when": "the customer requests full early repayment of the mortgage AND acknowledges the penalty",
+    "then": "the penalty of 4000 is calculated AND the total payment of 204000 is deducted from the account AND the mortgage is closed AND the account balance is 6000",
+    "complexity": "complex"
+  },
+  {
+    "id": 97,
+    "domain": "library",
+    "title": "Search for a book",
+    "given": "a book exists in the library catalog",
+    "when": "the member searches for the book by title",
+    "then": "the book information is displayed with availability status",
+    "complexity": "simple"
+  },
+  {
+    "id": 98,
+    "domain": "library",
+    "title": "Borrow a book",
+    "given": "a book is available AND the member has no overdue books",
+    "when": "the member borrows the book",
+    "then": "the book is checked out to the member AND the due date is set",
+    "complexity": "simple"
+  },
+  {
+    "id": 99,
+    "domain": "library",
+    "title": "Return a book",
+    "given": "a book is checked out to the member",
+    "when": "the member returns the book",
+    "then": "the book is marked as available",
+    "complexity": "simple"
+  },
+  {
+    "id": 100,
+    "domain": "library",
+    "title": "Renew membership",
+    "given": "a library membership is about to expire",
+    "when": "the member renews the membership",
+    "then": "the membership expiration date is extended by one year",
+    "complexity": "simple"
+  },
+  {
+    "id": 101,
+    "domain": "library",
+    "title": "Reserve a study room",
+    "given": "a study room is available at the requested time",
+    "when": "the member reserves the study room for 2 hours",
+    "then": "the room is reserved for the member AND the time slot is blocked",
+    "complexity": "simple"
+  },
+  {
+    "id": 102,
+    "domain": "library",
+    "title": "Cancel a book reservation",
+    "given": "a book reservation exists for the member",
+    "when": "the member cancels the reservation",
+    "then": "the reservation is removed AND the book becomes available for others",
+    "complexity": "simple"
+  },
+  {
+    "id": 103,
+    "domain": "library",
+    "title": "Check membership status",
+    "given": "a member has an active library membership",
+    "when": "the member checks the membership status",
+    "then": "the membership details are displayed including the expiration date",
+    "complexity": "simple"
+  },
+  {
+    "id": 104,
+    "domain": "library",
+    "title": "Place hold on borrowed book",
+    "given": "a book is checked out to another member AND no holds exist on the book",
+    "when": "the member places a hold on the book",
+    "then": "the hold is created AND the member is added to the waiting list at position 1",
+    "complexity": "medium"
+  },
+  {
+    "id": 105,
+    "domain": "library",
+    "title": "Renew loan without holds",
+    "given": "a book is checked out to the member AND the due date has not passed AND no other member has placed a hold on the book",
+    "when": "the member renews the loan",
+    "then": "the due date is extended by 14 days AND the renewal count is incremented",
+    "complexity": "medium"
+  },
+  {
+    "id": 106,
+    "domain": "library",
+    "title": "Return overdue book with fine",
+    "given": "a book is checked out to the member AND the book is 5 days overdue AND the daily fine is 1",
+    "when": "the member returns the book",
+    "then": "the book is marked as available AND a fine of 5 is added to the member account",
+    "complexity": "medium"
+  },
+  {
+    "id": 107,
+    "domain": "library",
+    "title": "Transfer reservation to another member",
+    "given": "a book reservation exists for member A AND member B is eligible to receive reservations",
+    "when": "member A transfers the reservation to member B",
+    "then": "the reservation is assigned to member B AND member A no longer has the reservation",
+    "complexity": "medium"
+  },
+  {
+    "id": 108,
+    "domain": "library",
+    "title": "Book room with equipment",
+    "given": "a study room with a projector is available AND the member needs a projector for a presentation",
+    "when": "the member reserves the room and requests the projector",
+    "then": "the room is reserved AND the projector is allocated to the booking",
+    "complexity": "medium"
+  },
+  {
+    "id": 109,
+    "domain": "library",
+    "title": "Extend study room reservation",
+    "given": "a member has a room reserved for 2 hours AND the room is available for the following hour",
+    "when": "the member requests a 1 hour extension",
+    "then": "the reservation is extended to 3 hours AND the additional time slot is blocked",
+    "complexity": "medium"
+  },
+  {
+    "id": 110,
+    "domain": "library",
+    "title": "Request interlibrary loan",
+    "given": "a book is not available in the local catalog AND the book exists in a partner library catalog",
+    "when": "the member requests an interlibrary loan for the book",
+    "then": "the loan request is submitted to the partner library AND the estimated arrival date is set",
+    "complexity": "medium"
+  },
+  {
+    "id": 111,
+    "domain": "library",
+    "title": "Pay outstanding fines",
+    "given": "a member has accumulated fines of 15 AND the member borrowing privileges are suspended",
+    "when": "the member pays the outstanding fines",
+    "then": "the fine balance is cleared AND borrowing privileges are restored",
+    "complexity": "medium"
+  },
+  {
+    "id": 112,
+    "domain": "library",
+    "title": "Batch return with mixed fines",
+    "given": "a member has 3 books checked out AND book A is on time AND book B is 3 days overdue AND book C is 7 days overdue AND the daily fine is 1",
+    "when": "the member returns all 3 books at once",
+    "then": "all books are marked as available AND a total fine of 10 is applied AND the fine breakdown is 0 for book A and 3 for book B and 7 for book C",
+    "complexity": "complex"
+  },
+  {
+    "id": 113,
+    "domain": "library",
+    "title": "Faculty priority reservation",
+    "given": "a popular book has 2 holds from students AND the library gives faculty priority over students",
+    "when": "a faculty member places a hold on the book",
+    "then": "the faculty hold is placed at position 1 AND the student holds move to positions 2 and 3",
+    "complexity": "complex"
+  },
+  {
+    "id": 114,
+    "domain": "library",
+    "title": "Automatic hold expiry and reassignment",
+    "given": "a held book has been available for pickup for 3 days AND the hold expiry period is 3 days AND 2 other members are on the waiting list",
+    "when": "the system runs the hold expiry check",
+    "then": "the expired hold is removed AND the book is assigned to the next member on the waiting list AND the next member is notified AND the waiting list positions are updated",
+    "complexity": "complex"
+  },
+  {
+    "id": 115,
+    "domain": "library",
+    "title": "Room booking conflict resolution",
+    "given": "a study room is reserved by member A from 10 to 12 AND member B requests the same room from 11 to 13",
+    "when": "member B submits the reservation request AND the system detects the time conflict",
+    "then": "member B is notified of the conflict AND alternative available time slots are suggested AND the original reservation remains unchanged",
+    "complexity": "complex"
+  },
+  {
+    "id": 116,
+    "domain": "library",
+    "title": "Interlibrary loan with full tracking",
+    "given": "an interlibrary loan request has been approved AND the book is at the partner library AND the member is eligible",
+    "when": "the partner library ships the book AND the local library receives the book AND the member is notified",
+    "then": "the book status is updated to available for pickup AND the loan period starts AND the return date is set AND the partner library records are updated",
+    "complexity": "complex"
+  },
+  {
+    "id": 117,
+    "domain": "library",
+    "title": "Concurrent borrow attempts",
+    "given": "a single copy of a popular book has just been returned AND two members are waiting to borrow it",
+    "when": "member A and member B both attempt to borrow the book at the same time",
+    "then": "only one member successfully borrows the book AND the other member is offered to place a hold AND the book is checked out exactly once",
+    "complexity": "complex"
+  },
+  {
+    "id": 118,
+    "domain": "library",
+    "title": "Overdue renewal denied due to hold",
+    "given": "a book is checked out to member A AND the book is 2 days overdue AND member B has placed a hold on the book",
+    "when": "member A attempts to renew the book",
+    "then": "the renewal is denied because of the existing hold AND member A is notified to return the book AND the overdue fine continues to accumulate",
+    "complexity": "complex"
+  },
+  {
+    "id": 119,
+    "domain": "library",
+    "title": "Semester-end bulk recall",
+    "given": "the semester is ending in 7 days AND 50 books are checked out AND 20 of those books have holds from other members",
+    "when": "the library initiates the semester-end recall process",
+    "then": "recall notices are sent for the 20 books with holds AND the due dates for recalled books are shortened to 3 days AND non-recalled books retain their original due dates AND fines are doubled for recalled books not returned on time",
+    "complexity": "complex"
+  },
+  {
+    "id": 120,
+    "domain": "library",
+    "title": "Lost book replacement and account update",
+    "given": "a book checked out to a member has been lost AND the book replacement cost is 45 AND the member has a clean borrowing record",
+    "when": "the member reports the book as lost AND the system processes the lost book claim",
+    "then": "the replacement fee of 45 is charged to the member account AND the book is removed from the member active loans AND the catalog is updated to reflect the lost copy AND a replacement order is placed if the book has active holds",
+    "complexity": "complex"
+  }
+]

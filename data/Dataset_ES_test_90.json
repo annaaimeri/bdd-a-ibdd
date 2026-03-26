@@ -1,0 +1,812 @@
+[
+  {
+    "id": 31,
+    "domain": "printer",
+    "title": "Verificar nivel de tinta",
+    "given": "una impresora está en línea",
+    "when": "el operador verifica el nivel de tinta",
+    "then": "se muestra el nivel de tinta actual",
+    "complexity": "simple"
+  },
+  {
+    "id": 32,
+    "domain": "printer",
+    "title": "Seleccionar bandeja de papel",
+    "given": "la impresora tiene dos bandejas de papel cargadas",
+    "when": "el operador selecciona la bandeja 2 para el próximo trabajo",
+    "then": "la bandeja de papel activa es la bandeja 2",
+    "complexity": "simple"
+  },
+  {
+    "id": 33,
+    "domain": "printer",
+    "title": "Activar impresión dúplex",
+    "given": "la impresora soporta modo dúplex",
+    "when": "el operador activa la impresión dúplex",
+    "then": "el modo de impresión se establece como dúplex",
+    "complexity": "simple"
+  },
+  {
+    "id": 34,
+    "domain": "printer",
+    "title": "Ver estado de la impresora",
+    "given": "el controlador de la impresora está en funcionamiento",
+    "when": "el operador solicita el estado de la impresora",
+    "then": "se muestra la información del estado de la impresora",
+    "complexity": "simple"
+  },
+  {
+    "id": 35,
+    "domain": "printer",
+    "title": "Reordenar trabajos en la cola",
+    "given": "hay 3 trabajos en los trabajos programados Y el trabajo B está en la posición 2",
+    "when": "el operador mueve el trabajo B a la posición 1",
+    "then": "el trabajo B está en la posición 1 Y los demás trabajos se desplazan una posición hacia abajo",
+    "complexity": "medium"
+  },
+  {
+    "id": 36,
+    "domain": "printer",
+    "title": "Impresión por lotes con configuraciones mixtas",
+    "given": "3 trabajos de controlador están en los trabajos programados Y el trabajo A requiere impresión a color Y el trabajo B requiere escala de grises Y el trabajo C requiere impresión a color",
+    "when": "el operador inicia la impresión por lotes Y la impresora procesa cada trabajo con su configuración individual",
+    "then": "el trabajo A se imprime a color Y el trabajo B se imprime en escala de grises Y el trabajo C se imprime a color Y todos los trabajos se mueven a trabajos impresos",
+    "complexity": "complex"
+  },
+  {
+    "id": 37,
+    "domain": "printer",
+    "title": "Trabajo de impresión con papel insuficiente",
+    "given": "un trabajo de controlador requiere 100 páginas Y la impresora tiene solo 50 páginas de papel restantes",
+    "when": "la impresora comienza a imprimir el trabajo de controlador Y el papel se agota en la página 50",
+    "then": "el trabajo de controlador se pausa en la página 50 Y se notifica al operador del papel insuficiente Y el trabajo se reanuda después de recargar papel",
+    "complexity": "complex"
+  },
+  {
+    "id": 38,
+    "domain": "printer",
+    "title": "Mantenimiento programado interrumpe la impresión",
+    "given": "un trabajo de controlador se está imprimiendo Y el mantenimiento programado está previsto en 5 minutos",
+    "when": "el temporizador de mantenimiento expira Y la impresora pausa todos los trabajos activos Y el operador completa el mantenimiento Y el operador reanuda la impresión",
+    "then": "el trabajo de controlador continúa desde la página interrumpida Y el registro de mantenimiento se actualiza",
+    "complexity": "complex"
+  },
+  {
+    "id": 39,
+    "domain": "printer",
+    "title": "Control de acceso deniega cancelación no autorizada",
+    "given": "un trabajo de controlador pertenece al operador A Y el operador B no tiene permiso para gestionarlo",
+    "when": "el operador B intenta cancelar el trabajo de controlador",
+    "then": "la solicitud de cancelación es denegada Y el operador B recibe una notificación de acceso denegado Y el trabajo de controlador continúa imprimiendo",
+    "complexity": "complex"
+  },
+  {
+    "id": 40,
+    "domain": "calculator",
+    "title": "Manejo de división por cero",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso los números 10 y 0 y elijo división",
+    "then": "la calculadora muestra un error Y el resultado anterior se preserva",
+    "complexity": "medium"
+  },
+  {
+    "id": 41,
+    "domain": "calculator",
+    "title": "Guardar y recuperar de memoria",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso el número 42 y lo guardo en memoria Y limpio la pantalla Y recupero el valor de la memoria",
+    "then": "la calculadora muestra el resultado como 42",
+    "complexity": "medium"
+  },
+  {
+    "id": 42,
+    "domain": "calculator",
+    "title": "Convertir resultado a porcentaje",
+    "given": "la calculadora muestra 0.75",
+    "when": "elijo la operación convertir a porcentaje",
+    "then": "la calculadora muestra el resultado como 75",
+    "complexity": "medium"
+  },
+  {
+    "id": 43,
+    "domain": "calculator",
+    "title": "Deshacer última operación",
+    "given": "la calculadora muestra 15 después de sumar 5 y 10",
+    "when": "deshago la última operación",
+    "then": "la calculadora muestra el resultado como 5 Y la última operación se elimina del historial",
+    "complexity": "medium"
+  },
+  {
+    "id": 44,
+    "domain": "calculator",
+    "title": "Cambiar signo del número",
+    "given": "la calculadora muestra 25",
+    "when": "presiono el botón de cambiar signo",
+    "then": "la calculadora muestra el resultado como -25",
+    "complexity": "medium"
+  },
+  {
+    "id": 45,
+    "domain": "calculator",
+    "title": "Encadenar cuatro operaciones",
+    "given": "la calculadora está lista para usar",
+    "when": "ingreso 100 y resto 25 y luego multiplico por 4 y luego sumo 10",
+    "then": "la calculadora muestra el resultado como 310",
+    "complexity": "complex"
+  },
+  {
+    "id": 46,
+    "domain": "calculator",
+    "title": "Cálculo de interés compuesto",
+    "given": "la calculadora está en modo científico",
+    "when": "ingreso el capital 1000 y la tasa 5 por ciento y el período 3 años y elijo cálculo de interés compuesto",
+    "then": "la calculadora calcula el monto compuesto Y el resultado es mayor que el capital Y el interés ganado se muestra por separado",
+    "complexity": "complex"
+  },
+  {
+    "id": 47,
+    "domain": "calculator",
+    "title": "Media estadística de múltiples valores",
+    "given": "la calculadora está en modo estadístico",
+    "when": "ingreso los valores 10 y 20 y 30 y 40 y elijo media",
+    "then": "la calculadora muestra el resultado como 25 Y la cantidad de valores es 4",
+    "complexity": "complex"
+  },
+  {
+    "id": 48,
+    "domain": "calculator",
+    "title": "Expresión con operaciones anidadas",
+    "given": "la calculadora está en modo avanzado",
+    "when": "ingreso 2 multiplicado por la suma de 3 y 4 y luego divido el resultado por 7",
+    "then": "la calculadora muestra el resultado como 2",
+    "complexity": "complex"
+  },
+  {
+    "id": 49,
+    "domain": "ecommerce",
+    "title": "Ver detalles del producto",
+    "given": "un producto existe en el catálogo",
+    "when": "el usuario ve la página del producto",
+    "then": "se muestran los detalles del producto",
+    "complexity": "simple"
+  },
+  {
+    "id": 50,
+    "domain": "ecommerce",
+    "title": "Agregar artículo a la lista de deseos",
+    "given": "un usuario ha iniciado sesión Y un producto está disponible en el catálogo",
+    "when": "el usuario agrega el producto a la lista de deseos",
+    "then": "el producto está en la lista de deseos del usuario",
+    "complexity": "simple"
+  },
+  {
+    "id": 51,
+    "domain": "ecommerce",
+    "title": "Eliminar artículo del carrito",
+    "given": "un producto está en el carrito de compras",
+    "when": "el usuario elimina el producto del carrito",
+    "then": "el producto no está en el carrito de compras Y el total del carrito se actualiza",
+    "complexity": "simple"
+  },
+  {
+    "id": 52,
+    "domain": "ecommerce",
+    "title": "Buscar un producto",
+    "given": "el catálogo de productos está cargado",
+    "when": "el usuario busca un producto por nombre",
+    "then": "los resultados de búsqueda contienen productos coincidentes",
+    "complexity": "simple"
+  },
+  {
+    "id": 53,
+    "domain": "ecommerce",
+    "title": "Iniciar sesión en la cuenta",
+    "given": "una cuenta de usuario existe con credenciales válidas",
+    "when": "el usuario ingresa las credenciales y envía el formulario de inicio de sesión",
+    "then": "el usuario está autenticado Y la sesión está activa",
+    "complexity": "simple"
+  },
+  {
+    "id": 54,
+    "domain": "ecommerce",
+    "title": "Actualizar dirección de envío",
+    "given": "un usuario ha iniciado sesión Y tiene una dirección de envío guardada",
+    "when": "el usuario actualiza la dirección de envío",
+    "then": "la nueva dirección de envío se guarda en la cuenta",
+    "complexity": "simple"
+  },
+  {
+    "id": 55,
+    "domain": "ecommerce",
+    "title": "Cerrar sesión de la cuenta",
+    "given": "una sesión de usuario está activa",
+    "when": "el usuario hace clic en el botón de cerrar sesión",
+    "then": "la sesión se termina Y el usuario es redirigido a la página de inicio",
+    "complexity": "simple"
+  },
+  {
+    "id": 56,
+    "domain": "ecommerce",
+    "title": "Agregar producto con verificación de stock",
+    "given": "un producto está disponible con 10 unidades en stock",
+    "when": "el usuario agrega 3 unidades del producto al carrito",
+    "then": "el carrito contiene 3 unidades del producto Y el stock reservado se actualiza a 7",
+    "complexity": "medium"
+  },
+  {
+    "id": 57,
+    "domain": "ecommerce",
+    "title": "Aplicar código de descuento",
+    "given": "un carrito de compras con total 100 Y un código de descuento válido por 20 por ciento de descuento",
+    "when": "el usuario aplica el código de descuento en el checkout",
+    "then": "el total del carrito se reduce a 80 Y el código de descuento se marca como usado",
+    "complexity": "medium"
+  },
+  {
+    "id": 58,
+    "domain": "ecommerce",
+    "title": "Devolver artículo dentro de la política",
+    "given": "un pedido fue entregado hace 5 días Y la política de devoluciones permite devoluciones dentro de 30 días",
+    "when": "el cliente inicia una devolución del artículo Y proporciona el motivo",
+    "then": "se genera una etiqueta de devolución Y el estado del artículo cambia a devolución pendiente",
+    "complexity": "medium"
+  },
+  {
+    "id": 59,
+    "domain": "ecommerce",
+    "title": "Actualizar cantidad en el carrito",
+    "given": "un producto con 3 unidades está en el carrito Y hay 10 unidades en stock",
+    "when": "el usuario cambia la cantidad a 5",
+    "then": "el carrito refleja 5 unidades del producto Y el stock reservado se actualiza",
+    "complexity": "medium"
+  },
+  {
+    "id": 60,
+    "domain": "ecommerce",
+    "title": "Aplicar puntos de fidelidad al pedido",
+    "given": "un cliente tiene 500 puntos de fidelidad Y el total del pedido es 50",
+    "when": "el cliente aplica 200 puntos de fidelidad al pedido",
+    "then": "el total del pedido se reduce por el valor de los puntos Y el saldo de fidelidad se actualiza a 300",
+    "complexity": "medium"
+  },
+  {
+    "id": 61,
+    "domain": "ecommerce",
+    "title": "Filtrar productos por rango de precio",
+    "given": "el catálogo de productos contiene productos con diversos precios",
+    "when": "el usuario establece un precio mínimo de 20 y un precio máximo de 50 Y aplica el filtro",
+    "then": "solo se muestran los productos dentro del rango de precio Y la cantidad de resultados se actualiza",
+    "complexity": "medium"
+  },
+  {
+    "id": 62,
+    "domain": "ecommerce",
+    "title": "Dejar reseña de producto",
+    "given": "un cliente compró un producto Y el pedido fue entregado",
+    "when": "el cliente envía una reseña con una calificación de 4 estrellas y un comentario",
+    "then": "la reseña se agrega a la página del producto Y la calificación promedio se recalcula",
+    "complexity": "medium"
+  },
+  {
+    "id": 63,
+    "domain": "ecommerce",
+    "title": "Suscribirse a notificación de reposición",
+    "given": "un producto está agotado Y el usuario ha iniciado sesión",
+    "when": "el usuario se suscribe a notificaciones de reposición del producto",
+    "then": "la suscripción se crea Y el usuario se agrega a la lista de notificaciones",
+    "complexity": "medium"
+  },
+  {
+    "id": 64,
+    "domain": "ecommerce",
+    "title": "Checkout con inventario insuficiente",
+    "given": "un producto tiene 2 unidades en stock Y el usuario tiene 5 unidades en el carrito",
+    "when": "el usuario procede al checkout Y el sistema verifica la disponibilidad de inventario",
+    "then": "el usuario es notificado del stock insuficiente Y la cantidad del carrito se ajusta a 2 Y el pedido no se realiza",
+    "complexity": "complex"
+  },
+  {
+    "id": 65,
+    "domain": "ecommerce",
+    "title": "Proceso de checkout en múltiples pasos",
+    "given": "un usuario ha iniciado sesión Y el carrito de compras tiene artículos Y una dirección de envío está guardada",
+    "when": "el usuario selecciona un método de pago Y ingresa los datos de pago Y confirma el pedido",
+    "then": "el pago se procesa Y el pedido se crea Y el inventario se reduce Y se envía un correo de confirmación",
+    "complexity": "complex"
+  },
+  {
+    "id": 66,
+    "domain": "ecommerce",
+    "title": "Cálculo de descuento por paquete",
+    "given": "una oferta de paquete requiere 3 productos de la misma categoría Y aplica un descuento de paquete del 15 por ciento",
+    "when": "el usuario agrega 3 productos elegibles al carrito Y el sistema detecta el paquete",
+    "then": "el descuento de paquete se aplica al total del carrito Y cada producto muestra el precio con descuento Y se muestra el monto ahorrado",
+    "complexity": "complex"
+  },
+  {
+    "id": 67,
+    "domain": "ecommerce",
+    "title": "Cancelar pedido después de envío parcial",
+    "given": "un pedido tiene 3 artículos Y 1 artículo ha sido enviado Y 2 artículos están pendientes de envío",
+    "when": "el cliente solicita la cancelación del pedido completo",
+    "then": "el artículo enviado permanece en estado enviado Y los artículos pendientes se cancelan Y se inicia un reembolso parcial por los artículos cancelados Y el inventario se restaura para los artículos cancelados",
+    "complexity": "complex"
+  },
+  {
+    "id": 68,
+    "domain": "ecommerce",
+    "title": "Actualizaciones concurrentes del carrito desde dos sesiones",
+    "given": "un usuario ha iniciado sesión en dos dispositivos Y el carrito contiene un producto con cantidad 2",
+    "when": "el usuario agrega un producto nuevo en el dispositivo uno Y el usuario elimina el producto existente en el dispositivo dos",
+    "then": "el carrito contiene solo el producto nuevo Y el producto eliminado ya no está en el carrito Y el carrito se sincroniza en ambas sesiones",
+    "complexity": "complex"
+  },
+  {
+    "id": 69,
+    "domain": "ecommerce",
+    "title": "Garantía de igualación de precio",
+    "given": "un producto está en el carrito a precio 100 Y un competidor ofrece el mismo producto a precio 80",
+    "when": "el cliente envía una solicitud de igualación de precio con prueba del competidor Y el sistema verifica el precio del competidor",
+    "then": "el precio del producto se ajusta a 80 Y la diferencia de precio se aplica al pedido Y el ajuste se registra",
+    "complexity": "complex"
+  },
+  {
+    "id": 70,
+    "domain": "ecommerce",
+    "title": "Pago parcial con tarjeta de regalo",
+    "given": "el total del pedido es 150 Y una tarjeta de regalo tiene un saldo de 100",
+    "when": "el usuario aplica la tarjeta de regalo Y paga el saldo restante con tarjeta de crédito",
+    "then": "el saldo de la tarjeta de regalo se reduce a 0 Y se cobra 50 a la tarjeta de crédito Y el pedido se confirma Y ambos métodos de pago quedan registrados",
+    "complexity": "complex"
+  },
+  {
+    "id": 71,
+    "domain": "ecommerce",
+    "title": "Recuperación de carrito abandonado",
+    "given": "un usuario tiene artículos en el carrito Y el carrito ha estado inactivo por 24 horas Y el usuario tiene notificaciones por correo habilitadas",
+    "when": "el sistema de recuperación de abandono se ejecuta Y el sistema envía un correo recordatorio al usuario",
+    "then": "el correo recordatorio se envía con el contenido del carrito Y se incluye un incentivo de descuento Y el carrito se preserva por 7 días más",
+    "complexity": "complex"
+  },
+  {
+    "id": 72,
+    "domain": "ecommerce",
+    "title": "Venta flash con stock limitado",
+    "given": "una venta flash comienza para un producto con 5 unidades disponibles Y 10 usuarios están esperando para comprar",
+    "when": "la venta flash comienza Y múltiples usuarios intentan agregar el producto a sus carritos simultáneamente",
+    "then": "solo los primeros 5 usuarios exitosos tienen el producto en sus carritos Y los usuarios restantes son notificados de que el producto está agotado Y el producto se marca como no disponible",
+    "complexity": "complex"
+  },
+  {
+    "id": 73,
+    "domain": "banking",
+    "title": "Consultar saldo de cuenta",
+    "given": "una cuenta bancaria existe con saldo 5000",
+    "when": "el cliente consulta el saldo de la cuenta",
+    "then": "el saldo se muestra como 5000",
+    "complexity": "simple"
+  },
+  {
+    "id": 74,
+    "domain": "banking",
+    "title": "Depositar dinero",
+    "given": "una cuenta bancaria tiene un saldo de 1000",
+    "when": "el cliente deposita 500 en la cuenta",
+    "then": "el saldo de la cuenta se actualiza a 1500",
+    "complexity": "simple"
+  },
+  {
+    "id": 75,
+    "domain": "banking",
+    "title": "Retirar efectivo",
+    "given": "una cuenta bancaria tiene un saldo de 3000",
+    "when": "el cliente retira 200",
+    "then": "el saldo de la cuenta se actualiza a 2800 Y el efectivo se entrega",
+    "complexity": "simple"
+  },
+  {
+    "id": 76,
+    "domain": "banking",
+    "title": "Ver historial de transacciones",
+    "given": "una cuenta bancaria tiene transacciones registradas",
+    "when": "el cliente solicita el historial de transacciones",
+    "then": "se muestra la lista de transacciones",
+    "complexity": "simple"
+  },
+  {
+    "id": 77,
+    "domain": "banking",
+    "title": "Congelar tarjeta de débito",
+    "given": "una tarjeta de débito está activa",
+    "when": "el cliente congela la tarjeta de débito",
+    "then": "el estado de la tarjeta se establece como congelado Y las nuevas transacciones se bloquean",
+    "complexity": "simple"
+  },
+  {
+    "id": 78,
+    "domain": "banking",
+    "title": "Actualizar número de teléfono de contacto",
+    "given": "una cuenta de cliente existe con un número de teléfono registrado",
+    "when": "el cliente actualiza el número de teléfono a un número nuevo",
+    "then": "el número de teléfono se actualiza en los registros de la cuenta",
+    "complexity": "simple"
+  },
+  {
+    "id": 79,
+    "domain": "banking",
+    "title": "Consultar puntaje crediticio",
+    "given": "un cliente está inscrito en monitoreo crediticio",
+    "when": "el cliente solicita el puntaje crediticio",
+    "then": "se muestra el puntaje crediticio actual",
+    "complexity": "simple"
+  },
+  {
+    "id": 80,
+    "domain": "banking",
+    "title": "Transferir entre cuentas propias",
+    "given": "una cuenta corriente con saldo 3000 Y una cuenta de ahorro con saldo 2000",
+    "when": "el cliente transfiere 500 de la cuenta corriente a la cuenta de ahorro",
+    "then": "el saldo de la cuenta corriente es 2500 Y el saldo de la cuenta de ahorro es 2500 Y la transferencia queda registrada",
+    "complexity": "medium"
+  },
+  {
+    "id": 81,
+    "domain": "banking",
+    "title": "Pagar factura con fondos suficientes",
+    "given": "una cuenta bancaria con saldo 1500 Y una factura pendiente de electricidad de 300",
+    "when": "el cliente paga la factura desde la cuenta",
+    "then": "el saldo de la cuenta es 1200 Y la factura se marca como pagada Y el pago se registra en el historial de transacciones",
+    "complexity": "medium"
+  },
+  {
+    "id": 82,
+    "domain": "banking",
+    "title": "Configurar pago recurrente",
+    "given": "una cuenta bancaria está activa Y un beneficiario está registrado",
+    "when": "el cliente configura un pago mensual de 100 al beneficiario comenzando el día 15",
+    "then": "el pago recurrente se crea Y la próxima fecha de pago se establece para el día 15",
+    "complexity": "medium"
+  },
+  {
+    "id": 83,
+    "domain": "banking",
+    "title": "Solicitar protección contra sobregiro",
+    "given": "una cuenta corriente sin protección contra sobregiro Y el cliente cumple los criterios de elegibilidad",
+    "when": "el cliente solicita protección contra sobregiro con un límite de 1000",
+    "then": "la protección contra sobregiro se activa Y el límite de sobregiro se establece en 1000",
+    "complexity": "medium"
+  },
+  {
+    "id": 84,
+    "domain": "banking",
+    "title": "Cambiar límite diario de retiro",
+    "given": "una cuenta con un límite diario de retiro de 500",
+    "when": "el cliente solicita aumentar el límite diario a 1000 Y proporciona verificación adicional",
+    "then": "el límite diario de retiro se actualiza a 1000 Y el cambio se registra",
+    "complexity": "medium"
+  },
+  {
+    "id": 85,
+    "domain": "banking",
+    "title": "Disputar una transacción",
+    "given": "una cuenta bancaria tiene una transacción de 150 que el cliente no reconoce",
+    "when": "el cliente disputa la transacción Y proporciona el ID de la transacción",
+    "then": "la transacción se marca como disputada Y se aplica un crédito temporal de 150 Y se abre un caso de investigación",
+    "complexity": "medium"
+  },
+  {
+    "id": 86,
+    "domain": "banking",
+    "title": "Abrir un depósito a plazo fijo",
+    "given": "una cuenta de ahorro con saldo 10000 Y la tasa de depósito a plazo fijo es 4 por ciento a 12 meses",
+    "when": "el cliente abre un depósito a plazo fijo de 5000 por 12 meses",
+    "then": "el saldo de ahorro se reduce a 5000 Y el depósito a plazo fijo se crea con fecha de vencimiento en 12 meses Y la tasa de interés se fija en 4 por ciento",
+    "complexity": "medium"
+  },
+  {
+    "id": 87,
+    "domain": "banking",
+    "title": "Programar una transferencia futura",
+    "given": "una cuenta bancaria con saldo 5000 Y un beneficiario está registrado",
+    "when": "el cliente programa una transferencia de 1000 al beneficiario para el próximo lunes",
+    "then": "la transferencia programada se crea Y los fondos se reservan Y la fecha de ejecución se confirma",
+    "complexity": "medium"
+  },
+  {
+    "id": 88,
+    "domain": "banking",
+    "title": "Transferencia internacional con conversión de moneda",
+    "given": "una cuenta bancaria con saldo 10000 en USD Y la comisión de transferencia es 25 Y el tipo de cambio de USD a EUR es 0.85",
+    "when": "el cliente inicia una transferencia de 1000 USD a una cuenta europea Y confirma la transferencia",
+    "then": "el saldo de la cuenta se reduce en 1025 Y el destinatario recibe 850 EUR Y la comisión se deduce Y la transacción se registra con el tipo de cambio",
+    "complexity": "complex"
+  },
+  {
+    "id": 89,
+    "domain": "banking",
+    "title": "Pago de préstamo con cálculo de interés",
+    "given": "un préstamo con capital pendiente de 10000 y tasa de interés anual del 6 por ciento Y un pago mensual está pendiente",
+    "when": "el sistema calcula el interés mensual Y el cliente realiza un pago de 500",
+    "then": "la porción de interés se calcula como 50 Y el capital se reduce en 450 Y el saldo de la cuenta del cliente disminuye en 500 Y el calendario del préstamo se actualiza",
+    "complexity": "complex"
+  },
+  {
+    "id": 90,
+    "domain": "banking",
+    "title": "Detectar y bloquear transacción sospechosa",
+    "given": "una cuenta de cliente con patrones de gasto normales Y el sistema de detección de fraude está activo",
+    "when": "se intenta una transacción de 5000 desde una ubicación extranjera Y el monto excede el gasto típico en un 400 por ciento",
+    "then": "la transacción se bloquea Y el cliente es notificado Y la tarjeta se congela temporalmente Y se abre un caso de investigación de fraude",
+    "complexity": "complex"
+  },
+  {
+    "id": 91,
+    "domain": "banking",
+    "title": "Cuenta conjunta con doble autorización",
+    "given": "una cuenta conjunta con dos titulares Y la cuenta requiere doble autorización para transferencias superiores a 5000",
+    "when": "el titular A inicia una transferencia de 8000 Y el titular B aprueba la transferencia",
+    "then": "la transferencia se ejecuta Y ambas aprobaciones quedan registradas Y el saldo de la cuenta se actualiza",
+    "complexity": "complex"
+  },
+  {
+    "id": 92,
+    "domain": "banking",
+    "title": "Cierre de cuenta con transferencia de saldo",
+    "given": "la cuenta A tiene saldo 3000 Y la cuenta B tiene saldo 2000 Y ambas pertenecen al mismo cliente",
+    "when": "el cliente solicita cerrar la cuenta B y transferir su saldo a la cuenta A",
+    "then": "el saldo de la cuenta A se actualiza a 5000 Y la cuenta B se cierra Y todos los pagos recurrentes de la cuenta B se cancelan Y el cliente es notificado",
+    "complexity": "complex"
+  },
+  {
+    "id": 93,
+    "domain": "banking",
+    "title": "Retiro en cajero excede límite diario",
+    "given": "una cuenta bancaria con saldo 5000 Y el límite diario de retiro es 1000 Y ya se retiraron 700 hoy",
+    "when": "el cliente intenta retirar 500 en el cajero automático",
+    "then": "el retiro es rechazado Y el cliente es informado de que solo quedan 300 disponibles hoy Y el saldo de la cuenta permanece sin cambios",
+    "complexity": "complex"
+  },
+  {
+    "id": 94,
+    "domain": "banking",
+    "title": "Procesamiento de contracargo",
+    "given": "un cliente compró un artículo por 200 con tarjeta de débito Y el comerciante no entregó el artículo Y han pasado 30 días",
+    "when": "el cliente presenta una solicitud de contracargo Y proporciona prueba de no entrega",
+    "then": "el contracargo se inicia Y se aplica un crédito temporal de 200 a la cuenta Y el comerciante es notificado Y se establece un plazo de resolución de 45 días",
+    "complexity": "complex"
+  },
+  {
+    "id": 95,
+    "domain": "banking",
+    "title": "Conversión en cuenta multidivisa",
+    "given": "una cuenta multidivisa con saldo USD 5000 y saldo EUR 0 Y el tipo de cambio es 0.85 USD a EUR",
+    "when": "el cliente convierte 1000 USD a EUR dentro de la cuenta",
+    "then": "el saldo en USD se reduce a 4000 Y el saldo en EUR se actualiza a 850 Y la conversión se registra con el tipo de cambio Y se envía una confirmación",
+    "complexity": "complex"
+  },
+  {
+    "id": 96,
+    "domain": "banking",
+    "title": "Pago anticipado de hipoteca con penalización",
+    "given": "una hipoteca con saldo pendiente de 200000 Y la penalización por pago anticipado es el 2 por ciento del saldo restante Y la cuenta del cliente tiene 210000",
+    "when": "el cliente solicita el pago anticipado total de la hipoteca Y acepta la penalización",
+    "then": "la penalización de 4000 se calcula Y el pago total de 204000 se deduce de la cuenta Y la hipoteca se cierra Y el saldo de la cuenta es 6000",
+    "complexity": "complex"
+  },
+  {
+    "id": 97,
+    "domain": "library",
+    "title": "Buscar un libro",
+    "given": "un libro existe en el catálogo de la biblioteca",
+    "when": "el socio busca el libro por título",
+    "then": "se muestra la información del libro con el estado de disponibilidad",
+    "complexity": "simple"
+  },
+  {
+    "id": 98,
+    "domain": "library",
+    "title": "Tomar prestado un libro",
+    "given": "un libro está disponible Y el socio no tiene libros vencidos",
+    "when": "el socio toma prestado el libro",
+    "then": "el libro se registra como prestado al socio Y se establece la fecha de devolución",
+    "complexity": "simple"
+  },
+  {
+    "id": 99,
+    "domain": "library",
+    "title": "Devolver un libro",
+    "given": "un libro está prestado al socio",
+    "when": "el socio devuelve el libro",
+    "then": "el libro se marca como disponible",
+    "complexity": "simple"
+  },
+  {
+    "id": 100,
+    "domain": "library",
+    "title": "Renovar membresía",
+    "given": "una membresía de biblioteca está por vencer",
+    "when": "el socio renueva la membresía",
+    "then": "la fecha de vencimiento de la membresía se extiende por un año",
+    "complexity": "simple"
+  },
+  {
+    "id": 101,
+    "domain": "library",
+    "title": "Reservar una sala de estudio",
+    "given": "una sala de estudio está disponible en el horario solicitado",
+    "when": "el socio reserva la sala de estudio por 2 horas",
+    "then": "la sala queda reservada para el socio Y el horario se bloquea",
+    "complexity": "simple"
+  },
+  {
+    "id": 102,
+    "domain": "library",
+    "title": "Cancelar reserva de libro",
+    "given": "existe una reserva de libro para el socio",
+    "when": "el socio cancela la reserva",
+    "then": "la reserva se elimina Y el libro queda disponible para otros",
+    "complexity": "simple"
+  },
+  {
+    "id": 103,
+    "domain": "library",
+    "title": "Verificar estado de membresía",
+    "given": "un socio tiene una membresía activa de biblioteca",
+    "when": "el socio consulta el estado de la membresía",
+    "then": "se muestran los detalles de la membresía incluyendo la fecha de vencimiento",
+    "complexity": "simple"
+  },
+  {
+    "id": 104,
+    "domain": "library",
+    "title": "Colocar reserva en libro prestado",
+    "given": "un libro está prestado a otro socio Y no existen reservas sobre el libro",
+    "when": "el socio coloca una reserva sobre el libro",
+    "then": "la reserva se crea Y el socio se agrega a la lista de espera en la posición 1",
+    "complexity": "medium"
+  },
+  {
+    "id": 105,
+    "domain": "library",
+    "title": "Renovar préstamo sin reservas pendientes",
+    "given": "un libro está prestado al socio Y la fecha de devolución no ha pasado Y ningún otro socio ha colocado una reserva sobre el libro",
+    "when": "el socio renueva el préstamo",
+    "then": "la fecha de devolución se extiende por 14 días Y el contador de renovaciones se incrementa",
+    "complexity": "medium"
+  },
+  {
+    "id": 106,
+    "domain": "library",
+    "title": "Devolver libro vencido con multa",
+    "given": "un libro está prestado al socio Y el libro tiene 5 días de atraso Y la multa diaria es 1",
+    "when": "el socio devuelve el libro",
+    "then": "el libro se marca como disponible Y se aplica una multa de 5 a la cuenta del socio",
+    "complexity": "medium"
+  },
+  {
+    "id": 107,
+    "domain": "library",
+    "title": "Transferir reserva a otro socio",
+    "given": "existe una reserva de libro para el socio A Y el socio B es elegible para recibir reservas",
+    "when": "el socio A transfiere la reserva al socio B",
+    "then": "la reserva se asigna al socio B Y el socio A ya no tiene la reserva",
+    "complexity": "medium"
+  },
+  {
+    "id": 108,
+    "domain": "library",
+    "title": "Reservar sala con equipamiento",
+    "given": "una sala de estudio con proyector está disponible Y el socio necesita un proyector para una presentación",
+    "when": "el socio reserva la sala y solicita el proyector",
+    "then": "la sala queda reservada Y el proyector se asigna a la reserva",
+    "complexity": "medium"
+  },
+  {
+    "id": 109,
+    "domain": "library",
+    "title": "Extender reserva de sala de estudio",
+    "given": "un socio tiene una sala reservada por 2 horas Y la sala está disponible para la hora siguiente",
+    "when": "el socio solicita una extensión de 1 hora",
+    "then": "la reserva se extiende a 3 horas Y el horario adicional se bloquea",
+    "complexity": "medium"
+  },
+  {
+    "id": 110,
+    "domain": "library",
+    "title": "Solicitar préstamo interbibliotecario",
+    "given": "un libro no está disponible en el catálogo local Y el libro existe en el catálogo de una biblioteca asociada",
+    "when": "el socio solicita un préstamo interbibliotecario del libro",
+    "then": "la solicitud de préstamo se envía a la biblioteca asociada Y se establece la fecha estimada de llegada",
+    "complexity": "medium"
+  },
+  {
+    "id": 111,
+    "domain": "library",
+    "title": "Pagar multas pendientes",
+    "given": "un socio tiene multas acumuladas de 15 Y los privilegios de préstamo del socio están suspendidos",
+    "when": "el socio paga las multas pendientes",
+    "then": "el saldo de multas se limpia Y los privilegios de préstamo se restauran",
+    "complexity": "medium"
+  },
+  {
+    "id": 112,
+    "domain": "library",
+    "title": "Devolución por lote con multas mixtas",
+    "given": "un socio tiene 3 libros prestados Y el libro A está en plazo Y el libro B tiene 3 días de atraso Y el libro C tiene 7 días de atraso Y la multa diaria es 1",
+    "when": "el socio devuelve los 3 libros a la vez",
+    "then": "todos los libros se marcan como disponibles Y se aplica una multa total de 10 Y el desglose de multas es 0 por el libro A y 3 por el libro B y 7 por el libro C",
+    "complexity": "complex"
+  },
+  {
+    "id": 113,
+    "domain": "library",
+    "title": "Reserva prioritaria para docentes",
+    "given": "un libro popular tiene 2 reservas de estudiantes Y la biblioteca da prioridad a docentes sobre estudiantes",
+    "when": "un docente coloca una reserva sobre el libro",
+    "then": "la reserva del docente se coloca en la posición 1 Y las reservas de estudiantes se mueven a las posiciones 2 y 3",
+    "complexity": "complex"
+  },
+  {
+    "id": 114,
+    "domain": "library",
+    "title": "Expiración automática de reserva y reasignación",
+    "given": "un libro reservado ha estado disponible para retiro por 3 días Y el período de expiración de reserva es 3 días Y hay 2 socios más en la lista de espera",
+    "when": "el sistema ejecuta la verificación de expiración de reservas",
+    "then": "la reserva expirada se elimina Y el libro se asigna al siguiente socio en la lista de espera Y el siguiente socio es notificado Y las posiciones de la lista de espera se actualizan",
+    "complexity": "complex"
+  },
+  {
+    "id": 115,
+    "domain": "library",
+    "title": "Resolución de conflicto de reserva de sala",
+    "given": "una sala de estudio está reservada por el socio A de 10 a 12 Y el socio B solicita la misma sala de 11 a 13",
+    "when": "el socio B envía la solicitud de reserva Y el sistema detecta el conflicto de horario",
+    "then": "el socio B es notificado del conflicto Y se sugieren horarios alternativos disponibles Y la reserva original permanece sin cambios",
+    "complexity": "complex"
+  },
+  {
+    "id": 116,
+    "domain": "library",
+    "title": "Préstamo interbibliotecario con seguimiento completo",
+    "given": "una solicitud de préstamo interbibliotecario ha sido aprobada Y el libro está en la biblioteca asociada Y el socio es elegible",
+    "when": "la biblioteca asociada envía el libro Y la biblioteca local recibe el libro Y el socio es notificado",
+    "then": "el estado del libro se actualiza a disponible para retiro Y el período de préstamo comienza Y se establece la fecha de devolución Y los registros de la biblioteca asociada se actualizan",
+    "complexity": "complex"
+  },
+  {
+    "id": 117,
+    "domain": "library",
+    "title": "Intentos concurrentes de préstamo",
+    "given": "una única copia de un libro popular acaba de ser devuelta Y dos socios están esperando para tomarlo prestado",
+    "when": "el socio A y el socio B intentan tomar prestado el libro al mismo tiempo",
+    "then": "solo un socio logra tomar prestado el libro Y al otro socio se le ofrece colocar una reserva Y el libro se presta exactamente una vez",
+    "complexity": "complex"
+  },
+  {
+    "id": 118,
+    "domain": "library",
+    "title": "Renovación vencida denegada por reserva existente",
+    "given": "un libro está prestado al socio A Y el libro tiene 2 días de atraso Y el socio B ha colocado una reserva sobre el libro",
+    "when": "el socio A intenta renovar el libro",
+    "then": "la renovación se deniega debido a la reserva existente Y el socio A es notificado de devolver el libro Y la multa por atraso continúa acumulándose",
+    "complexity": "complex"
+  },
+  {
+    "id": 119,
+    "domain": "library",
+    "title": "Reclamación masiva de fin de semestre",
+    "given": "el semestre termina en 7 días Y hay 50 libros prestados Y 20 de esos libros tienen reservas de otros socios",
+    "when": "la biblioteca inicia el proceso de reclamación de fin de semestre",
+    "then": "se envían avisos de reclamación para los 20 libros con reservas Y las fechas de devolución de los libros reclamados se acortan a 3 días Y los libros no reclamados conservan sus fechas originales Y las multas se duplican para los libros reclamados no devueltos a tiempo",
+    "complexity": "complex"
+  },
+  {
+    "id": 120,
+    "domain": "library",
+    "title": "Reemplazo de libro perdido y actualización de cuenta",
+    "given": "un libro prestado a un socio se ha perdido Y el costo de reemplazo del libro es 45 Y el socio tiene un historial de préstamos limpio",
+    "when": "el socio reporta el libro como perdido Y el sistema procesa el reclamo de libro perdido",
+    "then": "la tarifa de reemplazo de 45 se carga a la cuenta del socio Y el libro se elimina de los préstamos activos del socio Y el catálogo se actualiza para reflejar la copia perdida Y se coloca una orden de reemplazo si el libro tiene reservas activas",
+    "complexity": "complex"
+  }
+]

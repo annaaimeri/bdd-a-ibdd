@@ -1,0 +1,245 @@
+\chapter{Prompt de Traducción Utilizado}
+\label{ap:prompt}
+\begingroup
+\shorthandoff{"}
+
+Este apéndice reproduce el prompt en español utilizado en los experimentos de traducción BDD$\rightarrow$IBDD. La versión fuente empleada por el sistema puede encontrarse en el archivo \texttt{docs/PROMPT\_ES.md} del repositorio. La versión correspondiente en inglés puede encontrarse en \texttt{docs/PROMPT\_EN.md}.
+
+\section{Contexto}
+
+Vas a traducir escenarios escritos en formato Gherkin a un lenguaje intermedio llamado IBDD (\textit{Intermediate Behavior-Driven Development}). IBDD mantiene la estructura Given--When--Then pero añade precisión formal mediante sistemas de transición simbólicos.
+
+\section{Definición de IBDD}
+
+\subsection{Gramática}
+
+\begin{quote}
+\ttfamily
+Scenario ::= Given When Then\\
+Given ::= 'GIVEN' Declaration '[' Guard ']'\\
+Declaration ::= lv1, ..., lvn\\
+Guard ::= P | Guard '∧' Guard\\
+When ::= 'WHEN' Switch+\\
+Switch ::= Interaction Condition Assignment\\
+Interaction ::= g. iv1, ..., ivn\\
+Condition ::= B\\
+Assignment ::= A\\
+Then ::= 'THEN' Switch* '[' Guard ']'
+\end{quote}
+
+\subsection{Elementos Clave}
+
+\begin{itemize}
+\item Variables locales (\texttt{lv}): se declaran en \texttt{GIVEN} y son visibles en todo el escenario.
+\item Variables globales: representan estado persistente del sistema, por ejemplo \texttt{SJL} (\textit{Scheduled Jobs List}).
+\item Variables de interacción (\texttt{iv}): modelan la comunicación entre el sistema y su entorno.
+\item Gates: el prefijo \texttt{!} denota salidas del sistema y el prefijo \texttt{?} denota entradas desde el entorno.
+\item Guards: expresan condiciones booleanas.
+\item Assignments: expresan asignaciones del tipo \texttt{variable := expresión}.
+\end{itemize}
+
+\section{Ejemplos de Traducción}
+
+\subsection{Ejemplo 1: escenario simple con variable local}
+
+\textbf{Escenario Gherkin}
+
+\begin{quote}
+\ttfamily\small
+\{\\
+\quad "id": 1,\\
+\quad "domain": "printer",\\
+\quad "title": "Submit job to printer",\\
+\quad "given": "a job file",\\
+\quad "when": "the operator submits the job file\\
+\quad using Submission method",\\
+\quad "then": "the printer appends a new controller job\\
+\quad to the scheduled jobs AND the controller job\\
+\quad is of type Job type"\\
+\}
+\end{quote}
+
+\textbf{Traducción IBDD}
+
+\begin{quote}
+\ttfamily\small
+GIVEN JF [true]\\
+WHEN ?submit.jf,sm\\
+\quad true\\
+\quad JF := jf\\
+THEN !append.cj,sjl\\
+\quad cj.type = JT ∧ sjl = SJL ∧ JT = getJobType(SM)\\
+\quad CJ := cj, SJL := add(CJ, SJL)\\
+\quad [is\_in\_list(CJ, SJL) ∧ CJ.type = JT]
+\end{quote}
+
+\textbf{Razonamiento}
+
+\begin{itemize}
+\item La cláusula Given declara la variable local \texttt{JF} sin precondiciones, por lo que se utiliza la guarda \texttt{[true]}.
+\item La cláusula When se modela mediante el gate de entrada \texttt{?submit} y las variables de interacción \texttt{jf} y \texttt{sm}.
+\item La cláusula Then utiliza el gate de salida \texttt{!append} y una postcondición que verifica la inclusión del job en la lista.
+\end{itemize}
+
+\subsection{Ejemplo 2: variables locales con guardas y acciones secuenciales}
+
+\textbf{Escenario Gherkin}
+
+\begin{quote}
+\ttfamily\small
+\{\\
+\quad "id": 2,\\
+\quad "domain": "printer",\\
+\quad "title": "Move production job to printed jobs",\\
+\quad "given": "a controller job is in the scheduled jobs\\
+\quad AND the controller job is a production job",\\
+\quad "when": "the printer starts printing the controller job\\
+\quad AND the printer completes printing the controller job",\\
+\quad "then": "the controller job is in the printed jobs"\\
+\}
+\end{quote}
+
+\textbf{Traducción IBDD}
+
+\begin{quote}
+\ttfamily\small
+GIVEN CJ [is\_in\_list(CJ, SJL) ∧ CJ.type = Production]\\
+WHEN !printstart.cj\\
+\quad cj.id = CJ.id ∧ cj.state = Printing\\
+\quad CJ.state := cj.state\\
+!printcomplete.cj\\
+\quad cj.id = CJ.id ∧ cj.state = Completed\\
+\quad CJ.state := cj.state, PJL := add(CJ, PJL)\\
+THEN [is\_in\_list(CJ, PJL)]
+\end{quote}
+
+\textbf{Razonamiento}
+
+\begin{itemize}
+\item La cláusula Given declara la variable local \texttt{CJ} y expresa una guarda compuesta sobre su pertenencia a \texttt{SJL} y su tipo.
+\item La cláusula When se traduce como dos switches secuenciales, uno para el inicio de impresión y otro para su finalización.
+\item La cláusula Then verifica que el job haya pasado a la lista de impresiones completadas.
+\end{itemize}
+
+\subsection{Ejemplo 3: escenario con guarda sin variables locales}
+
+\textbf{Escenario Gherkin}
+
+\begin{quote}
+\ttfamily\small
+\{\\
+\quad "id": 3,\\
+\quad "domain": "printer",\\
+\quad "title": "Clean up printed jobs on restart",\\
+\quad "given": "the printer controller is running",\\
+\quad "when": "the operator restarts the printer controller",\\
+\quad "then": "the printed jobs clean up is executed"\\
+\}
+\end{quote}
+
+\textbf{Traducción IBDD}
+
+\begin{quote}
+\ttfamily\small
+GIVEN [is\_running(CTRL)]\\
+WHEN ?restart\\
+\quad true\\
+\quad (no assignment)\\
+THEN !cleanup\\
+\quad true\\
+\quad PJL := empty(PJL)\\
+\quad [is\_empty(PJL)]
+\end{quote}
+
+\textbf{Razonamiento}
+
+\begin{itemize}
+\item La cláusula Given no introduce variables locales; solo impone una guarda sobre el estado del controlador.
+\item La cláusula When se modela mediante un gate de entrada simple.
+\item La cláusula Then representa una acción del sistema seguida de una postcondición que verifica el vaciado de la lista.
+\end{itemize}
+
+\subsection{Ejemplo 4: múltiples variables de interacción}
+
+\textbf{Escenario Gherkin}
+
+\begin{quote}
+\ttfamily\small
+\{\\
+\quad "id": 4,\\
+\quad "domain": "ecommerce",\\
+\quad "title": "Add product to cart",\\
+\quad "given": "a product with price and a shopping cart",\\
+\quad "when": "the user adds the product to the cart\\
+\quad with quantity",\\
+\quad "then": "the cart contains the product\\
+\quad AND the total price is updated"\\
+\}
+\end{quote}
+
+\textbf{Traducción IBDD}
+
+\begin{quote}
+\ttfamily\small
+GIVEN P, SC [P.price > 0 ∧ is\_valid(SC)]\\
+WHEN ?add\_to\_cart.p,sc,qty\\
+\quad p.id = P.id ∧ sc.id = SC.id ∧ qty > 0\\
+\quad SC.items := add(p, SC.items),\\
+\quad SC.total := SC.total + (p.price * qty)\\
+THEN [is\_in\_list(P, SC.items) ∧\\
+\quad SC.total = calculate\_total(SC.items)]
+\end{quote}
+
+\textbf{Razonamiento}
+
+\begin{itemize}
+\item La cláusula Given introduce dos variables locales y una guarda compuesta.
+\item La cláusula When utiliza múltiples variables de interacción: producto, carrito y cantidad.
+\item La cláusula Then verifica tanto la inclusión del producto como la actualización correcta del total.
+\end{itemize}
+
+\section{Formato de Entrada y Salida}
+
+La entrada del sistema consiste en un arreglo JSON de escenarios, donde cada objeto contiene los campos \texttt{id}, \texttt{domain}, \texttt{title}, \texttt{given}, \texttt{when} y \texttt{then}. La salida debe mantener exactamente esa estructura y añadir el campo \texttt{ibdd\_representation} con la traducción IBDD correspondiente.
+
+\section{Reglas de Traducción}
+
+\subsection{Cláusula Given}
+
+\begin{itemize}
+\item Identificar si el texto menciona variables locales, por ejemplo ``a job'' o ``a product''.
+\item Si la cláusula describe únicamente el estado del sistema, modelarla solo como guarda, sin declaración.
+\item Combinar múltiples condiciones mediante el operador \texttt{∧}.
+\end{itemize}
+
+\subsection{Cláusula When}
+
+\begin{itemize}
+\item Las acciones del usuario se traducen como gates de entrada.
+\item Las acciones del sistema se traducen como gates de salida.
+\item Las acciones múltiples conectadas por ``AND'' se traducen como switches secuenciales.
+\item Deben identificarse las variables de interacción necesarias para la comunicación.
+\end{itemize}
+
+\subsection{Cláusula Then}
+
+\begin{itemize}
+\item El estado final se expresa en la postcondición.
+\item Si hay acciones explícitas del sistema, deben modelarse como switches con gates de salida.
+\item La postcondición final siempre se escribe entre corchetes.
+\end{itemize}
+
+\subsection{Convenciones de Nombres}
+
+\begin{itemize}
+\item Variables locales: abreviaturas en mayúsculas, por ejemplo \texttt{CJ}, \texttt{JF}, \texttt{P}, \texttt{SC}.
+\item Variables globales: nombres descriptivos en mayúsculas, por ejemplo \texttt{SJL}, \texttt{PJL}, \texttt{CTRL}.
+\item Variables de interacción: nombres en minúscula relacionados con las variables locales, por ejemplo \texttt{cj}, \texttt{jf}, \texttt{p}, \texttt{sc}.
+\item Gates: verbos descriptivos en minúscula.
+\item Ejemplos representativos son \texttt{submit}, \texttt{printstart} y \texttt{add\_to\_cart}.
+\end{itemize}
+
+\section{Instrucción Final}
+
+Procesar el JSON de entrada y devolver el mismo JSON con el campo \texttt{ibdd\_representation} añadido a cada escenario. No deben incluirse explicaciones, comentarios ni marcas de formato adicionales; solo debe devolverse el JSON resultante, manteniendo exactamente la estructura de la entrada. La representación IBDD debe serializarse como una cadena con saltos de línea.
+\endgroup

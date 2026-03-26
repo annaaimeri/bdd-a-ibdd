@@ -1,0 +1,272 @@
+[
+  {
+    "id": 1,
+    "domain": "printer",
+    "title": "Submit job to printer",
+    "given": "a job file",
+    "when": "the operator submits the job file using Submission method",
+    "then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type",
+    "complexity": "medium"
+  },
+  {
+    "id": 2,
+    "domain": "printer",
+    "title": "Complete printing moves job to printed",
+    "given": "a controller job is in the scheduled jobs AND the controller job is a production job",
+    "when": "the printer starts printing the controller job AND the printer completes printing the controller job",
+    "then": "the controller job is in the printed jobs",
+    "complexity": "medium"
+  },
+  {
+    "id": 3,
+    "domain": "printer",
+    "title": "Restart cleanup",
+    "given": "the printer controller is running",
+    "when": "the operator restarts the printer controller",
+    "then": "the printed jobs clean up is executed",
+    "complexity": "simple"
+  },
+  {
+    "id": 4,
+    "domain": "printer",
+    "title": "Pause printing",
+    "given": "a controller job is printing",
+    "when": "the operator pauses the printing of the controller job",
+    "then": "the controller job is paused",
+    "complexity": "simple"
+  },
+  {
+    "id": 5,
+    "domain": "printer",
+    "title": "Resume paused job",
+    "given": "a controller job is paused",
+    "when": "the operator resumes printing the controller job",
+    "then": "the controller job is printing",
+    "complexity": "simple"
+  },
+  {
+    "id": 6,
+    "domain": "printer",
+    "title": "Move paused job to waiting",
+    "given": "a controller job is paused",
+    "when": "the operator moves the controller job to the waiting jobs before the printer completes printing",
+    "then": "the controller job is in the waiting jobs AND the controller job is not in the printed jobs",
+    "complexity": "medium"
+  },
+  {
+    "id": 7,
+    "domain": "printer",
+    "title": "Move from waiting to scheduled",
+    "given": "a controller job in the waiting jobs",
+    "when": "the operator moves the controller job to the scheduled jobs",
+    "then": "the controller job is in the scheduled jobs",
+    "complexity": "simple"
+  },
+  {
+    "id": 8,
+    "domain": "printer",
+    "title": "Hard copy output after printing",
+    "given": "a controller job is in the scheduled jobs",
+    "when": "the printer starts printing the controller job AND the printer completes printing the controller job",
+    "then": "there is a printed output AND the printed output is a hard copy of the controller job",
+    "complexity": "complex"
+  },
+  {
+    "id": 9,
+    "domain": "calculator",
+    "title": "Add two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 5 and 7 and choose addition",
+    "then": "the calculator displays the result as 12",
+    "complexity": "simple"
+  },
+  {
+    "id": 10,
+    "domain": "calculator",
+    "title": "Subtract two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 10 and 3 and choose subtraction",
+    "then": "the calculator displays the result as 7",
+    "complexity": "simple"
+  },
+  {
+    "id": 11,
+    "domain": "calculator",
+    "title": "Multiply two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 4 and 6 and choose multiplication",
+    "then": "the calculator displays the result as 24",
+    "complexity": "simple"
+  },
+  {
+    "id": 12,
+    "domain": "calculator",
+    "title": "Divide two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 20 and 4 and choose division",
+    "then": "the calculator displays the result as 5",
+    "complexity": "simple"
+  },
+  {
+    "id": 13,
+    "domain": "calculator",
+    "title": "Add three numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 5 and add 3 and then add 2",
+    "then": "the calculator displays the result as 10",
+    "complexity": "medium"
+  },
+  {
+    "id": 14,
+    "domain": "calculator",
+    "title": "Calculate percentage",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 80 and calculate 25 percent",
+    "then": "the calculator displays the result as 20",
+    "complexity": "simple"
+  },
+  {
+    "id": 15,
+    "domain": "calculator",
+    "title": "Square a number",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 9 and choose square operation",
+    "then": "the calculator displays the result as 81",
+    "complexity": "simple"
+  },
+  {
+    "id": 16,
+    "domain": "calculator",
+    "title": "Calculate square root",
+    "given": "the calculator is ready for use",
+    "when": "I enter the number 16 and choose square root operation",
+    "then": "the calculator displays the result as 4",
+    "complexity": "simple"
+  },
+  {
+    "id": 17,
+    "domain": "calculator",
+    "title": "Chain operations add and multiply",
+    "given": "the calculator is ready for use",
+    "when": "I enter 5 add 3 and then multiply by 2",
+    "then": "the calculator displays the result as 16",
+    "complexity": "medium"
+  },
+  {
+    "id": 18,
+    "domain": "calculator",
+    "title": "Calculate average of two numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 8 and 12 and choose average",
+    "then": "the calculator displays the result as 10",
+    "complexity": "simple"
+  },
+  {
+    "id": 19,
+    "domain": "calculator",
+    "title": "Clear and add",
+    "given": "the calculator displays 42",
+    "when": "I clear the calculator and then enter 7 and add 3",
+    "then": "the calculator displays the result as 10",
+    "complexity": "medium"
+  },
+  {
+    "id": 20,
+    "domain": "calculator",
+    "title": "Add negative numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers -5 and -3 and choose addition",
+    "then": "the calculator displays the result as -8",
+    "complexity": "simple"
+  },
+  {
+    "id": 21,
+    "domain": "calculator",
+    "title": "Subtract with negative result",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 5 and 12 and choose subtraction",
+    "then": "the calculator displays the result as -7",
+    "complexity": "simple"
+  },
+  {
+    "id": 22,
+    "domain": "calculator",
+    "title": "Add decimal numbers",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 3.5 and 2.7 and choose addition",
+    "then": "the calculator displays the result as 6.2",
+    "complexity": "simple"
+  },
+  {
+    "id": 23,
+    "domain": "calculator",
+    "title": "Multiply by zero",
+    "given": "the calculator is ready for use",
+    "when": "I enter the numbers 25 and 0 and choose multiplication",
+    "then": "the calculator displays the result as 0",
+    "complexity": "simple"
+  },
+  {
+    "id": 24,
+    "domain": "printer",
+    "title": "Cancel job during printing",
+    "given": "a controller job is printing",
+    "when": "the operator cancels the controller job",
+    "then": "the controller job is removed from scheduled jobs AND the controller job is not in printed jobs AND the printer stops printing",
+    "complexity": "medium"
+  },
+  {
+    "id": 25,
+    "domain": "printer",
+    "title": "Handle paper jam during production",
+    "given": "a production job is printing AND the printer has sufficient paper",
+    "when": "a paper jam occurs AND the operator clears the paper jam AND the operator resumes printing",
+    "then": "the controller job continues printing from the last successful page",
+    "complexity": "complex"
+  },
+  {
+    "id": 26,
+    "domain": "printer",
+    "title": "Priority job jumps queue",
+    "given": "there are 3 jobs in the scheduled jobs",
+    "when": "the operator submits a high priority job AND marks it as urgent",
+    "then": "the high priority job is inserted at the beginning of scheduled jobs",
+    "complexity": "medium"
+  },
+  {
+    "id": 27,
+    "domain": "printer",
+    "title": "Concurrent pause requests",
+    "given": "a controller job is printing",
+    "when": "two operators attempt to pause the same controller job simultaneously",
+    "then": "the controller job is paused only once AND both operators receive confirmation",
+    "complexity": "complex"
+  },
+  {
+    "id": 28,
+    "domain": "printer",
+    "title": "Auto-cleanup old printed jobs",
+    "given": "there are 50 jobs in printed jobs AND printed jobs are older than 30 days",
+    "when": "the scheduled cleanup task runs",
+    "then": "jobs older than 30 days are removed from printed jobs AND recent jobs remain",
+    "complexity": "medium"
+  },
+  {
+    "id": 29,
+    "domain": "printer",
+    "title": "Resume printing after power failure",
+    "given": "a controller job is printing at page 45 of 100",
+    "when": "a power failure occurs AND the printer restarts AND the operator resumes the controller job",
+    "then": "the controller job continues printing from page 45",
+    "complexity": "complex"
+  },
+  {
+    "id": 30,
+    "domain": "printer",
+    "title": "Duplicate job submission detection",
+    "given": "a job file with checksum ABC123 is in scheduled jobs",
+    "when": "the operator submits the same job file with checksum ABC123",
+    "then": "the printer rejects the duplicate AND displays a warning message",
+    "complexity": "medium"
+  }
+]

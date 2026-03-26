@@ -7,7 +7,11 @@
     "when": "the operator submits the job file using Submission method",
     "then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN JF [true]\nWHEN ?submit.jf,sm [true] JF := jf\nTHEN !append.cj,sjl [cj.type = JT ∧ sjl = SJL ∧ JT = getJobType(SM)] CJ := cj, SJL := add(CJ, SJL)\n[is_in_list(CJ, SJL) ∧ CJ.type = JT]"
+    "ibdd_representation": "GIVEN JF, SM, CJ, JT [true]\nWHEN ?submit.jf,sm [true] JF := jf, SM := sm\nTHEN !append.cj,sjl [cj = CJ ∧ sjl = SJL ∧ JT = getJobType(SM) ∧ CJ.type = JT] SJL := add(CJ, SJL)\n[is_in_list(CJ, SJL) ∧ CJ.type = JT]",
+    "_metrics": {
+      "translation_time": 2.98,
+      "timestamp": "2026-01-06 16:43:09"
+    }
   },
   {
     "id": 2,
@@ -17,7 +21,11 @@
     "when": "the printer starts printing the controller job AND the printer completes printing the controller job",
     "then": "the controller job is in the printed jobs",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, SJL) ∧ CJ.type = Production]\nWHEN !printstart.cj [cj.id = CJ.id ∧ cj.state = Printing] CJ.state := cj.state\n!printcomplete.cj [cj.id = CJ.id ∧ cj.state = Completed] CJ.state := cj.state, PJL := add(CJ, PJL)\nTHEN [is_in_list(CJ, PJL)]"
+    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, SJL) ∧ CJ.type = Production]\nWHEN !printstart.cj [cj.id = CJ.id ∧ cj.state = Printing] CJ.state := cj.state\n!printcomplete.cj [cj.id = CJ.id ∧ cj.state = Completed] CJ.state := cj.state, PJL := add(CJ, PJL)\nTHEN [is_in_list(CJ, PJL)]",
+    "_metrics": {
+      "translation_time": 5.66,
+      "timestamp": "2026-01-06 16:43:15"
+    }
   },
   {
     "id": 3,
@@ -27,7 +35,11 @@
     "when": "the operator restarts the printer controller",
     "then": "the printed jobs clean up is executed",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [is_running(CTRL)]\nWHEN ?restart [true] true\nTHEN !cleanup [true] PJL := empty(PJL)\n[is_empty(PJL)]"
+    "ibdd_representation": "GIVEN [is_running(CTRL)]\nWHEN ?restart.ctrl [is_running(CTRL)] true\nTHEN !cleanup.pjl [true] PJL := empty(PJL)\n[is_empty(PJL)]",
+    "_metrics": {
+      "translation_time": 1.84,
+      "timestamp": "2026-01-06 16:43:17"
+    }
   },
   {
     "id": 4,
@@ -37,7 +49,11 @@
     "when": "the operator pauses the printing of the controller job",
     "then": "the controller job is paused",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?pause.cj [cj.id = CJ.id] CJ.state := Paused\nTHEN [CJ.state = Paused]"
+    "ibdd_representation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?pause.cj [cj.id = CJ.id] CJ.state := Paused\nTHEN [CJ.state = Paused]",
+    "_metrics": {
+      "translation_time": 1.88,
+      "timestamp": "2026-01-06 16:43:19"
+    }
   },
   {
     "id": 5,
@@ -47,7 +63,11 @@
     "when": "the operator resumes printing the controller job",
     "then": "the controller job is printing",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN CJ [CJ.state = Paused]\nWHEN ?resume.cj [cj.id = CJ.id] CJ.state := Printing\nTHEN [CJ.state = Printing]"
+    "ibdd_representation": "GIVEN CJ [CJ.state = Paused]\nWHEN ?resume.cj [cj.id = CJ.id] CJ.state := Printing\nTHEN [CJ.state = Printing]",
+    "_metrics": {
+      "translation_time": 2.22,
+      "timestamp": "2026-01-06 16:43:21"
+    }
   },
   {
     "id": 6,
@@ -57,7 +77,11 @@
     "when": "the operator moves the controller job to the waiting jobs before the printer completes printing",
     "then": "the controller job is in the waiting jobs AND the controller job is not in the printed jobs",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN CJ [CJ.state = Paused]\nWHEN ?move_to_waiting.cj [cj.id = CJ.id] WJL := add(CJ, WJL)\nTHEN [is_in_list(CJ, WJL) ∧ ¬is_in_list(CJ, PJL)]"
+    "ibdd_representation": "GIVEN CJ [CJ.state = Paused]\nWHEN ?move_to_waiting.cj [cj.id = CJ.id ∧ CJ.state = Paused ∧ ¬is_completed(CJ)] CJ := cj, CJ.state := Waiting, WJL := add(CJ, WJL)\nTHEN [is_in_list(CJ, WJL) ∧ ¬is_in_list(CJ, PJL)]",
+    "_metrics": {
+      "translation_time": 2.54,
+      "timestamp": "2026-01-06 16:43:24"
+    }
   },
   {
     "id": 7,
@@ -67,7 +91,11 @@
     "when": "the operator moves the controller job to the scheduled jobs",
     "then": "the controller job is in the scheduled jobs",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, WJL)]\nWHEN ?move_to_scheduled.cj [cj.id = CJ.id] SJL := add(CJ, SJL)\nTHEN [is_in_list(CJ, SJL)]"
+    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, WJL)]\nWHEN ?move_to_scheduled.cj [cj.id = CJ.id] WJL := remove(CJ, WJL), SJL := add(CJ, SJL)\nTHEN [is_in_list(CJ, SJL)]",
+    "_metrics": {
+      "translation_time": 2.4,
+      "timestamp": "2026-01-06 16:43:26"
+    }
   },
   {
     "id": 8,
@@ -77,7 +105,11 @@
     "when": "the printer starts printing the controller job AND the printer completes printing the controller job",
     "then": "there is a printed output AND the printed output is a hard copy of the controller job",
     "complexity": "complex",
-    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, SJL)]\nWHEN !printstart.cj [cj.id = CJ.id ∧ cj.state = Printing] CJ.state := cj.state\n!printcomplete.cj [cj.id = CJ.id ∧ cj.state = Completed] PrintOutput := hard_copy(CJ)\nTHEN [PrintOutput = hard_copy(CJ)]"
+    "ibdd_representation": "GIVEN CJ, PO [is_in_list(CJ, SJL)]\nWHEN !printstart.cj [cj.id = CJ.id ∧ cj.state = Printing] CJ.state := cj.state\n!printcomplete.cj [cj.id = CJ.id ∧ cj.state = Completed] CJ.state := cj.state\nTHEN !output.po,cj [po.job_id = CJ.id ∧ po.kind = HardCopy] PO := po\n[exists(PO) ∧ PO.job_id = CJ.id ∧ PO.kind = HardCopy]",
+    "_metrics": {
+      "translation_time": 3.67,
+      "timestamp": "2026-01-06 16:43:30"
+    }
   },
   {
     "id": 9,
@@ -87,7 +119,11 @@
     "when": "I enter the numbers 5 and 7 and choose addition",
     "then": "the calculator displays the result as 12",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = 5 ∧ n2 = 7] result := n1 + n2\nTHEN !display.result [result = 12]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.a,b,op [a = 5 ∧ b = 7 ∧ op = Add] A := a, B := b, OP := op\n!compute.res [res = add(A, B) ∧ OP = Add] RES := res\nTHEN [RES = 12]",
+    "_metrics": {
+      "translation_time": 3.24,
+      "timestamp": "2026-01-06 16:43:33"
+    }
   },
   {
     "id": 10,
@@ -97,7 +133,11 @@
     "when": "I enter the numbers 10 and 3 and choose subtraction",
     "then": "the calculator displays the result as 7",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = 10 ∧ n2 = 3] result := n1 - n2\nTHEN !display.result [result = 7]"
+    "ibdd_representation": "GIVEN A, B, R [is_ready(CALC)]\nWHEN ?enter_numbers.a,b [a = 10 ∧ b = 3] A := a, B := b\n?choose_op.op [op = Subtraction] OP := op, R := A - B\nTHEN [R = 7]",
+    "_metrics": {
+      "translation_time": 2.74,
+      "timestamp": "2026-01-06 16:43:36"
+    }
   },
   {
     "id": 11,
@@ -107,7 +147,11 @@
     "when": "I enter the numbers 4 and 6 and choose multiplication",
     "then": "the calculator displays the result as 24",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = 4 ∧ n2 = 6] result := n1 * n2\nTHEN !display.result [result = 24]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.a,b,op [a = 4 ∧ b = 6 ∧ op = Mul] A := a, B := b, OP := op\n!compute.res [A = 4 ∧ B = 6 ∧ OP = Mul ∧ res = A * B] RES := res\nTHEN [RES = 24]",
+    "_metrics": {
+      "translation_time": 2.94,
+      "timestamp": "2026-01-06 16:43:39"
+    }
   },
   {
     "id": 12,
@@ -117,7 +161,11 @@
     "when": "I enter the numbers 20 and 4 and choose division",
     "then": "the calculator displays the result as 5",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = 20 ∧ n2 = 4] result := n1 / n2\nTHEN !display.result [result = 5]"
+    "ibdd_representation": "GIVEN A,B,R [is_ready(CALC)]\nWHEN ?enter_numbers.a,b [a = 20 ∧ b = 4] A := a, B := b\n?choose_op.op [op = Div] OP := op\nTHEN !display.r [r = (A / B) ∧ B ≠ 0] R := r\n[R = 5]",
+    "_metrics": {
+      "translation_time": 2.9,
+      "timestamp": "2026-01-06 16:43:41"
+    }
   },
   {
     "id": 13,
@@ -127,7 +175,11 @@
     "when": "I enter the number 5 and add 3 and then add 2",
     "then": "the calculator displays the result as 10",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n [n = 5] total := n\n?add.n [n = 3] total := total + n\n?add.n [n = 2] total := total + n\nTHEN !display.total [total = 10]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.n [n = 5] ACC := n\n?add.n [n = 3] ACC := ACC + n\n?add.n [n = 2] ACC := ACC + n\nTHEN !display.res [res = ACC] OUT := res\n[OUT = 10]",
+    "_metrics": {
+      "translation_time": 3.2,
+      "timestamp": "2026-01-06 16:43:45"
+    }
   },
   {
     "id": 14,
@@ -137,7 +189,11 @@
     "when": "I enter the number 80 and calculate 25 percent",
     "then": "the calculator displays the result as 20",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n [n = 80] percentage := n * 0.25\nTHEN !display.percentage [percentage = 20]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.n [n = 80] N := n\n?percent.pct [pct = 25] PCT := pct, RES := (N * PCT) / 100\nTHEN [display = RES ∧ RES = 20]",
+    "_metrics": {
+      "translation_time": 2.59,
+      "timestamp": "2026-01-06 16:43:47"
+    }
   },
   {
     "id": 15,
@@ -147,7 +203,11 @@
     "when": "I enter the number 9 and choose square operation",
     "then": "the calculator displays the result as 81",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n [n = 9] result := n^2\nTHEN !display.result [result = 81]"
+    "ibdd_representation": "GIVEN N, RES [is_ready(CALC)]\nWHEN ?enter.n [n = 9] N := n\n?choose.op [op = Square] true\nTHEN !display.res [res = N ^ 2] RES := res\n[RES = 81]",
+    "_metrics": {
+      "translation_time": 2.65,
+      "timestamp": "2026-01-06 16:43:50"
+    }
   },
   {
     "id": 16,
@@ -157,7 +217,11 @@
     "when": "I enter the number 16 and choose square root operation",
     "then": "the calculator displays the result as 4",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n [n = 16] result := sqrt(n)\nTHEN !display.result [result = 4]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.n [n = 16] N := n\n?choose_op.op [op = Sqrt] OP := op\nTHEN !display.res [res = sqrt(N)] RES := res\n[RES = 4]",
+    "_metrics": {
+      "translation_time": 2.38,
+      "timestamp": "2026-01-06 16:43:52"
+    }
   },
   {
     "id": 17,
@@ -167,7 +231,11 @@
     "when": "I enter 5 add 3 and then multiply by 2",
     "then": "the calculator displays the result as 16",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n [n = 5] total := n\n?add.n [n = 3] total := total + n\n?multiply.n [n = 2] total := total * n\nTHEN !display.total [total = 16]"
+    "ibdd_representation": "GIVEN RES [is_ready(CALC)]\nWHEN ?enter_add.a,b [a = 5 ∧ b = 3] RES := a + b\n?enter_multiply.res,f [res = RES ∧ f = 2] RES := res * f\nTHEN [RES = 16]",
+    "_metrics": {
+      "translation_time": 2.6,
+      "timestamp": "2026-01-06 16:43:55"
+    }
   },
   {
     "id": 18,
@@ -177,7 +245,11 @@
     "when": "I enter the numbers 8 and 12 and choose average",
     "then": "the calculator displays the result as 10",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = 8 ∧ n2 = 12] average := (n1 + n2) / 2\nTHEN !display.average [average = 10]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.a,b,op [a = 8 ∧ b = 12 ∧ op = Average] A := a, B := b, OP := op\nTHEN !display.res [res = avg(A, B) ∧ res = 10] RES := res\n[RES = 10]",
+    "_metrics": {
+      "translation_time": 2.55,
+      "timestamp": "2026-01-06 16:43:57"
+    }
   },
   {
     "id": 19,
@@ -187,7 +259,11 @@
     "when": "I clear the calculator and then enter 7 and add 3",
     "then": "the calculator displays the result as 10",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN [display = 42]\nWHEN ?clear [true] display := 0\n?enter.n [n = 7] display := n\n?add.n [n = 3] display := display + n\nTHEN !display.display [display = 10]"
+    "ibdd_representation": "GIVEN [DISP = 42]\nWHEN ?clear [true] DISP := 0\n?enter.n [n = 7] DISP := n\n?add.n [n = 3] DISP := DISP + n\nTHEN [DISP = 10]",
+    "_metrics": {
+      "translation_time": 1.81,
+      "timestamp": "2026-01-06 16:43:59"
+    }
   },
   {
     "id": 20,
@@ -197,7 +273,11 @@
     "when": "I enter the numbers -5 and -3 and choose addition",
     "then": "the calculator displays the result as -8",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = -5 ∧ n2 = -3] result := n1 + n2\nTHEN !display.result [result = -8]"
+    "ibdd_representation": "GIVEN A,B,OP [is_ready(CALC)]\nWHEN ?enter.a,b,op [a = -5 ∧ b = -3 ∧ op = Add] A := a, B := b, OP := op\n!compute.res [res = add(A,B)] RES := res\nTHEN [RES = -8]",
+    "_metrics": {
+      "translation_time": 2.57,
+      "timestamp": "2026-01-06 16:44:02"
+    }
   },
   {
     "id": 21,
@@ -207,7 +287,11 @@
     "when": "I enter the numbers 5 and 12 and choose subtraction",
     "then": "the calculator displays the result as -7",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = 5 ∧ n2 = 12] result := n1 - n2\nTHEN !display.result [result = -7]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.a,b,op [a = 5 ∧ b = 12 ∧ op = Subtraction] A := a, B := b, OP := op\n!compute.res [res = (A - B) ∧ OP = Subtraction] RES := res\nTHEN [RES = -7]",
+    "_metrics": {
+      "translation_time": 2.66,
+      "timestamp": "2026-01-06 16:44:05"
+    }
   },
   {
     "id": 22,
@@ -217,7 +301,11 @@
     "when": "I enter the numbers 3.5 and 2.7 and choose addition",
     "then": "the calculator displays the result as 6.2",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = 3.5 ∧ n2 = 2.7] result := n1 + n2\nTHEN !display.result [result = 6.2]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.a,b,op [a = 3.5 ∧ b = 2.7 ∧ op = Add] A := a, B := b, OP := op\nTHEN !display.res [res = A + B ∧ OP = Add] RES := res\n[RES = 6.2]",
+    "_metrics": {
+      "translation_time": 2.62,
+      "timestamp": "2026-01-06 16:44:07"
+    }
   },
   {
     "id": 23,
@@ -227,7 +315,11 @@
     "when": "I enter the numbers 25 and 0 and choose multiplication",
     "then": "the calculator displays the result as 0",
     "complexity": "simple",
-    "ibdd_representation": "GIVEN [calculator_ready]\nWHEN ?enter.n1,n2 [n1 = 25 ∧ n2 = 0] result := n1 * n2\nTHEN !display.result [result = 0]"
+    "ibdd_representation": "GIVEN [is_ready(CALC)]\nWHEN ?enter.a,b,op [a = 25 ∧ b = 0 ∧ op = Mul] A := a, B := b, OP := op\nTHEN !display.res [res = A * B ∧ OP = Mul] RES := res\n[RES = 0]",
+    "_metrics": {
+      "translation_time": 2.48,
+      "timestamp": "2026-01-06 16:44:10"
+    }
   },
   {
     "id": 24,
@@ -237,7 +329,11 @@
     "when": "the operator cancels the controller job",
     "then": "the controller job is removed from scheduled jobs AND the controller job is not in printed jobs AND the printer stops printing",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?cancel.cj [cj.id = CJ.id] SJL := remove(CJ, SJL), CJ.state := Cancelled\nTHEN [¬is_in_list(CJ, SJL) ∧ ¬is_in_list(CJ, PJL) ∧ CJ.state = Cancelled]"
+    "ibdd_representation": "GIVEN CJ [CJ.state = Printing ∧ is_in_list(CJ, SJL)]\nWHEN ?cancel.cj [cj.id = CJ.id] CJ.state := Cancelled\nTHEN !remove.cj,sjl [cj.id = CJ.id ∧ sjl = SJL] SJL := remove(CJ, SJL)\n!stopprint.cj [cj.id = CJ.id ∧ CJ.state = Cancelled] CJ.state := Stopped\n[¬is_in_list(CJ, SJL) ∧ ¬is_in_list(CJ, PJL) ∧ CJ.state = Stopped]",
+    "_metrics": {
+      "translation_time": 2.87,
+      "timestamp": "2026-01-06 16:44:12"
+    }
   },
   {
     "id": 25,
@@ -247,7 +343,11 @@
     "when": "a paper jam occurs AND the operator clears the paper jam AND the operator resumes printing",
     "then": "the controller job continues printing from the last successful page",
     "complexity": "complex",
-    "ibdd_representation": "GIVEN CJ [CJ.state = Printing ∧ paper_available]\nWHEN !paper_jam [true] CJ.state := Jammed\n?clear_jam [true] CJ.state := Ready\n?resume.cj [cj.id = CJ.id] CJ.state := Printing\nTHEN [CJ.state = Printing ∧ CJ.page = last_successful_page]"
+    "ibdd_representation": "GIVEN CJ [CJ.type = Production ∧ CJ.state = Printing ∧ has_sufficient_paper(PRN) ∧ CJ.last_success_page > 0]\nWHEN !paperjam.cj,page [cj.id = CJ.id ∧ page = CJ.last_success_page + 1] CJ.state := Jammed\n?clear_jam [true] PRN.jam := false\n?resume_print.cj [cj.id = CJ.id ∧ CJ.state = Jammed ∧ PRN.jam = false] CJ.state := Printing\nTHEN [CJ.state = Printing ∧ CJ.current_page = CJ.last_success_page + 1]",
+    "_metrics": {
+      "translation_time": 3.45,
+      "timestamp": "2026-01-06 16:44:16"
+    }
   },
   {
     "id": 26,
@@ -257,24 +357,36 @@
     "when": "the operator submits a high priority job AND marks it as urgent",
     "then": "the high priority job is inserted at the beginning of scheduled jobs",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN [job_count(SJL) = 3]\nWHEN ?submit_high_priority.j [true] SJL := insert_at_beginning(j, SJL)\nTHEN [is_first_in_list(j, SJL)]"
+    "ibdd_representation": "GIVEN HPJ [size(SJL) = 3]\nWHEN ?submit.hpj,sm [hpj.priority = High] HPJ := hpj\n?mark_urgent.hpj [hpj.id = HPJ.id] HPJ.urgent := true\nTHEN !insert_beginning.hpj,sjl [hpj.id = HPJ.id ∧ sjl = SJL] SJL := add_first(HPJ, SJL)\n[is_first(HPJ, SJL)]",
+    "_metrics": {
+      "translation_time": 3.51,
+      "timestamp": "2026-01-06 16:44:19"
+    }
   },
   {
     "id": 27,
+    "domain": "printer",
+    "title": "Concurrent pause requests",
     "given": "a controller job is printing",
     "when": "two operators attempt to pause the same controller job simultaneously",
     "then": "the controller job is paused only once AND both operators receive confirmation",
-    "ibdd_representation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?pause_cj_op1 [cj.id = CJ.id] CJ.state := Paused\n?pause_cj_op2 [cj.id = CJ.id] true\nTHEN [CJ.state = Paused ∧ confirmation_sent(op1) ∧ confirmation_sent(op2)]"
+    "complexity": "complex",
+    "ibdd_representation": "GIVEN CJ [CJ.state = Printing]\nWHEN ?pause_req.cj,op1 [cj.id = CJ.id ∧ op1.id = OP1.id] true\n?pause_req.cj,op2 [cj.id = CJ.id ∧ op2.id = OP2.id] true\nTHEN !pause.cj [cj.id = CJ.id ∧ CJ.state = Printing] CJ.state := Paused\n!pause_confirm.op1,cj [op1.id = OP1.id ∧ cj.id = CJ.id ∧ CJ.state = Paused] true\n!pause_confirm.op2,cj [op2.id = OP2.id ∧ cj.id = CJ.id ∧ CJ.state = Paused] true\n[CJ.state = Paused]",
+    "_metrics": {
+      "translation_time": 3.5,
+      "timestamp": "2026-01-06 16:44:23"
+    }
   },
   {
     "id": 28,
-    "domain": "printer",
-    "title": "Auto-cleanup old printed jobs",
     "given": "there are 50 jobs in printed jobs AND printed jobs are older than 30 days",
     "when": "the scheduled cleanup task runs",
     "then": "jobs older than 30 days are removed from printed jobs AND recent jobs remain",
-    "complexity": "medium",
-    "ibdd_representation": "GIVEN [job_count(PJL) = 50 ∧ all_older_than_30_days(PJL)]\nWHEN !cleanup_task [true] PJL := remove_old_jobs(PJL)\nTHEN [only_recent_jobs_remain(PJL)]"
+    "ibdd_representation": "GIVEN PJL [size(PJL) = 50 ∧ allOlderThanDays(PJL, 30)]\nWHEN !scheduledCleanupRun [true] true\nTHEN !removeOldJobs.pjl [pjl = PJL] PJL := removeOlderThanDays(PJL, 30)\n[allNotOlderThanDays(PJL, 30)]",
+    "_metrics": {
+      "translation_time": 2.15,
+      "timestamp": "2026-01-06 16:45:02"
+    }
   },
   {
     "id": 29,
@@ -284,233 +396,24 @@
     "when": "a power failure occurs AND the printer restarts AND the operator resumes the controller job",
     "then": "the controller job continues printing from page 45",
     "complexity": "complex",
-    "ibdd_representation": "GIVEN CJ [CJ.state = Printing ∧ CJ.page = 45]\nWHEN !power_failure [true] CJ.state := Paused\n!restart [true] CJ.state := Ready\n?resume.cj [cj.id = CJ.id] CJ.state := Printing\nTHEN [CJ.state = Printing ∧ CJ.page = 45]"
+    "ibdd_representation": "GIVEN CJ [CJ.state = Printing ∧ CJ.currentPage = 45 ∧ CJ.totalPages = 100]\nWHEN !powerfail.cj [cj.id = CJ.id] CJ.state := Paused, CJ.resumePage := CJ.currentPage\n!restart.ctrl [is_running(CTRL)] CTRL := CTRL\n?resume.cj [cj.id = CJ.id ∧ CJ.state = Paused] CJ.state := Printing, CJ.currentPage := CJ.resumePage\nTHEN [CJ.state = Printing ∧ CJ.currentPage = 45]",
+    "_metrics": {
+      "translation_time": 4.72,
+      "timestamp": "2026-01-06 16:44:31"
+    }
   },
   {
     "id": 30,
+    "domain": "printer",
+    "title": "Duplicate job submission detection",
     "given": "a job file with checksum ABC123 is in scheduled jobs",
     "when": "the operator submits the same job file with checksum ABC123",
     "then": "the printer rejects the duplicate AND displays a warning message",
-    "ibdd_representation": "GIVEN JF [checksum(JF) = ABC123 ∧ is_in_list(JF, SJL)]\nWHEN ?submit_jf [checksum(jf) = ABC123] duplicate := true\nTHEN !reject_duplicate [duplicate] !display_warning [duplicate] [duplicate = true]"
-  },
-  {
-    "id": 31,
-    "given": "there are 10 jobs in scheduled jobs",
-    "when": "the operator starts batch printing AND the printer completes all 10 jobs",
-    "then": "all 10 jobs are in printed jobs AND the printer is idle",
-    "ibdd_representation": "GIVEN [job_count(SJL) = 10]\nWHEN ?start_batch_print [true] PJL := PJL + SJL\n!complete_all_jobs [true] SJL := []\nTHEN [job_count(PJL) = 10 ∧ job_count(SJL) = 0 ∧ printer_idle]"
-  },
-  {
-    "id": 32,
-    "domain": "printer",
-    "title": "Emergency stop during printing",
-    "given": "a controller job is printing at 50% completion",
-    "when": "the operator presses the emergency stop button",
-    "then": "the printer immediately stops printing AND the controller job is moved to paused state AND no additional pages are printed",
     "complexity": "medium",
-    "ibdd_representation": "GIVEN CJ [CJ.state = Printing ∧ CJ.completion = 50]\nWHEN ?emergency_stop [true] CJ.state := Paused\nTHEN [CJ.state = Paused ∧ no_additional_pages_printed]"
-  },
-  {
-    "id": 33,
-    "domain": "banking",
-    "title": "Transfer funds between accounts",
-    "given": "account A has balance 1000 AND account B has balance 500",
-    "when": "the customer transfers 300 from account A to account B",
-    "then": "account A has balance 700 AND account B has balance 800 AND a transaction record is created",
-    "complexity": "medium",
-    "ibdd_representation": "GIVEN A, B [A.balance = 1000 ∧ B.balance = 500]\nWHEN ?transfer.amount,from,to [amount = 300 ∧ from = A ∧ to = B] A.balance := A.balance - amount, B.balance := B.balance + amount\nTHEN !create_transaction_record [A.balance = 700 ∧ B.balance = 800] [transaction_record_exists]"
-  },
-  {
-    "id": 34,
-    "domain": "banking",
-    "title": "Concurrent withdrawal attempts",
-    "given": "an account has balance 100",
-    "when": "two withdrawal requests for 80 are processed simultaneously",
-    "then": "only one withdrawal succeeds AND the account has balance 20 AND the other withdrawal is rejected",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN A [A.balance = 100]\nWHEN ?withdraw.amount1 [amount1 = 80] success1 := (A.balance >= amount1)\n?withdraw.amount2 [amount2 = 80] success2 := (A.balance >= amount2)\nTHEN [success1 ∧ ¬success2 ∧ A.balance = 20]"
-  },
-  {
-    "id": 35,
-    "domain": "banking",
-    "title": "Overdraft protection activation",
-    "given": "an account has balance 50 AND overdraft limit 200",
-    "when": "the customer attempts to withdraw 150",
-    "then": "the withdrawal succeeds AND the account balance is -100 AND overdraft fees are applied",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN A [A.balance = 50 ∧ A.overdraft_limit = 200]\nWHEN ?withdraw.amount [amount = 150] success := (A.balance + A.overdraft_limit >= amount)\nTHEN !apply_overdraft_fees [success] A.balance := A.balance - amount\n[A.balance = -100 ∧ overdraft_fees_applied]"
-  },
-  {
-    "id": 36,
-    "domain": "banking",
-    "title": "Failed transfer rollback",
-    "given": "account A has balance 1000 AND account B exists",
-    "when": "a transfer of 500 from account A to account B is initiated AND the transfer fails after debiting account A",
-    "then": "account A is restored to balance 1000 AND account B remains unchanged AND an error is logged",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN A, B [A.balance = 1000 ∧ account_exists(B)]\nWHEN ?transfer.amount,from,to [amount = 500 ∧ from = A ∧ to = B] A.balance := A.balance - amount\n!transfer_fail [true] A.balance := A.balance + amount\nTHEN !log_error [true] [A.balance = 1000 ∧ account_unchanged(B)]"
-  },
-  {
-    "id": 37,
-    "domain": "banking",
-    "title": "Detect fraudulent transaction pattern",
-    "given": "an account had 3 transactions in the last hour from different countries",
-    "when": "a fourth transaction is attempted from another country",
-    "then": "the transaction is flagged for review AND the account is temporarily locked AND the customer is notified",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN A [transaction_count(A) = 3 ∧ different_countries]\nWHEN ?transaction [new_country] flag := (new_country ≠ A.last_country)\nTHEN !flag_for_review [flag] !lock_account [flag] !notify_customer [flag] [flag = true]"
-  },
-  {
-    "id": 38,
-    "domain": "banking",
-    "title": "Schedule recurring payment",
-    "given": "an account has sufficient balance",
-    "when": "the customer schedules a monthly payment of 200 starting next month",
-    "then": "a recurring payment is created AND the payment executes on the scheduled date each month",
-    "complexity": "medium",
-    "ibdd_representation": "GIVEN A [A.balance >= 200]\nWHEN ?schedule_payment.amount,frequency [amount = 200 ∧ frequency = monthly] recurring_payment := create_recurring_payment(A, amount, frequency)\nTHEN !execute_payment [recurring_payment] [payment_executed_monthly]"
-  },
-  {
-    "id": 39,
-    "domain": "banking",
-    "title": "Insufficient funds for scheduled payment",
-    "given": "a recurring payment of 500 is scheduled AND the account has balance 300",
-    "when": "the payment date arrives",
-    "then": "the payment fails AND the customer is notified AND a retry is scheduled",
-    "complexity": "medium",
-    "ibdd_representation": "GIVEN A [A.balance = 300 ∧ recurring_payment_exists(500)]\nWHEN !payment_date [true] success := (A.balance >= 500)\nTHEN !notify_customer [¬success] !schedule_retry [¬success] [success = false]"
-  },
-  {
-    "id": 40,
-    "given": "a transaction of 250 was completed 2 hours ago",
-    "when": "the customer disputes the transaction AND the dispute is approved",
-    "then": "the transaction is reversed AND the account balance is restored AND both parties are notified",
-    "ibdd_representation": "GIVEN T [T.amount = 250 ∧ T.completed_time = twoHoursAgo]\nWHEN ?dispute_transaction_t [t = T] approval := approve_dispute(t)\nTHEN !reverse_transaction [approval] !notify_parties [approval] [balance_restored ∧ approval = true]"
-  },
-  {
-    "id": 41,
-    "domain": "ecommerce",
-    "title": "Place order with insufficient stock",
-    "given": "product X has 5 units in stock",
-    "when": "a customer orders 10 units of product X",
-    "then": "the order is partially fulfilled with 5 units AND the remaining 5 units are backordered",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN PX [PX.stock = 5]\nWHEN ?order.px,qty [px = PX ∧ qty = 10] fulfilled_qty := min(PX.stock, qty)\nTHEN !fulfill_order [fulfilled_qty] !backorder [qty - fulfilled_qty] [fulfilled_qty = 5 ∧ backordered_qty = 5]"
-  },
-  {
-    "id": 42,
-    "domain": "ecommerce",
-    "title": "Apply discount code after cart modification",
-    "given": "a cart has 3 items totaling 150 AND a discount code for 20% is applied",
-    "when": "the customer adds another item worth 50 AND proceeds to checkout",
-    "then": "the discount applies to the new total of 200 AND the final price is 160",
-    "complexity": "medium",
-    "ibdd_representation": "GIVEN C [C.total = 150 ∧ C.discount = 0.2]\nWHEN ?add_item.c,item_price [item_price = 50] C.total := C.total + item_price\n!checkout [true] final_price := C.total * (1 - C.discount)\nTHEN [C.total = 200 ∧ final_price = 160]"
-  },
-  {
-    "id": 43,
-    "given": "a cart has a discount code applied that expires in 5 minutes",
-    "when": "the customer completes checkout 10 minutes later",
-    "then": "the discount is removed AND the customer is notified AND charged the full price",
-    "ibdd_representation": "GIVEN C [C_discount_code_expiry = 5_minutes]\nWHEN !complete_checkout [time_elapsed = 10_minutes] discount_valid := false\nTHEN !remove_discount [¬discount_valid] !notify_customer [¬discount_valid] [charged_full_price]"
-  },
-  {
-    "id": 44,
-    "given": "product Y has 1 unit in stock",
-    "when": "two customers attempt to purchase product Y simultaneously",
-    "then": "only one order succeeds AND the other customer is notified that the item is out of stock",
-    "ibdd_representation": "GIVEN PY [PY.stock = 1]\nWHEN ?purchase_py_cust1 [py = PY] success1 := (PY.stock > 0)\n?purchase_py_cust2 [py = PY] success2 := (PY.stock > 0)\nTHEN [success1 ∧ ¬success2 ∧ notify_out_of_stock(cust2)]"
-  },
-  {
-    "id": 45,
-    "domain": "ecommerce",
-    "title": "Cancel order after partial shipment",
-    "given": "an order with 3 items has 1 item already shipped",
-    "when": "the customer cancels the order",
-    "then": "the 2 unshipped items are cancelled AND the shipped item cannot be cancelled AND a partial refund is processed",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN O [O.items = 3 ∧ O.shipped_items = 1]\nWHEN ?cancel_order.o [o = O] unshipped_items := O.items - O.shipped_items\nTHEN !cancel_unshipped [unshipped_items] !process_partial_refund [true] [unshipped_items = 2 ∧ shipped_items = 1]"
-  },
-  {
-    "id": 46,
-    "given": "a customer purchased an item 35 days ago AND the return window is 30 days",
-    "when": "the customer reports the item as defective with proof",
-    "then": "an exception is created AND the return is approved AND a refund or replacement is offered",
-    "ibdd_representation": "GIVEN I [I.purchase_date = thirtyFiveDaysAgo ∧ return_window = 30_days]\nWHEN ?report_defect_i,proof [i = I ∧ proof = valid] exception_created := true\nTHEN !approve_return [exception_created] !offer_refund_or_replacement [exception_created] [exception_created]"
-  },
-  {
-    "id": 47,
-    "domain": "ecommerce",
-    "title": "Dynamic pricing based on demand",
-    "given": "product Z has high demand with 100 views in the last hour",
-    "when": "another customer views product Z",
-    "then": "the price may increase based on demand algorithm AND the customer sees the updated price",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN PZ [PZ.views = 100]\nWHEN ?view.pz [pz = PZ] new_price := calculate_price(PZ)\nTHEN !update_price [true] !display_price [new_price] [price_updated]"
-  },
-  {
-    "id": 48,
-    "given": "a customer added items to cart 3 days ago but did not checkout",
-    "when": "the automated recovery system runs",
-    "then": "the customer receives a reminder email AND a special discount code is offered",
-    "ibdd_representation": "GIVEN C [C.last_activity = threeDaysAgo ∧ C.checked_out = false]\nWHEN !recovery_system_run [true] reminder_sent := true\nTHEN !send_reminder_email [reminder_sent] !offer_discount_code [reminder_sent] [reminder_sent]"
-  },
-  {
-    "id": 49,
-    "domain": "ecommerce",
-    "title": "Split payment across multiple methods",
-    "given": "an order total is 500",
-    "when": "the customer pays 200 with a gift card AND 300 with a credit card",
-    "then": "both payments are processed AND the order is confirmed",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN O [O.total = 500]\nWHEN ?pay_with_gift_card.amount [amount = 200] gift_card_payment := true\n?pay_with_credit_card.amount [amount = 300] credit_card_payment := true\nTHEN !process_payment [gift_card_payment ∧ credit_card_payment] !confirm_order [true] [order_confirmed]"
-  },
-  {
-    "id": 50,
-    "given": "doctor A has appointments at 10:00 and 11:00",
-    "when": "a patient requests an appointment at 10:30",
-    "then": "the system suggests alternative times AND the appointment is not scheduled",
-    "ibdd_representation": "GIVEN DA [DA.appointments = 10:00 ∧ DA.appointments = 11:00]\nWHEN ?request_appointment_time [time = 10:30] conflict := check_availability(DA, time)\nTHEN !suggest_alternatives [conflict] [appointment_not_scheduled]"
-  },
-  {
-    "id": 51,
-    "given": "a patient has a documented allergy to penicillin",
-    "when": "a doctor prescribes amoxicillin (a penicillin derivative)",
-    "then": "the system displays a critical allergy warning AND the prescription is blocked until acknowledged",
-    "ibdd_representation": "GIVEN P [P.allergies = penicillin]\nWHEN ?prescribe_medication [medication = amoxicillin] allergy_warning := check_allergy(P, medication)\nTHEN !display_allergy_warning [allergy_warning] !block_prescription [allergy_warning] [allergy_warning]"
-  },
-  {
-    "id": 52,
-    "domain": "healthcare",
-    "title": "Access patient records with privacy restrictions",
-    "given": "a patient has flagged their records as sensitive",
-    "when": "a nurse attempts to access the patient records",
-    "then": "access is logged AND requires additional authentication AND the patient may be notified",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN PR [PR.sensitivity_flag = true]\nWHEN ?access_records.nurse [true] access_granted := require_authentication(nurse)\nTHEN !log_access [true] !notify_patient [true] [access_granted]"
-  },
-  {
-    "id": 53,
-    "given": "an operating room is scheduled for a routine surgery at 14:00",
-    "when": "an emergency case arrives at 13:45",
-    "then": "the routine surgery is rescheduled AND the emergency case takes priority AND affected parties are notified",
-    "ibdd_representation": "GIVEN OR [OR.scheduled_surgery = 14:00]\nWHEN !emergency_case_arrival [arrival_time = 13:45] reschedule := true\nTHEN !reschedule_surgery [reschedule] !notify_affected_parties [true] [emergency_priority]"
-  },
-  {
-    "id": 54,
-    "domain": "healthcare",
-    "title": "Conflicting diagnoses from multiple doctors",
-    "given": "doctor A diagnosed condition X AND doctor B diagnosed condition Y for the same symptoms",
-    "when": "the patient requests a third opinion",
-    "then": "a specialist consultation is scheduled AND both previous diagnoses are made available",
-    "complexity": "complex",
-    "ibdd_representation": "GIVEN D1, D2 [D1.diagnosis = X ∧ D2.diagnosis = Y]\nWHEN ?request_opinion.patient [true] consultation_scheduled := true\nTHEN !schedule_specialist_consultation [consultation_scheduled] !make_diagnoses_available [consultation_scheduled] [consultation_scheduled]"
-  },
-  {
-    "id": 55,
-    "given": "a patient is taking medication A",
-    "when": "a doctor prescribes medication B that interacts with medication A",
-    "then": "the system alerts about the interaction AND suggests alternatives",
-    "ibdd_representation": "GIVEN P [P.medications = A]\nWHEN ?prescribe_medication [medication = B] interaction_detected := check_interaction(P, medication)\nTHEN !alert_interaction [interaction_detected] !suggest_alternatives [interaction_detected] [interaction_detected]"
+    "ibdd_representation": "GIVEN JF [JF.checksum = ABC123 ∧ is_in_list(JF, SJL)]\nWHEN ?submit.jf [jf.checksum = ABC123] JF := jf\nTHEN !reject.jf [jf.checksum = JF.checksum ∧ is_in_list(JF, SJL)] true\n!display_warning.msg [msg = DuplicateJob] WARN := msg\n[is_in_list(JF, SJL) ∧ WARN = DuplicateJob]",
+    "_metrics": {
+      "translation_time": 3.89,
+      "timestamp": "2026-01-06 16:44:35"
+    }
   }
 ]
