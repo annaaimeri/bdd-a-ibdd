@@ -14,7 +14,7 @@
         "Siempre encierra las guardas en corchetes '[...]' después de una declaración 'GIVEN'.",
         "Verifica que cada declaración 'GIVEN' siga el formato: 'GIVEN' Declaration '[' Guard ']'",
         "Revisa el uso de corchetes en las guardas para asegurar que no falten."
-      ] // TODO: Hay que opasarle el escenario completo. O todos?
+      ]
     }
   },
   {

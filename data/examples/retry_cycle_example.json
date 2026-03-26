@@ -1,0 +1,15 @@
+[
+  {
+    "case_id": 3,
+    "original_bdd": {
+      "given": "the printer controller is running",
+      "when": "the operator restarts the printer controller",
+      "then": "the printed jobs clean up is executed"
+    },
+    "previous_translation": "GIVEN [is_running(CTRL)]\nWHEN ?restart\n  true\n  (no assignment)\nTHEN !cleanup\n  true\n  PJL := empty(PJL)\n  [is_empty(PJL)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^",
+    "error_type": "Asignaciones faltantes",
+    "correction_suggestion": "Completar el switch con una condición explícita entre corchetes y una asignación válida de estado.",
+    "corrected_translation": "GIVEN CTRL [is_running(CTRL)]\nWHEN ?restart.ctrl [ctrl = CTRL] CTRL.state := Restarting\nTHEN !cleanup.pjl [true] PJL := empty(PJL)\n[is_empty(PJL)]"
+  }
+]

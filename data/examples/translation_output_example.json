@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "domain": "printer",
+    "title": "Submit job to printer",
+    "given": "a job file",
+    "when": "the operator submits the job file using Submission method",
+    "then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type",
+    "complexity": "medium",
+    "ibdd_representation": "GIVEN JF, SM, CJ, JT [true]\nWHEN ?submit.jf,sm [true] JF := jf, SM := sm\nTHEN !append.cj,sjl [cj = CJ ∧ sjl = SJL ∧ JT = getJobType(SM) ∧ CJ.type = JT] SJL := add(CJ, SJL)\n[is_in_list(CJ, SJL) ∧ CJ.type = JT]",
+    "_metrics": {
+      "translation_time": 2.98,
+      "timestamp": "2026-01-06 16:43:09"
+    }
+  },
+  {
+    "id": 2,
+    "domain": "printer",
+    "title": "Complete printing moves job to printed",
+    "given": "a controller job is in the scheduled jobs AND the controller job is a production job",
+    "when": "the printer starts printing the controller job AND the printer completes printing the controller job",
+    "then": "the controller job is in the printed jobs",
+    "complexity": "medium",
+    "ibdd_representation": "GIVEN CJ [is_in_list(CJ, SJL) ∧ CJ.type = Production]\nWHEN !printstart.cj [cj.id = CJ.id ∧ cj.state = Printing] CJ.state := cj.state\n!printcomplete.cj [cj.id = CJ.id ∧ cj.state = Completed] CJ.state := cj.state, PJL := add(CJ, PJL)\nTHEN [is_in_list(CJ, PJL)]",
+    "_metrics": {
+      "translation_time": 5.66,
+      "timestamp": "2026-01-06 16:43:15"
+    }
+  },
+  {
+    "id": 3,
+    "domain": "printer",
+    "title": "Restart cleanup",
+    "given": "the printer controller is running",
+    "when": "the operator restarts the printer controller",
+    "then": "the printed jobs clean up is executed",
+    "complexity": "simple",
+    "ibdd_representation": "GIVEN CTRL [is_running(CTRL)]\nWHEN ?restart.ctrl [ctrl = CTRL] CTRL.state := Restarting\nTHEN !cleanup.pjl [true] PJL := empty(PJL)\n[is_empty(PJL)]",
+    "_metrics": {
+      "translation_time": 1.84,
+      "timestamp": "2026-01-06 16:43:17"
+    }
+  }
+]

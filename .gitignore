@@ -3,7 +3,12 @@ __pycache__/
 venv/
 .DS_Store
 .env
+.env.*
+!.env.example
 *.log
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
 /.idea/copilot.data.migration.agent.xml
 /.idea/copilot.data.migration.ask.xml
 /.idea/copilot.data.migration.ask2agent.xml
@@ -19,3 +24,20 @@ venv/
 /documentacion/
 /documentación/
 /documentación/
+
+# Generated outputs
+/data/*_output.json
+/data/*_validation.json
+/data/*_metrics.json
+/data/error_explanations.json
+/data/output.json
+/data/output_fixed.json
+/data/parsed_ibdd_results.json
+/data/parsed_ibdd_results.csv
+/data/run_dataset_es_output.json
+/data/translation_output.json
+/data/eval_*/
+
+# Keep public examples
+!/data/examples/
+!/data/examples/*.json

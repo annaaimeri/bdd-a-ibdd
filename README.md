@@ -1,25 +1,23 @@
 # BDD to IBDD NLP
 
-Guía para levantar el proyecto localmente y ejecutar el pipeline completo de traducción BDD -> IBDD.
+Este repositorio acompaña la implementación de mi trabajo final para la Licenciatura en Ciencias de la Computación de la Facultad de Matemática, Astronomía, Física y Computación en la Universidad Nacional de Córdoba. El objetivo es traducir escenarios BDD expresados en JSON a representaciones IBDD usando un LLM, validar la sintaxis de las traducciones y registrar los resultados del proceso.
 
-## Objetivo
+El pipeline principal:
 
-Tomar un dataset JSON con escenarios BDD (`given`, `when`, `then`), traducirlo a IBDD con un LLM, validar la sintaxis con el parser y guardar resultados intermedios/finales en JSON.
+1. lee un dataset de escenarios BDD
+2. genera una traducción IBDD para cada caso
+3. valida la sintaxis de la salida
+4. si hay errores, intenta corregirlos en rondas sucesivas
+5. guarda traducciones, validaciones y métricas en archivos JSON
 
 ## Requisitos
 
-- Tener Python 3.10+ instalado
-- Tener acceso a un proveedor LLM:
+- Python 3.10 o superior
+- Un proveedor LLM configurado:
   - `openai` con `OPENAI_API_KEY`, o
-  - `ollama` corriendo localmente con un modelo descargado.
+  - `ollama` corriendo localmente
 
-## Instalar dependencias
-
-1. Clonar el repositorio.
-2. Entrar al directorio del proyecto.
-3. Crear entorno virtual.
-4. Activar entorno virtual.
-5. Instalar dependencias.
+## Preparar el entorno
 
 ```bash
 git clone <URL_DEL_REPO>
@@ -29,17 +27,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Configurar credenciales / proveedor
+## Configuración
 
-### Opción A: OpenAI
+### OpenAI
 
-Definir `OPENAI_API_KEY` por variable de entorno:
+Podés exportar la variable:
 
 ```bash
 export OPENAI_API_KEY="tu_api_key"
 ```
 
-O crear `.env` en la raíz del proyecto:
+O usar un archivo `.env` en la raíz del proyecto:
 
 ```env
 OPENAI_API_KEY=tu_api_key
@@ -47,11 +45,9 @@ LLM_PROVIDER=openai
 LLM_MODEL=gpt-4o
 ```
 
-### Opción B: Ollama
+### Ollama
 
-Tener Ollama levantado y un modelo disponible. Definir proveedor/modelo por CLI o `.env`.
-
-Ejemplo `.env`:
+Ejemplo de `.env`:
 
 ```env
 LLM_PROVIDER=ollama
@@ -59,195 +55,132 @@ LLM_MODEL=llama3.3:70b
 LLM_BASE_URL=http://localhost:11434
 ```
 
-## Preparar dataset de entrada (JSON)
+## Datasets incluidos
 
-El pipeline espera un arreglo JSON de casos. Cada caso debe tener, como mínimo:
+Para probar una ejecución recomiendo usar los ejemplos chicos:
 
-- `id`
-- `domain`
-- `title`
-- `given`
-- `when`
-- `then`
+- `data/examples/small_dataset.json`
+- `data/examples/medium_dataset.json`
 
-Se puede agregar `complexity` u otros metadatos; el traductor los preserva.
+El repositorio también incluye otros datasets más amplios usados durante el desarrollo y la evaluación.
 
-### Ejemplo mínimo de dataset
+También se incluyen ejemplos de salida para inspección rápida:
 
-```json
-[
-  {
-    "id": 1,
-    "domain": "printer",
-    "title": "Submit job to printer",
-    "given": "a job file",
-    "when": "the operator submits the job file using Submission method",
-    "then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type",
-    "complexity": "medium"
-  }
-]
-```
+- `data/examples/translation_output_example.json`
+- `data/examples/error_explanations_example.json`
+- `data/examples/retry_cycle_example.json`
 
-Archivos de ejemplo ya incluidos:
+## Ejecutar el pipeline completo
 
-- `data/Dataset.json`
-- `data/Dataset_20.json`
-- `data/Dataset_ES.json`
-
-## Ejecutar pipeline completo (recomendado)
-
-Usar `src/main.py` desde la raíz del repo.
-
-### Ejecución básica
+### Primera corrida recomendada
 
 ```bash
-python3 src/main.py data/Dataset_20.json docs/PROMPT_EN.md
+python3 src/main.py data/examples/small_dataset.json docs/PROMPT_EN.md
 ```
 
-Eso ejecuta:
+Este comando usa por defecto:
 
-1. Traducción BDD -> IBDD
-2. Validación sintáctica
-3. Ciclo de corrección iterativa
-4. Guardado de métricas
+- traducciones en `data/output.json`
+- validación en `data/parsed_ibdd_results.json`
+- explicaciones de error en `data/error_explanations.json`
 
-### Ejecución indicando salidas
+### Guardar los resultados en archivos propios
 
 ```bash
-python3 src/main.py data/Dataset_20.json docs/PROMPT_EN.md \
+python3 src/main.py data/examples/small_dataset.json docs/PROMPT_EN.md \
   -t data/mi_traduccion.json \
   -v data/mi_validacion.json \
   --max-rounds 2 \
   --workers 1
 ```
 
-### Ejecución con Ollama
+En este caso, además, se genera:
+
+- `data/mi_traduccion_metrics.json`
+
+### Correr el ejemplo mediano
 
 ```bash
-python3 src/main.py data/Dataset_20.json docs/PROMPT_EN.md \
+python3 src/main.py data/examples/medium_dataset.json docs/PROMPT_EN.md
+```
+
+### Correr con Ollama
+
+```bash
+python3 src/main.py data/examples/small_dataset.json docs/PROMPT_EN.md \
   --provider ollama \
   --model llama3.3:70b \
   --base-url http://localhost:11434
 ```
 
+## Dónde revisar los resultados
+
+Los archivos principales son:
+
+- `data/output.json`: traducciones IBDD generadas
+- `data/parsed_ibdd_results.json`: resultado de validación por caso
+- `data/error_explanations.json`: explicación de los errores detectados, si hubo fallos
+
+Si querés ver ejemplos de salida sin ejecutar el pipeline, podés revisar:
+
+- `data/examples/translation_output_example.json`
+- `data/examples/error_explanations_example.json`
+- `data/examples/retry_cycle_example.json`
+
+Si usaste `-t data/mi_traduccion.json`, también conviene revisar:
+
+- `data/mi_traduccion_metrics.json`: tiempos, rondas y resumen de la corrida
+
+## Qué contiene cada salida
+
+En el archivo de traducción, cada caso conserva su estructura original y agrega:
+
+- `ibdd_representation`: traducción IBDD generada
+- `_metrics`: tiempo y metadatos de la traducción
+
+En el archivo de validación, cada caso incluye:
+
+- `valid`: indica si la traducción pasó la validación
+- `error`: mensaje de error, si falló
+
+## Prompts disponibles
+
+- `docs/PROMPT_EN.md`
+- `docs/PROMPT_ES.md`
+- `docs/PROMPT_EN_RETRY.md`
+- `docs/PROMPT_ES_RETRY.md`
+
+El pipeline detecta automáticamente el prompt de reintento según el idioma del prompt principal.
+
 ## Parámetros principales de `src/main.py`
 
-- `dataset` (posicional): ruta al dataset JSON.
-- `prompt` (posicional): ruta al prompt (`.md`).
-- `-t`, `--translation-output`: JSON de traducciones (default `data/output.json`).
-- `-v`, `--validation-output`: JSON de validación (default `data/parsed_ibdd_results.json`).
-- `-k`, `--api-key`: clave API (opcional).
-- `-m`, `--model`: modelo a usar.
-- `--provider`: `openai` u `ollama`.
-- `--base-url`: URL base opcional del proveedor.
-- `--max-rounds`: cantidad máxima de rondas de corrección.
-- `--workers`: paralelismo para llamadas al LLM.
+- `dataset`: ruta al dataset JSON de entrada
+- `prompt`: ruta al prompt principal
+- `-t`, `--translation-output`: archivo de salida de traducciones
+- `-v`, `--validation-output`: archivo de salida de validación
+- `-k`, `--api-key`: clave API opcional
+- `--provider`: `openai` u `ollama`
+- `--model`: modelo a utilizar
+- `--base-url`: URL base opcional del proveedor
+- `--max-rounds`: máximo de rondas de corrección
+- `--workers`: cantidad de workers para llamadas al LLM
 
-## Archivos que genera el pipeline
-
-### 1. Traducciones (`translation-output`)
-
-Archivo JSON con la estructura original + `ibdd_representation` + `_metrics`.
-
-Ejemplo:
-
-```json
-[
-  {
-    "id": 1,
-    "domain": "printer",
-    "title": "Submit job to printer",
-    "given": "a job file",
-    "when": "the operator submits the job file using Submission method",
-    "then": "the printer appends a new controller job to the scheduled jobs AND the controller job is of type Job type",
-    "complexity": "medium",
-    "ibdd_representation": "GIVEN JF, SM [true]\\nWHEN ?submit.jf,sm [true] JF := jf, SM := sm\\nTHEN [true]",
-    "_metrics": {
-      "translation_time": 2.98,
-      "timestamp": "2026-01-06 16:43:09"
-    }
-  }
-]
-```
-
-### 2. Validación sintáctica (`validation-output`)
-
-Archivo JSON con resultado por caso (`valid`, `error`, `parsed_result`).
-
-Ejemplo:
-
-```json
-[
-  {
-    "id": 1,
-    "domain": "printer",
-    "title": "Submit job to printer",
-    "valid": true,
-    "error": null,
-    "parsed_result": "GIVEN JF, SM [[]\\nWHEN 1 switches\\nTHEN [[]"
-  }
-]
-```
-
-### 3. Explicaciones de error (si hay fallos)
-
-Archivo por defecto: `data/error_explanations.json` (o el que el pipeline use internamente para la corrida).
-
-Ejemplo:
-
-```json
-[
-  {
-    "case_id": 3,
-    "success": true,
-    "original_bdd": {
-      "given": "the printer controller is running",
-      "when": "the operator restarts the printer controller",
-      "then": "the printed jobs clean up is executed"
-    },
-    "previous_translation": "GIVEN [is_running(CTRL)]\\nWHEN ?restart ...",
-    "parse_error": "No terminal matches ...",
-    "explanation": "El parser esperaba ...",
-    "error_type": "Asignaciones faltantes",
-    "error_location": "Línea 4",
-    "correction_suggestion": "Reemplazar ...",
-    "hints": [
-      "Asegurarse de ..."
-    ]
-  }
-]
-```
-
-### 4. Métricas del pipeline
-
-El pipeline genera un archivo adicional junto a la salida de traducción:
-
-- si `-t data/mi_traduccion.json`, genera `data/mi_traduccion_metrics.json`
-
-Incluye resumen inicial/final, rondas, tiempos y casos fallidos.
-
-## Ejecutar módulos por separado (opcional)
+## Ejecutar módulos por separado
 
 ### Solo traducción
 
 ```bash
-python3 src/translator.py data/Dataset_20.json docs/PROMPT_EN.md \
-  -o data/solo_traduccion.json \
-  --provider openai \
-  --model gpt-4o
+python3 src/translator.py data/examples/small_dataset.json docs/PROMPT_EN.md \
+  -o data/solo_traduccion.json
 ```
 
-### Solo validación sintáctica
-
-Usar el parser sobre un archivo de traducciones (debe tener `ibdd_representation` en cada caso).
+### Solo validación
 
 ```bash
 python3 src/parser.py data/solo_traduccion.json data/solo_validacion.json
 ```
 
-### Solo evaluación (corridas múltiples)
-
-`src/evaluate.py` ejecuta varias corridas y genera resumen JSON + fragmento LaTeX.
+### Evaluación
 
 ```bash
 python3 src/evaluate.py \
@@ -256,33 +189,5 @@ python3 src/evaluate.py \
   --workers 1 \
   --provider openai \
   --model gpt-4o \
-  --configs EN-EN ES-EN \
-  --output-dir data/eval_demo \
-  --latex-out tesis/07_evaluacion/generated_results.tex
+  --configs EN-EN
 ```
-
-## Preparar prompts propios
-
-Para ejecutar el pipeline completo, indicar un prompt `.md` como segundo argumento.
-
-Prompts disponibles:
-
-- `docs/PROMPT_EN.md`
-- `docs/PROMPT_ES.md`
-- `docs/PROMPT_EN_RETRY.md`
-- `docs/PROMPT_ES_RETRY.md`
-
-El pipeline detecta automáticamente el prompt de reintento según el nombre del prompt principal (`_ES` o inglés por defecto).
-
-## Checklist rápido para correr localmente
-
-1. Activar `venv`.
-2. Configurar `.env` o variables (`OPENAI_API_KEY` / `LLM_PROVIDER` / `LLM_MODEL`).
-3. Elegir dataset (`data/Dataset_20.json` para prueba corta).
-4. Elegir prompt (`docs/PROMPT_EN.md` o `docs/PROMPT_ES.md`).
-5. Ejecutar `python3 src/main.py ...`.
-6. Revisar:
-   - traducciones (`*_output.json` o `-t`)
-   - validación (`*_validation.json` o `-v`)
-   - métricas (`*_metrics.json`)
-

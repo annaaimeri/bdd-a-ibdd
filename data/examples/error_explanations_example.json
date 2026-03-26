@@ -1,0 +1,41 @@
+[
+  {
+    "case_id": 3,
+    "success": true,
+    "original_bdd": {
+      "given": "the printer controller is running",
+      "when": "the operator restarts the printer controller",
+      "then": "the printed jobs clean up is executed"
+    },
+    "previous_translation": "GIVEN [is_running(CTRL)]\nWHEN ?restart\n  true\n  (no assignment)\nTHEN !cleanup\n  true\n  PJL := empty(PJL)\n  [is_empty(PJL)]",
+    "parse_error": "No terminal matches 'a' in the current parser context, at line 4 col 5\n\n(no assignment)\n    ^\nExpected one of: \n\t* NEQ\n\t* EQ\n\t* OR_SYMBOL\n\t* MINUS\n\t* PERCENT\n\t* STAR\n\t* DOT\n\t* EQEQ\n\t* PLUS\n\t* COMMA\n\t* AND_SYMBOL\n\t* CIRCUMFLEX\n\t* RPAR\n\t* NEQ_SYMBOL\n\t* SLASH\n\t* OR\n\t* LEQ_SYMBOL\n\t* LPAR\n\t* LT\n\t* GEQ_SYMBOL\n\t* LEQ\n\t* GT\n\t* GEQ\n\t* AND\n",
+    "explanation": "El parser esperaba una asignación después de la condición en el switch, pero encontró '(no assignment)'. Cada switch debe tener una asignación válida.",
+    "error_type": "Asignaciones faltantes",
+    "error_location": "Línea 4, después de '?restart'",
+    "correction_suggestion": "Completa el switch con una condición explícita entre corchetes y una asignación válida de estado. Por ejemplo:\n\n```\nGIVEN CTRL [is_running(CTRL)]\nWHEN ?restart.ctrl [ctrl = CTRL] CTRL.state := Restarting\nTHEN !cleanup.pjl [true] PJL := empty(PJL)\n[is_empty(PJL)]\n```",
+    "hints": [
+      "Asegúrate de que cada switch en la sección WHEN tenga una asignación.",
+      "Revisa que las condiciones estén correctamente encerradas en corchetes.",
+      "Verifica que las asignaciones sean válidas y estén presentes."
+    ]
+  },
+  {
+    "case_id": 10,
+    "success": true,
+    "original_bdd": {
+      "given": "the calculator is ready for use",
+      "when": "I enter the numbers 10 and 3 and choose subtraction",
+      "then": "the calculator displays the result as 7"
+    },
+    "previous_translation": "GIVEN [is_ready(CALC)]\nWHEN ?enter_numbers.calc,10,3\n  calc.state = Ready\n  CALC.state := Performing\n!choose_operation.calc,subtraction\n  calc.state = Performing\n  CALC.state := Result\nTHEN !display_result.calc\n  calc.result = 7\n  [calc.result = 7]",
+    "parse_error": "No terminal matches '1' in the current parser context, at line 2 col 26\n\nWHEN ?enter_numbers.calc,10,3\n                         ^\nExpected one of: \n\t* __ANON_2\n",
+    "explanation": "El parser esperaba encontrar una condición encerrada en corchetes '[]' inmediatamente después de la interacción '?enter_numbers.calc,10,3'. Sin embargo, encontró una asignación 'calc.state = Ready' sin la condición requerida.",
+    "error_type": "Corchetes faltantes en condiciones",
+    "error_location": "Línea 2, después de '?enter_numbers.calc,10,3'",
+    "correction_suggestion": "Agrega una condición en corchetes después de '?enter_numbers.calc,10,3'. Por ejemplo: '?enter_numbers.calc,10,3 [true]'.",
+    "hints": [
+      "Asegúrate de que cada interacción en la sección WHEN esté seguida de una condición en corchetes.",
+      "Revisa que cada switch tenga la estructura: Interacción [Condición] Asignación."
+    ]
+  }
+]
