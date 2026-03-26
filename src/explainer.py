@@ -209,7 +209,13 @@ Responde en formato JSON."""
                     "items": {"type": "string"}
                 }
             },
-            "required": ["error_type", "error_location", "explanation", "correction_suggestion"],
+            "required": [
+                "error_type",
+                "error_location",
+                "explanation",
+                "correction_suggestion",
+                "hints"
+            ],
             "additionalProperties": False
         }
 

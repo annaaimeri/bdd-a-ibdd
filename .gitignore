@@ -36,8 +36,11 @@ venv/
 /data/parsed_ibdd_results.csv
 /data/run_dataset_es_output.json
 /data/translation_output.json
+/data/demo_output.json
+/data/demo_output_metrics.json
+/data/demo_validation.json
 /data/eval_*/
-
-# Keep public examples
-!/data/examples/
-!/data/examples/*.json
+/main.aux
+/main.fdb_latexmk
+/main.fls
+*.key

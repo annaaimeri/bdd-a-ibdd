@@ -115,9 +115,19 @@ class LLMClient:
                             f"[LLMClient] OpenAI generate_json failed after {self.max_retries} intentos: "
                             f"{type(e).__name__}: {e}"
                         )
-                        return None
+                        print(
+                            "[LLMClient] Reintentando con JSON en mejor esfuerzo y validacion local."
+                        )
+                        return self._generate_json_best_effort(messages, schema)
 
-        # JSON en mejor esfuerzo para modelos locales (validar si `jsonschema` está disponible)
+        return self._generate_json_best_effort(messages, schema)
+
+    def _generate_json_best_effort(
+        self,
+        messages: List[Union[SystemMessage, HumanMessage]],
+        schema: Dict[str, Any],
+    ) -> Optional[Union[Dict[str, Any], List[Any]]]:
+        # JSON en mejor esfuerzo para modelos locales o fallback de OpenAI
         schema_hint = (
             "Return ONLY valid JSON that matches this JSON Schema. "
             "Do not include markdown or explanations. "
