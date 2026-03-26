@@ -142,6 +142,7 @@ class LLMClient:
                 msg = self._get_llm().invoke(messages_with_schema)
                 content = msg.content
                 parsed = json.loads(content)
+                parsed = self._normalize_singleton_items_wrapper(parsed, schema)
 
                 if jsonschema_validate:
                     jsonschema_validate(instance=parsed, schema=schema)
@@ -158,3 +159,38 @@ class LLMClient:
                     )
                     return None
         return None
+
+    @staticmethod
+    def _normalize_singleton_items_wrapper(
+        parsed: Union[Dict[str, Any], List[Any]],
+        schema: Dict[str, Any],
+    ) -> Union[Dict[str, Any], List[Any]]:
+        """Adapta respuestas de un solo objeto a un schema envuelto en {"items": [...]}."""
+        if not isinstance(parsed, dict):
+            return parsed
+
+        if schema.get("type") != "object":
+            return parsed
+
+        properties = schema.get("properties", {})
+        required = schema.get("required", [])
+        items_schema = properties.get("items")
+
+        if "items" not in required or not isinstance(items_schema, dict):
+            return parsed
+
+        if items_schema.get("type") != "array":
+            return parsed
+
+        if "items" in parsed:
+            return parsed
+
+        item_schema = items_schema.get("items", {})
+        item_properties = item_schema.get("properties", {})
+        if item_schema.get("type") != "object" or not item_properties:
+            return parsed
+
+        if set(parsed.keys()).issubset(set(item_properties.keys())):
+            return {"items": [parsed]}
+
+        return parsed
