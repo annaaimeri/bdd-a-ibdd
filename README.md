@@ -20,7 +20,7 @@ El pipeline principal:
 ## Preparar el entorno
 
 ```bash
-git clone <URL_DEL_REPO>
+git clone https://github.com/annaaimeri/bdd-a-ibdd
 cd bdd-to-ibdd-nlp
 python3 -m venv venv
 source venv/bin/activate
