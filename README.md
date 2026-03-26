@@ -21,7 +21,7 @@ El pipeline principal:
 
 ```bash
 git clone https://github.com/annaaimeri/bdd-a-ibdd
-cd bdd-to-ibdd-nlp
+cd bdd-a-ibdd
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -158,7 +158,7 @@ python3 src/main.py data/examples/medium_dataset.json docs/PROMPT_EN.md
 ```bash
 python3 src/main.py data/examples/small_dataset.json docs/PROMPT_EN.md \
   --provider ollama \
-  --model llama3.3:70b \
+  --model llama3.2 \
   --base-url http://localhost:11434
 ```
 

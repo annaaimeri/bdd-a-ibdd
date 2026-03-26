@@ -470,9 +470,6 @@ Ejemplos:
         default=1,
         help='Workers paralelos para llamadas al LLM (default: 1)'
     )
-    # TODO: agregar un flag CLI para temperatura de traducción y así
-    # facilitar comparaciones reproducibles de rendimiento y calidad.
-
     args = parser.parse_args()
 
     # Validar que existan los archivos de entrada
