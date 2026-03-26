@@ -29,9 +29,15 @@ pip install -r requirements.txt
 
 ## Configuración
 
+La implementación y la evaluación reportadas en la tesis se realizaron con modelos de OpenAI, ya que mostraron resultados más consistentes durante el desarrollo. El soporte para Ollama se mantiene como alternativa para ejecutar el pipeline localmente, pero en general produce salidas menos estables cuando se le exige respetar estructuras JSON estrictas.
+
 ### OpenAI
 
-Podés exportar la variable:
+1. Crear una cuenta en OpenAI Platform.
+2. Generar una API key desde la consola de OpenAI.
+3. Exportar la variable o guardarla en `.env`.
+
+Podés exportarla así:
 
 ```bash
 export OPENAI_API_KEY="tu_api_key"
@@ -45,14 +51,57 @@ LLM_PROVIDER=openai
 LLM_MODEL=gpt-4o
 ```
 
+La plantilla `.env.example` muestra la forma esperada.
+
+Prueba rápida con OpenAI:
+
+```bash
+python3 src/main.py data/examples/small_dataset.json docs/PROMPT_EN.md
+```
+
 ### Ollama
 
-Ejemplo de `.env`:
+Esta opción está pensada como alternativa local. Puede servir para pruebas rápidas, pero los resultados suelen ser peores y menos consistentes que con OpenAI.
+
+1. Instalar Ollama y abrir la aplicación para levantar el servicio local.
+2. Verificar que la API responda en `http://localhost:11434`.
+3. Descargar un modelo.
+
+Verificación rápida:
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+Descargar un modelo para la primera prueba:
+
+```bash
+ollama pull llama3.2
+```
+
+Configurar `.env` o variables de entorno:
 
 ```env
 LLM_PROVIDER=ollama
-LLM_MODEL=llama3.3:70b
+LLM_MODEL=llama3.2
 LLM_BASE_URL=http://localhost:11434
+```
+
+Si preferís exportarlas:
+
+```bash
+export LLM_PROVIDER=ollama
+export LLM_MODEL=llama3.2
+export LLM_BASE_URL=http://localhost:11434
+```
+
+Prueba rápida con Ollama:
+
+```bash
+python3 src/main.py data/examples/small_dataset.json docs/PROMPT_EN.md \
+  --provider ollama \
+  --model llama3.2 \
+  --base-url http://localhost:11434
 ```
 
 ## Datasets incluidos
@@ -178,16 +227,4 @@ python3 src/translator.py data/examples/small_dataset.json docs/PROMPT_EN.md \
 
 ```bash
 python3 src/parser.py data/solo_traduccion.json data/solo_validacion.json
-```
-
-### Evaluación
-
-```bash
-python3 src/evaluate.py \
-  --runs 3 \
-  --max-rounds 2 \
-  --workers 1 \
-  --provider openai \
-  --model gpt-4o \
-  --configs EN-EN
 ```
