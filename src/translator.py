@@ -239,6 +239,11 @@ class TranslationService:
         if is_array_input and isinstance(response, dict) and "items" in response:
             return response["items"]
 
+        # Los modelos locales a veces devuelven el caso traducido directamente
+        # en lugar del envoltorio {"items": [...]} para entradas unitarias.
+        if is_array_input and len(json_data) == 1 and isinstance(response, dict):
+            return [response]
+
         return response
 
     def translate_single_case(
