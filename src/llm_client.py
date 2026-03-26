@@ -143,6 +143,7 @@ class LLMClient:
                 content = msg.content
                 parsed = json.loads(content)
                 parsed = self._normalize_singleton_items_wrapper(parsed, schema)
+                parsed = self._normalize_known_schema_shapes(parsed, schema)
 
                 if jsonschema_validate:
                     jsonschema_validate(instance=parsed, schema=schema)
@@ -192,5 +193,34 @@ class LLMClient:
 
         if set(parsed.keys()).issubset(set(item_properties.keys())):
             return {"items": [parsed]}
+
+        return parsed
+
+    @staticmethod
+    def _normalize_known_schema_shapes(
+        parsed: Union[Dict[str, Any], List[Any]],
+        schema: Dict[str, Any],
+    ) -> Union[Dict[str, Any], List[Any]]:
+        """Normaliza campos conocidos cuando modelos locales respetan la semantica pero no el tipo exacto."""
+        if not isinstance(parsed, dict):
+            return parsed
+
+        properties = schema.get("properties", {})
+
+        error_location_schema = properties.get("error_location")
+        error_location = parsed.get("error_location")
+        if (
+            isinstance(error_location_schema, dict)
+            and error_location_schema.get("type") == "string"
+            and isinstance(error_location, dict)
+        ):
+            line = error_location.get("line")
+            column = error_location.get("column")
+            parts = []
+            if line is not None:
+                parts.append(f"line {line}")
+            if column is not None:
+                parts.append(f"column {column}")
+            parsed["error_location"] = ", ".join(parts) if parts else json.dumps(error_location, ensure_ascii=False)
 
         return parsed
